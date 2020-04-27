@@ -5,6 +5,7 @@ library(paletteer)
 library(curl)
 library(readxl)
 library(lubridate)
+library(forcats)
 
 ####################################
 #Read in English & Welsh data first#
@@ -907,7 +908,14 @@ reg.UK.excess <- data.reg.UK.new %>%
   group_by(reg) %>%
   summarise(excess=sum(excess))
 
-ann_text4 <- data.frame(weekno=c(16.5, 28, 28), deaths=c(1700, 1200,700), reg=rep("East", times=3))
+data.reg.UK.new <- data.reg.UK.new %>%
+  group_by(reg) %>%
+  mutate(maxexcess=max(excess))
+
+data.reg.UK.new$reg <- fct_reorder(data.reg.UK.new$reg, -data.reg.UK.new$maxexcess)
+data.reg.UK.old$reg <- factor(data.reg.UK.old$reg, levels=levels(data.reg.UK.new$reg))
+
+ann_text4 <- data.frame(weekno=c(16.5, 28, 28), deaths=c(2000, 1100,600), reg=rep("London", times=3))
 
 tiff("Outputs/ONSNRSNISRAWeeklyDeathsxReg.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
@@ -925,4 +933,26 @@ ggplot()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   geom_text(data=ann_text4, aes(x=weekno, y=deaths), label=c("Unprecedented excess deaths\nin 2020","Max", "Min"), size=3, 
             colour=c("Red", "deepskyblue4", "deepskyblue4"), hjust=0)
-dev.off()  
+dev.off() 
+
+#Generate cumulative death counts by year
+data.reg.UK <- data.reg.UK %>%
+  group_by(reg, year) %>%
+  mutate(cumul_deaths=cumsum(deaths))
+
+ann_text5 <- data.frame(weekno=15, cumul_deaths=25000, reg="London")
+
+tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
+ggplot()+
+  geom_line(data=subset(data.reg.UK, year!=2020), aes(x=weekno, y=cumul_deaths, group=as.factor(year)), colour="Grey80")+
+  geom_line(data=subset(data.reg.UK, year==2020), aes(x=weekno, y=cumul_deaths), colour="Red")+
+  theme_classic()+
+  facet_wrap(~reg)+
+  facet_wrap(~reg)+
+  scale_x_continuous(name="Week number")+
+  scale_y_continuous(name="Deaths registered")+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold"))+
+  labs(title="Cumulative deaths in the UK from all causes in 2020 vs. 2010-2019",
+       caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
+  geom_text(data=ann_text5, aes(x=weekno, y=cumul_deaths), label=c("2020"), size=3, colour="Red")
+dev.off()
