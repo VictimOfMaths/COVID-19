@@ -9,4 +9,6 @@ Plots and analysis relating to the pandemic
 
 ![alt text](https://github.com/VictimOfMaths/COVID-19/blob/master/ONSWeeklyDeathsxAge.png)
 
-3) COVIDExposures.R brings together data on health deprivation and estimates of the potential COVID-19 mortality risk based on the age-sex structure of the population (following the approach developed by @ikashnitsky and @jm_aburto) at Lower Super Output Area level and plots bivariate maps highlighting areas with the greatest potential COVID-19 risk.
+3) COVIDExposures.R brings together data on health deprivation and estimates of the potential COVID-19 mortality risk based on the age-sex structure of the population (following the approach developed by @ikashnitsky and @jm_aburto) at Lower Super Output Area level and plots bivariate maps highlighting areas with the greatest potential COVID-19 risk. I also made a Shiny app which creates slightly lower resolution versions of the same plots online https://victimofmaths.shinyapps.io/covidmapper/
+
+![alt text](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDBivariateLondon.png)
