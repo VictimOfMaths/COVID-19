@@ -7,9 +7,14 @@ library(readxl)
 library(lubridate)
 library(forcats)
 
+#A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
+
 ####################################
 #Read in English & Welsh data first#
 ####################################
+
+#The ONS published weekly all-cause deaths data into a new Excel file each week on a Tuesday,
+#So need to manually update the 2020 link below and the corresponding range selection
 
 #Start with 2020 - data up to 10th April, updated on 21st April
 temp <- tempfile()
@@ -572,6 +577,8 @@ data2020.age.EW, data2020.female.EW, data2020.male.EW, data2020.reg.EW, data2020
 #Read in Scottish data#
 #######################
 
+#Historic weekly deaths data for Scotland is published by National Records of Scotland
+
 temp <- tempfile()
 source <- "https://www.nrscotland.gov.uk/files//statistics/weekly-monthly-births-deaths-data/2020/mar/weekly-march-20.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
@@ -585,6 +592,10 @@ data2016.S <- read_excel(temp, sheet="2016", range="E6:G57", col_names=FALSE)
 data2017.S <- read_excel(temp, sheet="2017", range="E6:G57", col_names=FALSE)
 data2018.S <- read_excel(temp, sheet="2018", range="E6:G57", col_names=FALSE)
 data2019.S <- read_excel(temp, sheet="2019", range="E6:G57", col_names=FALSE)
+
+#Weekly data for 2020 is published in a different Excel file each week on a Wednesday,
+#so need to update the link each time from this page https://www.nrscotland.gov.uk/covid19stats
+#Need to manually update the cell range when reading data in.
 
 #Take 2020 data from dedicated COVID-19 page, which is updated more regularly
 temp <- tempfile()
@@ -625,10 +636,13 @@ rm(date, data2010.S, data2011.S, data2012.S, data2013.S, data2014.S, data2015.S,
 #Read in Northern Irish data#
 #############################
 
+#NI data from NISRA is published to the same Excel file (so no need to update link) each Friday
+
+#Need to manually update the range by one each week
 temp <- tempfile()
 source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C18", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C19", col_names=FALSE)
 colnames(data2020.NI) <- c("date", "deaths")
 
 temp <- tempfile()
