@@ -88,7 +88,7 @@ data2020.sex.EW <- data2020.sex.EW %>%
 #By region
 data2020.reg.EW <- read_excel(temp, sheet="Weekly figures 2020", range="B87:R96", col_names=FALSE)
 colnames(data2020.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2020-01-03"), by="7 days", 
-                                               length.out=ncol(data2020.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2020.reg.EW)-1), "%d/%m/%y"))
 
 #2019 data
 temp <- tempfile()
@@ -100,7 +100,7 @@ data2019.age.EW <- read_excel(temp, sheet="Weekly figures 2019", range="B16:BB22
 colnames(data2019.age.EW) <- c("age", format(seq.Date(from=as.Date("2019-01-04"), by="7 days", 
                                                       length.out=ncol(data2019.age.EW)-1), "%d/%m/%y"))
 data2019.age.EW$age <- factor(data2019.age.EW$age, levels=c("Under 1 year", "01-14", "15-44", "45-64", "65-74", 
-                                                  "75-84", "85+"))
+                                                            "75-84", "85+"))
 data2019.age.EW <- arrange(data2019.age.EW, age)
 
 #By sex
@@ -130,7 +130,7 @@ data2019.sex.EW <- data2019.sex.EW %>%
 #By region
 data2019.reg.EW <- read_excel(temp, sheet="Weekly figures 2019", range="B43:BB52", col_names=FALSE)
 colnames(data2019.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2019-01-04"), by="7 days", 
-                                               length.out=ncol(data2019.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2019.reg.EW)-1), "%d/%m/%y"))
 
 #2018 data
 temp <- tempfile()
@@ -172,7 +172,7 @@ data2018.sex.EW <- data2018.sex.EW %>%
 #By region
 data2018.reg.EW <- read_excel(temp, sheet="Weekly figures 2018", range="B43:BB52", col_names=FALSE)
 colnames(data2018.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2018-01-05"), by="7 days", 
-                                               length.out=ncol(data2018.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2018.reg.EW)-1), "%d/%m/%y"))
 
 #2017 data
 temp <- tempfile()
@@ -214,7 +214,7 @@ data2017.sex.EW <- data2017.sex.EW %>%
 #By region
 data2017.reg.EW <- read_excel(temp, sheet="Weekly figures 2017", range="B43:BB52", col_names=FALSE)
 colnames(data2017.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2017-01-06"), by="7 days", 
-                                               length.out=ncol(data2017.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2017.reg.EW)-1), "%d/%m/%y"))
 
 #2016 data
 temp <- tempfile()
@@ -256,7 +256,7 @@ data2016.sex.EW <- data2016.sex.EW %>%
 #By region
 data2016.reg.EW <- read_excel(temp, sheet="Weekly figures 2016", range="B43:BB52", col_names=FALSE)
 colnames(data2016.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2016-01-08"), by="7 days", 
-                                               length.out=ncol(data2016.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2016.reg.EW)-1), "%d/%m/%y"))
 
 #2015 data
 temp <- tempfile()
@@ -298,7 +298,7 @@ data2015.sex.EW <- data2015.sex.EW %>%
 #By region
 data2015.reg.EW <- read_excel(temp, sheet="Weekly Figures 2015", range="A43:BB52", col_names=FALSE)
 colnames(data2015.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2015-01-02"), by="7 days", 
-                                               length.out=ncol(data2015.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2015.reg.EW)-1), "%d/%m/%y"))
 
 #2014 data
 temp <- tempfile()
@@ -340,7 +340,7 @@ data2014.sex.EW <- data2014.sex.EW %>%
 #By region
 data2014.reg.EW <- read_excel(temp, sheet="Weekly Figures 2014", range="A43:BA52", col_names=FALSE)
 colnames(data2014.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2014-01-03"), by="7 days", 
-                                               length.out=ncol(data2014.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2014.reg.EW)-1), "%d/%m/%y"))
 
 #2013 data
 temp <- tempfile()
@@ -382,7 +382,7 @@ data2013.sex.EW <- data2013.sex.EW %>%
 #By region
 data2013.reg.EW <- read_excel(temp, sheet="Weekly Figures 2013", range="A43:BA52", col_names=FALSE)
 colnames(data2013.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2013-01-04"), by="7 days", 
-                                               length.out=ncol(data2013.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2013.reg.EW)-1), "%d/%m/%y"))
 
 #2012 data
 temp <- tempfile()
@@ -424,7 +424,7 @@ data2012.sex.EW <- data2012.sex.EW %>%
 #By region
 data2012.reg.EW <- read_excel(temp, sheet="Weekly Figures 2012", range="A43:BA52", col_names=FALSE)
 colnames(data2012.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2012-01-06"), by="7 days", 
-                                               length.out=ncol(data2012.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2012.reg.EW)-1), "%d/%m/%y"))
 
 #2011 data
 temp <- tempfile()
@@ -466,7 +466,7 @@ data2011.sex.EW <- data2011.sex.EW %>%
 #By region
 data2011.reg.EW <- read_excel(temp, sheet="Weekly Figures 2011", range="A44:BA53", col_names=FALSE)
 colnames(data2011.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2011-01-07"), by="7 days", 
-                                               length.out=ncol(data2011.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2011.reg.EW)-1), "%d/%m/%y"))
 
 #2010 data
 temp <- tempfile()
@@ -508,7 +508,7 @@ data2010.sex.EW <- data2010.sex.EW %>%
 #By region
 data2010.reg.EW <- read_excel(temp, sheet="Weekly Figures 2010", range="A43:BA52", col_names=FALSE)
 colnames(data2010.reg.EW) <- c("reg", format(seq.Date(from=as.Date("2010-01-08"), by="7 days", 
-                                               length.out=ncol(data2010.reg.EW)-1), "%d/%m/%y"))
+                                                      length.out=ncol(data2010.reg.EW)-1), "%d/%m/%y"))
 
 #Combine into overall 2010-20 datasets
 #For age
@@ -562,16 +562,16 @@ data.reg.EW <- data.reg.EW[,-c(2)]
 
 #Tidy up
 rm(data_wide.age.EW, data_wide.reg.EW, data_wide.sex.EW, data2010.age.EW, data2010.female.EW, data2010.male.EW, data2010.reg.EW, data2010.sex.EW,
-data2011.age.EW, data2011.female.EW, data2011.male.EW, data2011.reg.EW, data2011.sex.EW,
-data2012.age.EW, data2012.female.EW, data2012.male.EW, data2012.reg.EW, data2012.sex.EW,
-data2013.age.EW, data2013.female.EW, data2013.male.EW, data2013.reg.EW, data2013.sex.EW,
-data2014.age.EW, data2014.female.EW, data2014.male.EW, data2014.reg.EW, data2014.sex.EW,
-data2015.age.EW, data2015.female.EW, data2015.male.EW, data2015.reg.EW, data2015.sex.EW,
-data2016.age.EW, data2016.female.EW, data2016.male.EW, data2016.reg.EW, data2016.sex.EW,
-data2017.age.EW, data2017.female.EW, data2017.male.EW, data2017.reg.EW, data2017.sex.EW,
-data2018.age.EW, data2018.female.EW, data2018.male.EW, data2018.reg.EW, data2018.sex.EW,
-data2019.age.EW, data2019.female.EW, data2019.male.EW, data2019.reg.EW, data2019.sex.EW,
-data2020.age.EW, data2020.female.EW, data2020.male.EW, data2020.reg.EW, data2020.sex.EW)
+   data2011.age.EW, data2011.female.EW, data2011.male.EW, data2011.reg.EW, data2011.sex.EW,
+   data2012.age.EW, data2012.female.EW, data2012.male.EW, data2012.reg.EW, data2012.sex.EW,
+   data2013.age.EW, data2013.female.EW, data2013.male.EW, data2013.reg.EW, data2013.sex.EW,
+   data2014.age.EW, data2014.female.EW, data2014.male.EW, data2014.reg.EW, data2014.sex.EW,
+   data2015.age.EW, data2015.female.EW, data2015.male.EW, data2015.reg.EW, data2015.sex.EW,
+   data2016.age.EW, data2016.female.EW, data2016.male.EW, data2016.reg.EW, data2016.sex.EW,
+   data2017.age.EW, data2017.female.EW, data2017.male.EW, data2017.reg.EW, data2017.sex.EW,
+   data2018.age.EW, data2018.female.EW, data2018.male.EW, data2018.reg.EW, data2018.sex.EW,
+   data2019.age.EW, data2019.female.EW, data2019.male.EW, data2019.reg.EW, data2019.sex.EW,
+   data2020.age.EW, data2020.female.EW, data2020.male.EW, data2020.reg.EW, data2020.sex.EW)
 
 #######################
 #Read in Scottish data#
@@ -733,16 +733,17 @@ ggplot()+
   theme_classic()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
   labs(title="Deaths from all causes have risen sharply across England & Wales",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 17th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=15.5, y=15000, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=16.5, y=15000, label="Unprecedented excess deaths", colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=9700, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=8000, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=8800, label="Historic mean", colour="grey30")+
   geom_curve(aes(x=48, y=9000, xend=47, yend=9800), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")
- 
+
 dev.off()  
 
 #Plot by sex
@@ -768,7 +769,7 @@ sex.EW.excess <- data.sex.EW.new %>%
   group_by(sex) %>%
   summarise(excess=sum(excess))
 
-ann_text1 <- data.frame(weekno=c(16,16), deaths=c(8600,9900), sex=c("Female", "Male"))
+ann_text1 <- data.frame(weekno=c(17,17), deaths=c(10900,11400), sex=c("Female", "Male"))
 
 tiff("Outputs/ONSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
@@ -779,6 +780,7 @@ ggplot()+
   facet_wrap(~sex)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
   labs(title="The burden of COVID-19 deaths have fallen disproportionately on men",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 17th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
@@ -811,7 +813,8 @@ sex.age.EW.excess <- data.sex.age.EW.new %>%
   group_by(sex, age) %>%
   summarise(excess=sum(excess))
 
-ann_text2 <- data.frame(weekno=rep(15.5, times=8), deaths=c(920,1200,2300,4200,1300,1900,3300,3400), sex=rep(c("Female", "Male"), each=4), 
+ann_text2 <- data.frame(weekno=rep(16.5, times=8), deaths=c(920,1300,2900,5400,1350,2000,3700,4000), 
+                        sex=rep(c("Female", "Male"), each=4), 
                         age=rep(c("45-64", "65-74", "75-84", "85+"), times=2))
 
 tiff("Outputs/ONSWeeklyDeathsxSexxAge.tiff", units="in", width=12, height=8, res=300)
@@ -823,6 +826,7 @@ ggplot()+
   facet_grid(age~sex)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
   labs(title="The burden of COVID-19 deaths have fallen disproportionately on men across all ages",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 17th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
@@ -873,7 +877,7 @@ age.EW.excess <- data.age.EW.new %>%
   group_by(age2) %>%
   summarise(excess=sum(excess))
 
-ann_text3 <- data.frame(weekno=rep(16, times=5), deaths=c(1000, 1800, 2500, 4500, 6000), age2=c("Under 45", "45-64", "65-74", "75-84", "85+"))
+ann_text3 <- data.frame(weekno=rep(17, times=5), deaths=c(1000, 1800, 2500, 4500, 6000), age2=c("Under 45", "45-64", "65-74", "75-84", "85+"))
 
 tiff("Outputs/ONSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
@@ -885,7 +889,8 @@ ggplot()+
   facet_wrap(~age2)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
-  labs(title="All-cause deaths in England & Wales are at record levels across all age groups over 45",
+  expand_limits(y=0)+
+    labs(title="All-cause deaths in England & Wales are at record levels across all age groups over 45",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 17th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
@@ -941,6 +946,7 @@ ggplot()+
   facet_wrap(~reg)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
   labs(title="Deaths from all causes have risen sharply, but not equally, across the UK",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19\nEngland, Wales & Northern Ireland data to April 17th\nScotland data to April 19th",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
@@ -954,7 +960,7 @@ data.reg.UK <- data.reg.UK %>%
   group_by(reg, year) %>%
   mutate(cumul_deaths=cumsum(deaths))
 
-ann_text5 <- data.frame(weekno=15, cumul_deaths=25000, reg="London")
+ann_text5 <- data.frame(weekno=16, cumul_deaths=27000, reg="London")
 
 tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
