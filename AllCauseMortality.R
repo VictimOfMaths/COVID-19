@@ -943,6 +943,46 @@ ggplot()+
 
 dev.off()  
 
+###########################
+#Plot for Northern Ireland#
+###########################
+#Overall plot
+
+#Extract max/min values
+#split off 2020 data
+data.NI.new <- subset(data.NI, year==2020)
+data.NI.old <- subset(data.NI, year<2020)
+
+data.NI.old <- data.NI.old %>%
+  group_by(weekno) %>%
+  summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
+
+#Generate filled area for total excess deaths vs. previous 10-year maximum
+data.NI.new <- merge(data.NI.new, data.NI.old, by=c("weekno"))
+data.NI.new <- data.NI.new %>%
+  mutate(ymin=pmin(deaths, max))
+
+tiff("Outputs/NISRAWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
+ggplot()+
+  geom_ribbon(data=data.NI.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_ribbon(data=data.NI.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_line(data=data.NI.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
+  geom_line(data=data.NI.new, aes(x=weekno, y=deaths), colour="Red")+
+  theme_classic()+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="Deaths in Northern Ireland look to have plateaued",
+       subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 19th April",
+       caption="Data from NISRA | Plot by @VictimOfMaths")+
+  annotate(geom="text", x=16.5, y=400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=30, y=320, label="Historic maximum", colour="Skyblue4")+
+  annotate(geom="text", x=30, y=160, label="Historic minimum", colour="Skyblue4")+
+  annotate(geom="text", x=47, y=220, label="Historic mean", colour="grey30")+
+  geom_curve(aes(x=48, y=230, xend=47, yend=285), colour="grey30", curvature=0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")
+
+dev.off()  
 
 ###############################
 #Plots for the whole of the UK#
