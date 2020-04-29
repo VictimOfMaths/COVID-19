@@ -599,9 +599,9 @@ data2019.S <- read_excel(temp, sheet="2019", range="E6:G57", col_names=FALSE)
 
 #Take 2020 data from dedicated COVID-19 page, which is updated more regularly
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-16.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-17.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:R7", col_names=FALSE))[,c(2)])
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:S7", col_names=FALSE))[,c(2)])
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "deaths")
@@ -890,7 +890,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-    labs(title="All-cause deaths in England & Wales are at record levels across all age groups over 45",
+  labs(title="All-cause deaths in England & Wales are at record levels across all age groups over 45",
        subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 17th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
@@ -901,6 +901,48 @@ ggplot()+
                                                              paste(round(age.EW.excess[5,2],0),"excess deaths")), 
             size=3, colour=rep("red", times=5), hjust=0)
 dev.off()  
+
+###################
+#Plot for Scotland#
+###################
+#Overall plot
+
+#Extract max/min values
+#split off 2020 data
+data.S.new <- subset(data.S, year==2020)
+data.S.old <- subset(data.S, year<2020)
+
+data.S.old <- data.S.old %>%
+  group_by(weekno) %>%
+  summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
+
+#Generate filled area for total excess deaths vs. previous 10-year maximum
+data.S.new <- merge(data.S.new, data.S.old, by=c("weekno"))
+data.S.new <- data.S.new %>%
+  mutate(ymin=pmin(deaths, max))
+
+tiff("Outputs/NRSWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
+ggplot()+
+  geom_ribbon(data=data.S.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_ribbon(data=data.S.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_line(data=data.S.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
+  geom_line(data=data.S.new, aes(x=weekno, y=deaths), colour="Red")+
+  theme_classic()+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="Scotland looks to have passed the peak of all-cause deaths",
+       subtitle="Weekly deaths in 2020 compared to the range in 2010-19. Data up to 26th April",
+       caption="Data from NRS | Plot by @VictimOfMaths")+
+  annotate(geom="text", x=17.5, y=1500, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=30, y=1150, label="Historic maximum", colour="Skyblue4")+
+  annotate(geom="text", x=30, y=800, label="Historic minimum", colour="Skyblue4")+
+  annotate(geom="text", x=48, y=850, label="Historic mean", colour="grey30")+
+  geom_curve(aes(x=48, y=900, xend=47, yend=1050), colour="grey30", curvature=0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")
+
+dev.off()  
+
 
 ###############################
 #Plots for the whole of the UK#
@@ -948,7 +990,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="Deaths from all causes have risen sharply, but not equally, across the UK",
-       subtitle="Weekly deaths in 2020 compared to the range in 2010-19\nEngland, Wales & Northern Ireland data to April 17th\nScotland data to April 19th",
+       subtitle="Weekly deaths in 2020 compared to the range in 2010-19\nEngland, Wales & Northern Ireland data to April 17th\nScotland data to April 26th",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   geom_text(data=ann_text4, aes(x=weekno, y=deaths), label=c("Unprecedented excess deaths\nin 2020","Max", "Min"), size=3, 
