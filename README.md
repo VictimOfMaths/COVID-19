@@ -16,3 +16,7 @@ Plots and analysis relating to the pandemic
 4) COVIDCasesByIMD.R takes published figures on confirmed COVID-19 cases by Local Authority in England and maps that onto quintiles of the Index of Multiple Deprivation, then plots a variety of case trajectories by deprivation quintile as well as a map of confirmed case rates.
 
 ![Quintile plot](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDQuintilesLonRate.png)
+
+5) ONSDeathIneq.R takes data the ONS have published for England on deaths from COVID-19 and other causes between 1st March-17th April and illustrates socioeconomic inequalities in the impact of the pandemic.
+
+![Inequality plot](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDIneqRate.png)
