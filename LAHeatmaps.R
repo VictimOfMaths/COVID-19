@@ -127,7 +127,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill=m
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in English Local Authorities",
-       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to 29th April. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to 3rd May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -153,7 +153,7 @@ deathtiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fil
   scale_y_discrete(name="")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
-       subtitle="The heatmap represents the 5-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to 29th April. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to 3rd May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from NHS England & Ben Barr | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -179,7 +179,7 @@ deathtiles2 <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill
   scale_y_discrete(name="")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
-       subtitle="The heatmap represents the 5-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to 29th April. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to 3rd May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from NHS England & Ben Barr | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
