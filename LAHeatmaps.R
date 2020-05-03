@@ -51,14 +51,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (61=26th April announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/04/COVID-19-total-announced-deaths-30-April-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-3-May-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=2,col_names = F))
 
-deaths<-deaths[18:.N, c(1:65)]
+deaths<-deaths[18:.N, c(1:68)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:65)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:68)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -117,7 +117,7 @@ heatmap$maxdeathprop <- heatmap$deathsroll_avg/heatmap$maxdeathrate
 
 #Enter dates to plot from and to
 plotfrom <- "2020-03-03"
-plotto <- "2020-04-30"
+plotto <- "2020-05-03"
 
 #Plot case trajectories
 casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
