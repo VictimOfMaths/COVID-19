@@ -242,7 +242,7 @@ CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=ge
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of the pandemic across England",
-       subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nData for most recent days is provisional and may be revised upwards\nas additional tests are processed\nDate: {frame_time}",
+       subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nDate: {frame_time}",
        caption="Data from Public Health England | Visualisation by @VictimOfMaths")
 
-animate(CaseAnim, duration=18, fps=20, width=2000, height=3000, res=300, renderer=gifski_renderer("CaseAnim.gif"), end_pause=60)
+animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("CaseAnim.gif"), end_pause=60)
