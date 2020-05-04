@@ -195,3 +195,53 @@ deathbars2 <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=totaldeaths, y=f
 tiff("Outputs/COVIDLADeathHeatmap2.tiff", units="in", width=10, height=16, res=500)
 plot_grid(deathtiles2, deathbars2, align="h", rel_widths=c(1,0.2))
 dev.off()
+
+###################################
+#Animated map of case trajectories#
+###################################
+
+library(sf)
+library(rmapshaper)
+library(gganimate)
+
+#Bring in shapefile of LAs
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/6638c31a8e9842f98a037748f72258ed_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+shapefile <- st_read(file.path(temp2, "14c86a61-d247-4b7d-9d3b-41946284cd2d202043-1-gzyml0.hpyb.shp"))
+names(shapefile)[names(shapefile) == "ctyua17cd"] <- "code"
+
+#Simplify map as the rendering takes *ages*!
+simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
+
+#Duplicate data to account for shapefile using pre-2019 codes
+int1 <- filter(heatmap, name=="Bournemouth, Christchurch and Poole")
+int1$code <- "E06000028"
+int2 <- filter(heatmap, name=="Bournemouth, Christchurch and Poole")
+int2$code <- "E06000029"
+int3 <- filter(heatmap, name=="Bournemouth, Christchurch and Poole")
+int3$code <- "E10000009"
+temp <- rbind(heatmap, int1, int2, int3)
+
+map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
+
+#remove areas with no HLE data (i.e. Scotland, Wales & NI)
+map.data <- map.data %>% drop_na("maxcaseprop")
+
+CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=geometry, fill=maxcaseprop))+
+  geom_sf(colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily cases as a %\nof peak cases", breaks=c(0,0.25,0.5,0.75,1),
+                       labels=c("0%", "25%", "50%", "75%", "100%"))+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nData for most recent days is provisional and may be revised upwards\nas additional tests are processed\nDate: {frame_time}",
+       caption="Data from Public Health England | Visualisation by @VictimOfMaths")
+
+animate(CaseAnim, duration=18, fps=20, width=2000, height=3000, res=300, renderer=gifski_renderer("CaseAnim.gif"), end_pause=60)
