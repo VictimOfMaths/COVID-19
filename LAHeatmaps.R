@@ -230,6 +230,7 @@ map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
 map.data <- map.data %>% drop_na("maxcaseprop")
 
+#WARNING - this can take quite a long time to render - it takes ~ 15 minutes on my desktop
 CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=geometry, fill=maxcaseprop))+
   geom_sf(colour=NA)+
   xlim(10000,655644)+
