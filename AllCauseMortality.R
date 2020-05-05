@@ -747,7 +747,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="Deaths from all causes fallen slightly across England & Wales",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 17th April",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 24th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=17.5, y=15000, label="Unprecedented excess deaths", colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=9700, label="Historic maximum", colour="Skyblue4")+
@@ -794,8 +794,8 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The burden of COVID-19 deaths have fallen disproportionately on men",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 17th April",
+  labs(title="All cause deaths have fallen slightly for both sexes",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 24th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
@@ -842,7 +842,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="All-cause deaths have fallen slightly across all age groups",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 17th April",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 24th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
@@ -905,8 +905,8 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are at record levels across all age groups over 45",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 17th April",
+  labs(title="All-cause deaths in England & Wales are still at record levels across all age groups over 45",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 24th April",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
@@ -1048,7 +1048,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="The dip in all-cause deaths hasn't happened in all regions of the UK",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England & Wales data to April 17th<br>Scotland data to April 19th<br>Northern Ireland data to April 24th",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England, Wales and Northern Ireland data to April 24th<br>Scotland data to April 19th",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
