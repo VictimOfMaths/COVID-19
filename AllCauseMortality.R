@@ -609,9 +609,9 @@ data2019.S <- read_excel(temp, sheet="2019", range="E6:G57", col_names=FALSE)
 
 #Take 2020 data from dedicated COVID-19 page, which is updated more regularly
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-16.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-17.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:R7", col_names=FALSE))[,c(2)])
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:S7", col_names=FALSE))[,c(2)])
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "deaths")
@@ -910,7 +910,7 @@ ggplot()+
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
-  geom_text(data=ann_text3, aes(x=weekno, y=deaths), label=c(paste(round(age.EW.excess[1,2],0),"deaths compared to\n2010-19 average"), 
+  geom_text(data=ann_text3, aes(x=weekno, y=deaths), label=c(paste(round(age.EW.excess[1,2],0),"excess deaths compared to\n2010-19 average"), 
                                                              paste(round(age.EW.excess[2,2],0),"excess deaths"),
                                                              paste(round(age.EW.excess[3,2],0),"excess deaths"),
                                                              paste(round(age.EW.excess[4,2],0),"excess deaths"),
@@ -1078,3 +1078,4 @@ ggplot()+
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   geom_text(data=ann_text5, aes(x=weekno, y=cumul_deaths), label=c("2020"), size=3, colour="Red")
 dev.off()
+
