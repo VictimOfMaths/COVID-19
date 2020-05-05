@@ -1061,7 +1061,7 @@ data.reg.UK <- data.reg.UK %>%
   group_by(reg, year) %>%
   mutate(cumul_deaths=cumsum(deaths))
 
-ann_text5 <- data.frame(weekno=17, cumul_deaths=27000, reg="London")
+ann_text5 <- data.frame(weekno=17, cumul_deaths=29000, reg="London")
 
 tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
@@ -1074,7 +1074,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold"),
         plot.title =element_markdown())+
-  labs(title="Cumulative deaths from all causes in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>",
+  labs(title="Cumulative deaths from all causes in <span style='color:red;'>2020</span> compared to <span style='color:Grey60;'>the range in 2010-19</span>",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   geom_text(data=ann_text5, aes(x=weekno, y=cumul_deaths), label=c("2020"), size=3, colour="Red")
 dev.off()
