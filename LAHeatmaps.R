@@ -204,16 +204,20 @@ library(sf)
 library(rmapshaper)
 library(gganimate)
 
-#Bring in shapefile of LAs
+#Download shapefile of LA boundaries
 temp <- tempfile()
 temp2 <- tempfile()
 source <- "https://opendata.arcgis.com/datasets/6638c31a8e9842f98a037748f72258ed_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
-shapefile <- st_read(file.path(temp2, "14c86a61-d247-4b7d-9d3b-41946284cd2d202043-1-gzyml0.hpyb.shp"))
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
 names(shapefile)[names(shapefile) == "ctyua17cd"] <- "code"
 
-#Simplify map as the rendering takes *ages*!
+#Simplify map as the rendering takes *ages*! Reducing the value of 'keep' further towards 0 simplifies the map more, 
+#making it quicker but less pretty!
 simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
 
 #Duplicate data to account for shapefile using pre-2019 codes
@@ -230,7 +234,8 @@ map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
 map.data <- map.data %>% drop_na("maxcaseprop")
 
-#WARNING - this can take quite a long time to render - it takes ~ 15 minutes on my desktop
+#WARNING - this can take quite a long time to render - it takes ~ 15 minutes for each gif on my desktop
+#Animation of case trajectories
 CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=geometry, fill=maxcaseprop))+
   geom_sf(colour=NA)+
   xlim(10000,655644)+
@@ -245,4 +250,38 @@ CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=ge
        subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nDate: {frame_time}",
        caption="Data from Public Health England | Visualisation by @VictimOfMaths")
 
-animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("CaseAnim.gif"), end_pause=60)
+animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnim.gif"), end_pause=60)
+
+#Animation of death trajectories
+DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-01")), aes(geometry=geometry, fill=maxdeathprop))+
+  geom_sf(colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily deaths as a %\nof peak deaths", breaks=c(0,0.25,0.5,0.75,1),
+                       labels=c("0%", "25%", "50%", "75%", "100%"))+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 5-day average number of new confirmed deaths coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak in deaths).\nDate: {frame_time}",
+       caption="Data from Public Health England | Visualisation by @VictimOfMaths")
+
+animate(DeathAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/DeathAnim.gif"), end_pause=60)
+
+#Animation of absolute case numbers
+CaseAnimAbs <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=geometry, fill=maxcaseprop))+
+  geom_sf(colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily cases as a %\nof peak cases", breaks=c(0,0.25,0.5,0.75,1),
+                       labels=c("0%", "25%", "50%", "75%", "100%"))+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nDate: {frame_time}",
+       caption="Data from Public Health England | Visualisation by @VictimOfMaths")
+
+animate(CaseAnimAbs, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnimAbs.gif"), end_pause=60)
