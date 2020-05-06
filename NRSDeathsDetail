@@ -1,0 +1,166 @@
+rm(list=ls())
+
+library(tidyverse)
+library(paletteer)
+library(curl)
+library(lubridate)
+library(readxl)
+library(ggtext)
+
+#Read in 2015-2019 location data
+temp <- tempfile()
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/weekly-deaths-by-location-2015-2019.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+data.loc <- na.omit(read.csv(temp))
+
+data.loc <- data.loc[-c(1, 26:31),]
+colnames(data.loc) <- c("year", c(1:53))
+
+data.loc$location <- rep(c("Care Home", "Home / Non-institution", "Hospital", "Other instutition"),
+                         each=6)
+
+data.loc_long <- gather(data.loc, week, deaths, c(2:54))
+data.loc_long$week <- as.integer(data.loc_long$week)
+
+#Read in 2015-19 health board data
+temp <- tempfile()
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/weekly-HB-and-CA-2015-2019.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+data.HB <- read_excel(temp, sheet=1, range="A5:BC74", col_names=FALSE)
+
+colnames(data.HB) <- c("HB", "year", c(1:53))
+data.HB$year <- as.character(data.HB$year)
+
+HBlist <- unique(na.omit(data.HB$HB))
+
+data.HB$HB <- rep(HBlist, each=5)
+
+data.HB_long <- gather(data.HB, week, deaths, c(3:55))
+data.HB_long$week <- as.integer(data.HB_long$week)
+
+#calculate averages
+temp <- data.HB_long %>%
+  group_by(week, HB) %>%
+  summarise(deaths=mean(deaths))
+
+temp$year="average"
+
+data.HB_long <- bind_rows(data.HB_long, temp)
+
+#Bring in 2020 data
+temp <- tempfile()
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-18.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+#Tidy location data
+data.loc.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c("C89:T92"), col_names=FALSE)))
+date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data.loc.2020)), "%d/%m/%y"))
+data.loc.2020 <- cbind(date, data.loc.2020)
+colnames(data.loc.2020) <- c("date", "Care Home", "Home / Non-institution", "Hospital", "Other instutition")
+data.loc.2020$date <- as.Date(data.loc.2020$date, "%d/%m/%y")
+data.loc.2020$week <- week(data.loc.2020$date+days(6))
+data.loc.2020$year <- "2020"
+
+#Merge with older years
+data.loc.2020_long <- gather(data.loc.2020, location, deaths, c(2:5))
+data.loc <- bind_rows(data.loc_long, data.loc.2020_long)
+
+#merge 'Other institution' deaths into 'home/other'
+data.loc$loc <- case_when(
+  data.loc$location=="Care Home" ~ "Care Home",
+  data.loc$location=="Hospital" ~ "Hospital",
+  TRUE ~ "Home/Other"
+)
+
+data.loc$loc <- factor(data.loc$loc, levels=c("Hospital", "Care Home", "Home/Other"))
+
+data.loc <- data.loc %>%
+  group_by(year, loc, week) %>%
+  summarise(deaths=sum(deaths))
+
+#Tidy HB data
+data.HB.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c("C39:T52"), col_names=FALSE)))
+data.HB.2020 <- cbind(date, data.HB.2020)
+colnames(data.HB.2020) <- c("date", HBlist)
+data.HB.2020$date <- as.Date(data.HB.2020$date, "%d/%m/%y")
+data.HB.2020$week <- week(data.HB.2020$date+days(6))
+data.HB.2020$year <- "2020"
+
+#Merge with older years
+data.HB.2020_long <- gather(data.HB.2020, HB, deaths, c(2:15))
+data.HB <- bind_rows(data.HB_long, data.HB.2020_long)
+
+#Plot death location data
+data.loc.old <- data.loc %>%
+  filter(!year %in% c("2020", "average")) %>%
+  group_by(week, loc) %>%
+  summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
+
+tiff("Outputs/NRSWeeklyDeathsxLocation.tiff", units="in", width=12, height=8, res=300)
+ggplot()+
+  geom_ribbon(data=data.loc.old, aes(x=week, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_line(data=subset(data.loc, year=="average"), aes(x=week, y=deaths), colour="Grey50", linetype=2)+
+  geom_line(data=subset(data.loc, year=="2020"), aes(x=week, y=deaths), colour="Red")+
+  facet_wrap(~loc)+
+  theme_classic()+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="Deaths in Scottish hospitals are back to normal levels, but deaths elsewhere remain far higher than usual",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to 2nd May",
+       caption="Data from NRS | Plot by @VictimOfMaths")+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle =element_markdown())
+dev.off()
+
+#Calculate excess deaths vs. average
+data.loc.new <- merge(subset(data.loc, year=="2020"), data.loc.old)
+data.loc.new$excess <- data.loc.new$deaths-data.loc.new$mean
+
+#plot excess deaths over time
+tiff("Outputs/NRSWeeklyDeathsExcessxLocation.tiff", units="in", width=12, height=8, res=300)
+ggplot(data.loc.new, aes(x=week, y=excess))+
+  geom_segment(aes(x=0, xend=19, y=0, yend=0), colour="Grey40")+
+  geom_line(aes(colour=loc))+
+  theme_classic()+
+  scale_x_continuous(name="Week commencing", breaks=c(1:18), 
+                     labels=c(format(seq.Date(from=as.Date("2019-12-30"), by="7 days", 
+                                              length.out=18), "%d/%m/%y")))+
+  scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
+  scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
+  labs(title="Excess deaths in Scottish care homes have peaked later and higher than deaths elsewhere",
+       subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
+       caption="Data from NRS | Plot by @VictimOfMaths")
+dev.off()
+
+#Plot HB data
+data.HB.old <- data.HB %>%
+  filter(!year %in% c("2020", "average")) %>%
+  group_by(week, HB) %>%
+  summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
+
+temp <- data.HB %>%
+  group_by(HB) %>%
+  summarise(max=max(deaths))
+
+temp$HB <- fct_reorder(temp$HB, -temp$max)
+
+data.HB.old$HB <- factor(data.HB.old$HB, levels=levels(temp$HB))
+data.HB$HB <- factor(data.HB$HB, levels=levels(temp$HB))
+
+tiff("Outputs/NRSWeeklyDeathsxHB.tiff", units="in", width=12, height=8, res=300)
+ggplot()+
+  geom_ribbon(data=data.HB.old, aes(x=week, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_line(data=subset(data.HB, year=="average"), aes(x=week, y=deaths), colour="Grey50", linetype=2)+
+  geom_line(data=subset(data.HB, year=="2020"), aes(x=week, y=deaths), colour="Red")+
+  facet_wrap(~HB)+
+  theme_classic()+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="Glasgow has borne the brunt of COVID-19 in Scotland",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to 2nd May",
+       caption="Data from NRS | Plot by @VictimOfMaths")+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle =element_markdown())
+dev.off()
