@@ -1079,3 +1079,74 @@ ggplot()+
   geom_text(data=ann_text5, aes(x=weekno, y=cumul_deaths), label=c("2020"), size=3, colour="Red")
 dev.off()
 
+
+###############################################################
+#Plot similar charts for death by location for England & Wales#
+###############################################################
+
+#Read in historic average deaths by place
+temp <- tempfile()
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/11622fiveyearaverageweeklydeathsbyplaceofdeathenglandandwalesdeathsoccurringbetween2015and2019/fiveyearavgweeklydeaths2015to2019podfinal.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+data1519 <- read_excel(temp, sheet="Table", range="A4:G52")
+data1519$week <- as.numeric(substr(data1519$...1, 6,7))
+data1519_long <- gather(data1519, location, deaths, c(2:7))[,-c(1)]
+data1519_long$year <- "hist"
+
+#Read in 2020 figures, which are formatted in a *hideous* way, thanks ONS
+temp <- tempfile()
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek172020.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+temp1 <- as.data.frame(t(read_excel(temp, sheet=12, range="A9:B14", col_names=FALSE)))
+temp2 <- as.data.frame(t(read_excel(temp, sheet=12, range="H9:H14", col_names=FALSE)))
+temp3 <- as.data.frame(t(read_excel(temp, sheet=12, range="N9:N14", col_names=FALSE)))
+temp4 <- as.data.frame(t(read_excel(temp, sheet=12, range="T9:T14", col_names=FALSE)))
+temp5 <- as.data.frame(t(read_excel(temp, sheet=12, range="Z9:Z14", col_names=FALSE)))
+temp6 <- as.data.frame(t(read_excel(temp, sheet=12, range="AF9:AF14", col_names=FALSE)))
+temp7 <- as.data.frame(t(read_excel(temp, sheet=12, range="AL9:AL14", col_names=FALSE)))
+
+colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
+temp1 <- temp1 %>% slice(-1)
+temp1$week <- 11
+temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
+
+data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7)
+data20$week <- c(12:17)
+
+colnames(data20) <- colnames(temp1)
+
+data20 <- bind_rows(temp1, data20)
+data20_long <- gather(data20, location, deaths, c(1:6))
+data20_long$year <- "curr"
+
+#Align location names
+data20_long$location <- case_when(
+  data20_long$location=="Hospital (acute or community, not psychiatric)" ~ "Hospital",
+  data20_long$location=="Care Home" ~ "Care home",
+  TRUE ~ data20_long$location
+)
+
+#Merge old and 2020 data
+data <- bind_rows(data1519_long, data20_long)
+
+#extract peak deaths to order facets
+data <- data %>%
+  group_by(location) %>%
+  mutate
+
+data$location <- fct_reorder(data$location, -data$max)
+
+tiff("Outputs/ONSWeeklyDeathsxLocation.tiff", units="in", width=12, height=8, res=300)
+ggplot()+
+  geom_line(data=subset(data, year=="hist"), aes(x=week, y=deaths), colour="skyblue4")+
+  geom_line(data=subset(data, year=="curr"), aes(x=week, y=deaths), colour="red")+
+  scale_x_continuous(name="Week")+
+  scale_y_continuous(name="Deaths registered")+
+  facet_wrap(~location)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle =element_markdown())+
+  labs(title="The fall in all cause deaths is driven by falling deaths in hospitals",
+       subtitle="Registered weekly deaths in England & Wales in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2015-19</span>. Data up to 24th April",
+       caption="Data from ONS | Plot by @VictimOfMaths")
+dev.off()
