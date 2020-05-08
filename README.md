@@ -18,6 +18,6 @@ Plots and analysis relating to the pandemic
 
 ![Quintile plot](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDQuintilesLonRate.png)
 
-5) [ONSDeathIneq.R](https://github.com/VictimOfMaths/COVID-19/blob/master/ONSDeathIneq.R) takes data the ONS have published for England on deaths from COVID-19 and other causes between 1st March-17th April and illustrates socioeconomic inequalities in the impact of the pandemic.
+5) [ONSDeathIneq.R](https://github.com/VictimOfMaths/COVID-19/blob/master/ONSDeathIneq.R) takes data the ONS have published for England on deaths from COVID-19 and other causes between 1st March-17th April and illustrates socioeconomic inequalities in the impact of the pandemic.[ONSDeathIneq2.R] brings in historical data on socioeconomic inequalities in all-cause deaths to compare the inequality impacts of the pandemic on mortality to historical levels of inequality.
 
 ![Inequality plot](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDIneqRate.png)
