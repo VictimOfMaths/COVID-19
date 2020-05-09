@@ -1,7 +1,8 @@
 # COVID-19
 Plots and analysis relating to the pandemic
 
-1) [LAHeatmaps.R](https://github.com/VictimOfMaths/COVID-19/blob/master/LAHeatmaps.R) generates heatmaps showing English Upper Tier Local Authority trajectories in both confirmed COVID-19 cases and estimated COVID-19 deaths (in hospitals only) inspired by similar plots for US states from @Marco_Piani. The approach to modelling deaths, which are only published at NHS trust level, was developed by @Benj_Barr
+1) [LAHeatmaps.R](https://github.com/VictimOfMaths/COVID-19/blob/master/LAHeatmaps.R) generates heatmaps showing English Upper Tier Local Authority trajectories in both confirmed COVID-19 cases and estimated COVID-19 deaths (in hospitals only) inspired by similar plots for US states from @Marco_Piani. The approach to modelling deaths, which are only published at NHS trust level, was developed by @Benj_Barr.
+[WelshLAHeatmaps.R](https://github.com/VictimOfMaths/COVID-19/blob/master/WelshLAHeatmap.R) and [IrishCountyHeatmaps.R](https://github.com/VictimOfMaths/COVID-19/blob/master/IrishCountyHeatmap.R) produce equivalent case trajectory plots for Welsh Local Authorities and Irish Counties respectively.
 
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDLACasesHeatmap.png)
 
