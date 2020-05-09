@@ -63,6 +63,6 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDIrishLACasesHeatmap.tiff", units="in", width=10, height=6, res=500)
+tiff("Outputs/COVIDIrishLACasesHeatmap.tiff", units="in", width=11, height=6, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
