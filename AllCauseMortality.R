@@ -609,9 +609,9 @@ data2019.S <- read_excel(temp, sheet="2019", range="E6:G57", col_names=FALSE)
 
 #Take 2020 data from dedicated COVID-19 page, which is updated more regularly
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-18.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-17.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:T7", col_names=FALSE))[,c(2)])
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C6:S7", col_names=FALSE))[,c(2)])
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "deaths")
@@ -654,7 +654,7 @@ rm(date, data2004.S, data2005.S, data2006.S, data2007.S, data2008.S, data2009.S,
 temp <- tempfile()
 source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C20", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C21", col_names=FALSE)
 colnames(data2020.NI) <- c("date", "deaths")
 
 temp <- tempfile()
@@ -947,10 +947,10 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in Scotland continue to fall, but are still historically high",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 2nd May",
+  labs(title="Scotland looks to have passed the peak of all-cause deaths",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 26th April",
        caption="Data from NRS | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=18.5, y=1400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=17.5, y=1500, label="Unprecedented excess deaths", colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=1150, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=800, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=850, label="Historic mean", colour="grey30")+
@@ -990,9 +990,9 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="Deaths in Northern Ireland have risen, but much less so than elsewhere in the UK",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 24th April",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 1st May",
        caption="Data from NISRA | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=17.5, y=400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=18.5, y=400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=320, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=160, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=47, y=220, label="Historic mean", colour="grey30")+
@@ -1047,8 +1047,8 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The dip in all-cause deaths hasn't happened in all regions of the UK",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England, Wales and Northern Ireland data to April 24th<br>Scotland data to May 2nd",
+  labs(title="Northern Ireland, Wales and Scotland have seen relatively smaller increases in all-cause deaths than England",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to April 24th<br> Northern Ireland data to 1st May<br>Scotland data to April 19th",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
@@ -1078,7 +1078,6 @@ ggplot()+
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   geom_text(data=ann_text5, aes(x=weekno, y=cumul_deaths), label=c("2020"), size=3, colour="Red")
 dev.off()
-
 
 ###############################################################
 #Plot similar charts for death by location for England & Wales#
@@ -1150,3 +1149,4 @@ ggplot()+
        subtitle="Registered weekly deaths in England & Wales in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2015-19</span>. Data up to 24th April",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
+
