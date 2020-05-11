@@ -8,9 +8,9 @@ library(RcppRoll)
 
 #Read in data
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/trends-in-number-of-people-in-hospital-with-confirmed-or-suspected-covid-19/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdata%2Bby%2BNHS%2BBoard%2B10%2BMay%2B2020.xlsx?forceDownload=true"
+source <- "https://raw.githubusercontent.com/DataScienceScotland/COVID-19-Management-Information/master/COVID19%20-%20Daily%20Management%20Information%20-%20Scottish%20Health%20Boards%20-%20Cumulative%20cases.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- read_excel(temp, sheet=3, range="A3:O68")
+data.s <- read.csv(temp)
 
 data$Date <- as.Date(data$Date)
 
