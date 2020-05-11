@@ -16,7 +16,7 @@ data$Date <- as.Date(data$Date)
 
 data_long <- gather(data, HB, cumul_cases, c(2:15))
 
-#Treat surpressed numbers as 0
+#Treat supressed numbers as 0
 data_long$cumul_cases <- as.numeric(ifelse(data_long$cumul_cases=="*", 0, data_long$cumul_cases))
 
 #Calculate daily cases
