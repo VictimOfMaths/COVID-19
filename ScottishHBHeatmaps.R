@@ -16,6 +16,7 @@ data <- read.csv(temp)
 data$Date <- as.Date(data$Date)
 
 data_long <- gather(data, HB, cumul_cases, c(2:15))
+data_long$HB <- gsub("[.]", " ", data_long$HB)
 
 #Treat supressed numbers as 0
 data_long$cumul_cases <- as.numeric(ifelse(data_long$cumul_cases=="*", 0, data_long$cumul_cases))
