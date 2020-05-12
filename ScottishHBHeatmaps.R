@@ -5,12 +5,13 @@ library(curl)
 library(forcats)
 library(readxl)
 library(RcppRoll)
+library(cowplot)
 
 #Read in data
 temp <- tempfile()
 source <- "https://raw.githubusercontent.com/DataScienceScotland/COVID-19-Management-Information/master/COVID19%20-%20Daily%20Management%20Information%20-%20Scottish%20Health%20Boards%20-%20Cumulative%20cases.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data.s <- read.csv(temp)
+data <- read.csv(temp)
 
 data$Date <- as.Date(data$Date)
 
@@ -30,7 +31,7 @@ data_long$cases <- ifelse(is.na(data_long$cases), 0, data_long$cases)
 heatmap <- data_long %>%
   arrange(HB, Date) %>%
   group_by(HB) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="left", fill=0)) %>%
+  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>%
   mutate(maxcaserate=max(casesroll_avg), maxcaseday=Date[which(casesroll_avg==maxcaserate)][1],
          totalcases=max(cumul_cases))
 
@@ -38,7 +39,7 @@ heatmap$maxcaseprop <- heatmap$casesroll_avg/heatmap$maxcaserate
 
 #Enter dates to plot from and to
 plotfrom <- "2020-03-14"
-plotto <- "2020-05-10"
+plotto <- "2020-05-11"
 
 #Plot case trajectories
 casetiles <- ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=maxcaseprop))+
@@ -48,7 +49,7 @@ casetiles <- ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=max
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in Scottish Health Boards",
-       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData updated to 10th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData updated to 11th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
