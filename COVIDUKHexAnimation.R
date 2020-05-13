@@ -241,6 +241,14 @@ fulldata <- fulldata %>%
   group_by(LTcode) %>%
   mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0))
 
+#Get number of LTLAs for each UTLA
+fulldata <-  fulldata %>%
+  group_by(code, date) %>%
+  mutate(LAcount=length(unique(LTcode)))
+
+#Divide cases equally between LTLAs for composite UTLAs
+fulldata$casesroll_avg <- fulldata$casesroll_avg/fulldata$LAcount
+
 #Bring in hexmap
 #Read in hex boundaries (adapted from from https://olihawkins.com/2018/02/1 and ODI Leeds)
 hex <- geojson_read("Data/UKIRELA.geojson", what="sp")
