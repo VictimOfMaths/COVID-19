@@ -8,7 +8,7 @@ Plots and analysis relating to the pandemic
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/COVIDLACasesHeatmap.png)
 
 2) [AllCauseMortality.R](https://github.com/VictimOfMaths/COVID-19/blob/master/AllCauseMortality.R) harmonises weekly all-cause mortality data from England & Wales (from ONS), Scotland (from NRS) and Northern Ireland (from NISRA) and draws plots comparing deaths in 2020 so far to the previous decade, split by age, sex and region inspired by a plot from @EdConwaySky.
-<br>[NRSDeathsDetail.R](https://github.com/VictimOfMaths/COVID-19/blob/master/NRSDeathsDetail) uses richer data published by NRS to look at patterns in excess mortality by place of death and Health Board area.
+<br>[NRSDeathsDetail.R](https://github.com/VictimOfMaths/COVID-19/blob/master/NRSDeathsDetail) uses richer data published by NRS to look at patterns in excess mortality in Scotland by place of death and Health Board area.
 
 ![Excess deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/ONSNRSNISRAWeeklyDeathsxReg.png)
 
