@@ -54,7 +54,7 @@ fulldata <- merge(skeleton, data_long[,-c(1)], by=c("State", "date", "measure"),
 #Interpolate missing dates
 fulldata <- fulldata %>%
   group_by(State, measure) %>%
-  mutate(count=na.approx(count))
+  mutate(count=na.spline(count))
 
 #Calculate daily figures
 fulldata <- fulldata %>%
@@ -86,7 +86,7 @@ casetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reorder
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in German Bundesländer",
-       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each State.\nData updated to 11th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each State.\nData updated to 15th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -112,7 +112,7 @@ deathtiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reord
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in German Bundesländer",
-       subtitle="The heatmap represents the 5-day rolling average of the number of confirmed deaths, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths in each State.\nData updated to 11th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle="The heatmap represents the 5-day rolling average of the number of confirmed deaths, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths in each State.\nData updated to 15th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -128,4 +128,29 @@ deathbars <- ggplot(subset(heatmap, date==maxcaseday & measure=="deaths"),
 
 tiff("Outputs/COVIDGermanStateDeathsHeatmap.tiff", units="in", width=11, height=6, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+#Try them as ridgeplots
+library(ggridges)
+
+tiff("Outputs/COVIDGermanStateCaseRidges.tiff", units="in", width=11, height=6, res=500)
+ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reorder(State, totalcases), height=casesroll_avg, fill=casesroll_avg))+
+  geom_density_ridges_gradient(stat="identity", rel_min_height=0.01)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_y_discrete(name="")+
+  labs(title="Timelines of confirmed COVID-19 cases in German Bundesländer",
+       caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDGermanStateDeathsRidges.tiff", units="in", width=11, height=6, res=500)
+ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reorder(State, totalcases), height=casesroll_avg, fill=casesroll_avg))+
+  geom_density_ridges_gradient(stat="identity", rel_min_height=0.01)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Deaths per day\n5-day rolling avg.")+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_y_discrete(name="")+
+  labs(title="Timelines of confirmed COVID-19 deaths in German Bundesländer",
+       caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")
 dev.off()
