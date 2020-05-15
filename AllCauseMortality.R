@@ -652,9 +652,9 @@ rm(date, data2004.S, data2005.S, data2006.S, data2007.S, data2008.S, data2009.S,
 
 #Need to manually update the range by one each week
 temp <- tempfile()
-source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
+source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLS"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C21", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range="B5:C22", col_names=FALSE)
 colnames(data2020.NI) <- c("date", "deaths")
 
 temp <- tempfile()
@@ -989,17 +989,16 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in Northern Ireland have risen, but much less so than elsewhere in the UK",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 1st May",
+  labs(title="Deaths from all causes in Northern Ireland are almost back to 'usual' levels",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 8th May",
        caption="Data from NISRA | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=18.5, y=400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
+  annotate(geom="text", x=19, y=400, label="Unprecedented excess deaths", colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=320, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=160, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=47, y=220, label="Historic mean", colour="grey30")+
   geom_curve(aes(x=48, y=230, xend=47, yend=285), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   theme(plot.subtitle =element_markdown())
-
 dev.off()  
 
 ###############################
@@ -1048,7 +1047,7 @@ ggplot()+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="London has seen the biggest fall in all-cause deaths, other regions are falling more slowly from lower peaks",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England, Wales and Northern Ireland data to 1st May<br>Scotland data to 9th May",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to 1st May<br>Northern Ireland data to 8th May<br>Scotland data to 9th May",
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
