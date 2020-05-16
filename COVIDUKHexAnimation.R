@@ -16,7 +16,7 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data <- read.csv(temp)[,c(1,2,3,4,5,8)]
 colnames(data) <- c("name", "code", "type", "date", "cases", "cumul_cases")
 data$date <- as.Date(data$date)
-data <- subset(data, type=="Upper tier local authority")
+data <- subset(data, type=="Lower tier local authority")
 
 #Set up skeleton dataframe with dates
 LAcodes <- unique(data$code)
@@ -48,7 +48,7 @@ fulldata$country <- "England"
 #Get Welsh data
 #Read in data
 temp <- tempfile()
-source <- "http://www2.nphs.wales.nhs.uk:8080/CommunitySurveillanceDocs.nsf/b4472ecab22fa0d580256f10003199e7/49b553ea08eff65780258566004e8895/$FILE/Rapid%20COVID-19%20surveillance%20data.xlsx"
+source <- "http://www2.nphs.wales.nhs.uk:8080/CommunitySurveillanceDocs.nsf/3dc04669c9e1eaa880257062003b246b/77fdb9a33544aee88025855100300cab/$FILE/Rapid%20COVID-19%20surveillance%20data.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data.w <- read_excel(temp, sheet=2)[,c(1:4)]
 
@@ -75,7 +75,9 @@ data.w$country <- "Wales"
 fulldata <- bind_rows(fulldata, subset(data.w, !is.na(code)))
 
 #Merge in LTLAs - cloning UTLA data
-fulldata <- merge(lookup[,-c(1,5)], fulldata, by="code", all.x=T, all.y=T)
+#fulldata <- merge(lookup[,-c(1,5)], fulldata, by="code", all.x=T, all.y=T)
+fulldata$LTcode <- fulldata$code
+fulldata$LTname <- fulldata$name
 
 #Get Scottish data
 temp <- tempfile()
@@ -180,7 +182,7 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data.i <- read_csv(temp)
 
 #Strip out geographical data
-data.i <- data.i[,c(1,4,11)]
+data.i <- data.i[,c(5,3,11)]
 colnames(data.i) <- c("TimeStamp", "name", "cumul_cases")
 
 #Convert timestamp to date
@@ -246,7 +248,7 @@ fulldata <-  fulldata %>%
   group_by(code, date) %>%
   mutate(LAcount=length(unique(LTcode)))
 
-#Divide cases equally between LTLAs for composite UTLAs
+#Divide cases equally between LTLAs for composite UTLAs (now only relevant in Scotland)
 fulldata$casesroll_avg <- fulldata$casesroll_avg/fulldata$LAcount
 
 #Bring in hexmap
@@ -258,6 +260,9 @@ hexes <- tidy(hex, region="id")
 
 data <- left_join(hexes, fulldata, by=c("id"="LTcode"), all.y=TRUE)
 data$date <- as.Date(data$date)
+
+#Remove Isles of Scilly which are too small to have their own data
+data <- subset(data, id!="E06000053")
 
 #extract latest date with full UK data
 data <- data %>%
@@ -275,26 +280,40 @@ HexAnim <- ggplot()+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  #theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+  #      axis.title=element_blank(),  plot.title=element_text(face="bold", size=6),
+  #      legend.title=element_text(size=rel(0.5)), legend.text=element_text(size=rel(0.5)),
+  #      plot.subtitle=element_text(size=5), plot.caption=element_text(size=4))+
+  #guides(fill = guide_legend(override.aes = list(size = rel(0.5))))+
   transition_time(date)+
   labs(title="Visualising the spread of COVID-19 across the UK & Ireland",
        subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
        caption="Data from PHE, PHW, ScotGov, DoHNI/Tom White & Gov.ie\nVisualisation by @VictimOfMaths")
 
+#animate(HexAnim, duration=18, fps=10, width=1028, height=1200, res=300, renderer=gifski_renderer("Outputs/HexAnim.gif"), 
+#        end_pause=60)
 animate(HexAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnim.gif"), 
         end_pause=60)
 
 HexAnimUK <- ggplot()+
-  geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=as.Date("2020-05-12") & country!="Republic of Ireland"), 
+  geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=as.Date("2020-05-13") & country!="Republic of Ireland"), 
                aes(x=long, y=lat, group=id, fill=casesroll_avg))+
   coord_fixed()+
   scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (5-day\nrolling avg.)", na.value="white")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  #theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+  #      axis.title=element_blank(),  plot.title=element_text(face="bold", size=6),
+  #      legend.title=element_text(size=rel(0.5)), legend.text=element_text(size=rel(0.5)),
+  #      plot.subtitle=element_text(size=5), plot.caption=element_text(size=4))+
+  #guides(fill = guide_legend(override.aes = list(size = rel(0.5))))+
   transition_time(date)+
-  labs(title="Visualising the spread of COVID-19 across the UK & Ireland",
+  labs(title="Visualising the spread of COVID-19 across the UK",
        subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
        caption="Data from PHE, PHW, ScotGov & DoHNI/Tom White\nVisualisation by @VictimOfMaths")
 
+#animate(HexAnimUK, duration=18, fps=10, width=1028, height=1200, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
+#        end_pause=60)
 animate(HexAnimUK, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
         end_pause=60)
