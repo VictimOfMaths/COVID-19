@@ -14,7 +14,7 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data <- read_csv(temp)
 
 #Strip out geographical information
-data <- data[,c(1,3,4,10,11)]
+data <- data[,c(14,2,3,9,10)]
 
 colnames(data) <- c("TimeStamp", "county", "pop", "cumul_cases", "caseprop")
 
@@ -52,7 +52,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(county, maxcaseday), fill
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in Irish Counties",
-       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the county.\nCounties are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each county.\nData updated to 11th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the county.\nCounties are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each county.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from data.gov.ie | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
