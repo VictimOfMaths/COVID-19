@@ -748,10 +748,7 @@ data.age.EW.old <- data.age.EW.old %>%
   group_by(weekno, reg) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.age.EW.new <- merge(data.age.EW.new, data.age.EW.old, by=c("weekno"))
-data.age.EW.new <- data.age.EW.new %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.age.EW.new$excess <- data.age.EW.new$deaths-data.age.EW.new$mean
@@ -764,8 +761,8 @@ labpos <- data.age.EW.new$mean[data.age.EW.new$weekno==EWmaxweek]+(data.age.EW.n
 
 tiff("Outputs/ONSWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
 ggplot()+
-  geom_ribbon(data=data.age.EW.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
   geom_ribbon(data=data.age.EW.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.age.EW.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.age.EW.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.age.EW.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -798,11 +795,7 @@ data.sex.EW.old <- data.sex.EW.old %>%
   group_by(weekno, sex) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.sex.EW.new <- merge(data.sex.EW.new, data.sex.EW.old, by=c("weekno", "sex"))
-data.sex.EW.new <- data.sex.EW.new %>%
-  group_by(sex) %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.sex.EW.new$excess <- data.sex.EW.new$deaths-data.sex.EW.new$mean
@@ -822,6 +815,7 @@ ann_text1 <- data.frame(weekno=rep(EWmaxweek+0.5, times=2), deaths=labpos$pos, s
 tiff("Outputs/ONSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
   geom_ribbon(data=data.sex.EW.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.sex.EW.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.sex.EW.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.sex.EW.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -852,11 +846,7 @@ data.sex.age.EW.old <- data.sex.age.EW.old %>%
   group_by(weekno, sex, age) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.sex.age.EW.new <- merge(data.sex.age.EW.new, data.sex.age.EW.old, by=c("weekno", "sex", "age"))
-data.sex.age.EW.new <- data.sex.age.EW.new %>%
-  group_by(sex, age) %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.sex.age.EW.new$excess <- data.sex.age.EW.new$deaths-data.sex.age.EW.new$mean
@@ -877,6 +867,7 @@ ann_text2 <- data.frame(weekno=rep(EWmaxweek+0.5, times=8), deaths=labpos$pos,
 tiff("Outputs/ONSWeeklyDeathsxSexxAge.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
   geom_ribbon(data=data.sex.age.EW.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.sex.age.EW.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.sex.age.EW.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.sex.age.EW.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -932,11 +923,7 @@ data.age.EW.old <- data.age.EW.old %>%
   group_by(weekno, age2) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.age.EW.new <- merge(data.age.EW.new, data.age.EW.old, by=c("weekno", "age2"))
-data.age.EW.new <- data.age.EW.new %>%
-  group_by(age2) %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.age.EW.new$excess <- data.age.EW.new$deaths-data.age.EW.new$mean
@@ -958,8 +945,8 @@ ann_text3 <- data.frame(weekno=rep(EWmaxweek+0.5, times=5), deaths=labpos$pos,
 
 tiff("Outputs/ONSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
-  geom_ribbon(data=data.age.EW.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
   geom_ribbon(data=data.age.EW.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.age.EW.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.age.EW.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.age.EW.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -1000,10 +987,7 @@ data.S.old <- data.S.old %>%
   group_by(weekno) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.S.new <- merge(data.S.new, data.S.old, by=c("weekno"))
-data.S.new <- data.S.new %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.S.new$excess <- data.S.new$deaths-data.S.new$mean
@@ -1017,8 +1001,8 @@ labpos <- data.S.new$mean[data.S.new$weekno==Scotmaxweek]+(data.S.new$deaths[dat
 
 tiff("Outputs/NRSWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
 ggplot()+
-  geom_ribbon(data=data.S.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
   geom_ribbon(data=data.S.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.S.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.S.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.S.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -1053,10 +1037,8 @@ data.NI.old <- data.NI.old %>%
   group_by(weekno) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.NI.new <- merge(data.NI.new, data.NI.old, by=c("weekno"))
-data.NI.new <- data.NI.new %>%
-  mutate(ymin=pmin(deaths, max))
+
 
 #Calculate excess deaths vs. mean so far this year
 data.NI.new$excess <- data.NI.new$deaths-data.NI.new$mean
@@ -1070,8 +1052,8 @@ labpos <- max(data.NI.new$mean[data.NI.new$weekno==NImaxweek]+(data.NI.new$death
 
 tiff("Outputs/NISRAWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
 ggplot()+
-  geom_ribbon(data=data.NI.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
   geom_ribbon(data=data.NI.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.NI.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.NI.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.NI.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
@@ -1106,11 +1088,7 @@ data.reg.UK.old <- data.reg.UK.old %>%
   group_by(weekno, reg) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-#Generate filled area for total excess deaths vs. previous 10-year maximum
 data.reg.UK.new <- merge(data.reg.UK.new, data.reg.UK.old, by=c("weekno", "reg"))
-data.reg.UK.new <- data.reg.UK.new %>%
-  group_by(reg) %>%
-  mutate(ymin=pmin(deaths, max))
 
 #Calculate excess deaths vs. mean so far this year
 data.reg.UK.new$excess <- data.reg.UK.new$deaths-data.reg.UK.new$mean
@@ -1143,8 +1121,8 @@ ann_text4 <- data.frame(weekno=rep(EWmaxweek+1, times=12), deaths=labpos$pos, re
 
 tiff("Outputs/ONSNRSNISRAWeeklyDeathsxReg.tiff", units="in", width=12, height=9, res=300)
 ggplot()+
-  geom_ribbon(data=data.reg.UK.new, aes(x=weekno, ymin=ymin, ymax=deaths), fill="Red", alpha=0.2)+
   geom_ribbon(data=data.reg.UK.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.reg.UK.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(data=data.reg.UK.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.reg.UK.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
