@@ -86,7 +86,7 @@ casetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reorder
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in German Bundesländer",
-       subtitle="The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each State.\nData updated to 15th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -112,7 +112,7 @@ deathtiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reord
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in German Bundesländer",
-       subtitle="The heatmap represents the 5-day rolling average of the number of confirmed deaths, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths in each State.\nData updated to 15th May. Data for most recent days is provisional and may be revised upwards as additional tests are processed.",
+       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of confirmed deaths, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths in each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
