@@ -91,7 +91,6 @@ temp <- tempfile()
 source <- "https://opendatacommunities.org/downloads/cube-table?uri=http%3A%2F%2Fopendatacommunities.org%2Fdata%2Fsocietal-wellbeing%2Fimd2019%2Findices"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 IMD <- read.csv(temp)
-#IMD <- subset(IMD, (Measurement=="Decile " | Measurement=="Rank") & Indices.of.Deprivation=="a. Index of Multiple Deprivation (IMD)")
 IMD <- subset(IMD, (Measurement=="Decile " | Measurement=="Rank") & Indices.of.Deprivation=="e. Health Deprivation and Disability Domain")
 IMD_wide <- spread(IMD, Measurement, Value)
 data_LSOA <- merge(data_LSOA, IMD_wide[,c(1,5,6)], by.x="Area Codes", by.y="FeatureCode", all.x=TRUE )
@@ -153,8 +152,14 @@ temp2 <- tempfile()
 source <- "https://opendata.arcgis.com/datasets/e886f1cd40654e6b94d970ecf437b7b5_0.zip?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
-shapefile <- st_read(file.path(temp2,"Lower_Layer_Super_Output_Areas_December_2011_Boundaries_EW_BFC.shp"))
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
 names(shapefile)[names(shapefile) == "LSOA11CD"] <- "code"
+
+#Convert to EPSG4326 projection to match lat/long and make siting annotations easier
+shapefile <- st_transform(map.data, crs=4326)
 
 map.data <- full_join(shapefile, data_LSOA, by="code")
 
