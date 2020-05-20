@@ -7,6 +7,11 @@ library(lubridate)
 library(readxl)
 library(ggtext)
 
+#Controls
+ScotDate <- "16th May"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-20.xlsx"
+ScotRange <- "V" #incrememnt by one letter each week
+
 #Read in 2015-2019 location data
 temp <- tempfile()
 source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/weekly-deaths-by-location-2015-2019.csv"
@@ -49,11 +54,10 @@ data.HB_long <- bind_rows(data.HB_long, temp)
 
 #Bring in 2020 data
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-19.xlsx"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+temp <- curl_download(url=Scot2020, destfile=temp, quiet=FALSE, mode="wb")
 
 #Tidy location data
-data.loc.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c("C89:U92"), col_names=FALSE)))
+data.loc.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c(paste0("C89:", ScotRange, "92")), col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data.loc.2020)), "%d/%m/%y"))
 data.loc.2020 <- cbind(date, data.loc.2020)
 colnames(data.loc.2020) <- c("date", "Care Home", "Home / Non-institution", "Hospital", "Other instutition")
@@ -79,7 +83,7 @@ data.loc <- data.loc %>%
   summarise(deaths=sum(deaths))
 
 #Tidy HB data
-data.HB.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c("C39:U52"), col_names=FALSE)))
+data.HB.2020 <- data.frame(t(read_excel(temp, sheet=3, range=c(paste0("C39:", ScotRange,"52")), col_names=FALSE)))
 data.HB.2020 <- cbind(date, data.HB.2020)
 colnames(data.HB.2020) <- c("date", HBlist)
 data.HB.2020$date <- as.Date(data.HB.2020$date, "%d/%m/%y")
@@ -106,8 +110,8 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in Scottish hospitals are back to normal levels, but deaths elsewhere remain far higher than usual",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to 9th May",
+  labs(title="Deaths in Scottish care homes continue to fall, but deaths at home have risen",
+       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())
@@ -131,7 +135,7 @@ ggplot(data.loc.new, aes(x=week, y=excess))+
   labs(title="Excess deaths in Scottish care homes have peaked later and higher than deaths elsewhere",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
-theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 dev.off()
 
 #Plot HB data
@@ -140,28 +144,75 @@ data.HB.old <- data.HB %>%
   group_by(week, HB) %>%
   summarise(max=max(deaths), min=min(deaths), mean=mean(deaths))
 
-temp <- data.HB %>%
+#Bring in 2020 data & average for easier plotting
+data.HB.old <- merge(data.HB.old, subset(data.HB, year=="2020")[,c(1,3,4)], by=c("week", "HB"), all.x=TRUE)
+colnames(data.HB.old) <- c("week", "HB", "max", "min", "mean", "2020")
+
+maxweek <- max(data.HB.2020$week)
+
+#Calculate excess deaths by Health Board
+data.HB.old$excess <- data.HB.old$`2020`-data.HB.old$mean
+excess <- data.HB.old %>%
+  filter(week<=maxweek) %>%
   group_by(HB) %>%
-  summarise(max=max(deaths))
+  summarise(totalexcess=sum(excess), totalmean=sum(mean), propexcess=totalexcess/totalmean)
 
-temp$HB <- fct_reorder(temp$HB, -temp$max)
+#Order HBs by total excess deaths
+data.HB.old$HB <- fct_reorder(data.HB.old$HB, -excess$totalexcess)
 
-data.HB.old$HB <- factor(data.HB.old$HB, levels=levels(temp$HB))
-data.HB$HB <- factor(data.HB$HB, levels=levels(temp$HB))
+#Extract label positions for excess deaths
+labpos <-  data.HB.old %>%
+  filter(!is.na(`2020`) & week==maxweek) %>%
+  group_by(HB) %>%
+  mutate(pos=max(`2020`, max+60))
+
+ann_text <- data.frame(weekno=rep(maxweek+0.5, times=14), deaths=labpos$pos, 
+                        HB=levels(data.HB.old$HB))
+
 
 tiff("Outputs/NRSWeeklyDeathsxHB.tiff", units="in", width=12, height=8, res=300)
-ggplot()+
-  geom_ribbon(data=data.HB.old, aes(x=week, ymin=min, ymax=max), fill="Skyblue2")+
-  geom_line(data=subset(data.HB, year=="average"), aes(x=week, y=deaths), colour="Grey50", linetype=2)+
-  geom_line(data=subset(data.HB, year=="2020"), aes(x=week, y=deaths), colour="Red")+
+ggplot(data.HB.old)+
+  geom_ribbon(aes(x=week, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(aes(x=week, ymin=mean, ymax=`2020`), fill="Red", alpha=0.2)+
+  geom_line(aes(x=week, y=mean), colour="Grey50", linetype=2)+
+  geom_line(aes(x=week, y=`2020`), colour="Red")+
   facet_wrap(~HB)+
   theme_classic()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Glasgow has borne the brunt of COVID-19 in Scotland",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to 9th May",
+  labs(title="The stalling in mortality rate decline seems to have happened across most of Scotland",
+       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
+  geom_text(data=ann_text, aes(x=weekno, y=deaths), label=c(paste0(round(excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
+                                                                round(excess[1,4]*100, 0),"%)"),
+                                                          paste0(round(excess[2,2],0)," excess deaths (+",
+                                                                 round(excess[2,4]*100, 0),"%)"),
+                                                          paste0(round(excess[3,2],0)," excess deaths (+",
+                                                                 round(excess[3,4]*100, 0),"%)"),
+                                                          paste0(round(excess[4,2],0)," excess deaths (+",
+                                                                 round(excess[4,4]*100, 0),"%)"),
+                                                          paste0(round(excess[5,2],0)," excess deaths (+",
+                                                                 round(excess[5,4]*100, 0),"%)"),
+                                                          paste0(round(excess[6,2],0)," excess deaths (+",
+                                                                 round(excess[6,4]*100, 0),"%)"),
+                                                          paste0(round(excess[7,2],0)," excess deaths (+",
+                                                                 round(excess[7,4]*100, 0),"%)"),
+                                                          paste0(round(excess[8,2],0)," excess deaths (+",
+                                                                 round(excess[8,4]*100, 0),"%)"),
+                                                          paste0(round(excess[9,2],0)," excess deaths (+",
+                                                                 round(excess[9,4]*100, 0),"%)"),
+                                                          paste0(round(excess[10,2],0)," excess deaths (+",
+                                                                 round(excess[10,4]*100, 0),"%)"),
+                                                          paste0(round(excess[11,2],0)," excess deaths (+",
+                                                                 round(excess[11,4]*100, 0),"%)"),
+                                                          paste0(round(excess[12,2],0)," excess deaths (+",
+                                                                 round(excess[12,4]*100, 0),"%)"),
+                                                          paste0(round(excess[13,2],0)," excess deaths (+",
+                                                                 round(excess[13,4]*100, 0),"%)"),
+                                                          paste0(round(excess[14,2],0)," excess deaths (",
+                                                                 round(excess[14,4]*100, 0),"%)")),
+            size=3, colour=rep("red", times=14), hjust=0)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())
 dev.off()
