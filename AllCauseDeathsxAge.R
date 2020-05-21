@@ -266,41 +266,45 @@ ggplot(data)+
 dev.off()
 
 #Scotland only age plot
+ann_text2 <- data.frame(week=rep(21, times=6), pos=c(75, 100, 240, 260, 400, 450),
+                        age=c("0-14", "15-44", "45-64", "65-74", "75-84", "85+"))
 
 tiff("Outputs/NRSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
 ggplot(subset(data, country=="Scotland"))+
-  geom_ribbon(aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
-  geom_ribbon(aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
-  geom_line(aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
-  geom_line(aes(x=weekno, y=deaths), colour="Red")+
+  geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
+  geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_line(aes(x=week, y=mean_d), colour="Grey50", linetype=2)+
+  geom_line(aes(x=week, y=deaths), colour="Red")+
   theme_classic()+
-  facet_wrap(~age2)+
+  facet_wrap(~age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are falling sharply across all age groups",
-       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
-       caption="Data from ONS | Plot by @VictimOfMaths")+
+  labs(title="All-cause deaths in Scotland have stopped falling in under-65s and over-85s",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to 16th May",
+       caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
-  geom_text(data=ann_text3, aes(x=weekno, y=deaths), label=c(paste0(round(age.EW.excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
-                                                                    round(age.EW.excess[1,4]*100, 1),"%)"), 
-                                                             paste0(round(age.EW.excess[2,2],0)," excess deaths (+",
-                                                                    round(age.EW.excess[2,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[3,2],0)," excess deaths (+",
-                                                                    round(age.EW.excess[3,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[4,2],0)," excess deaths (+",
-                                                                    round(age.EW.excess[4,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[5,2],0)," excess deaths (+",
-                                                                    round(age.EW.excess[5,4]*100, 0),"%)")), 
-            size=3, colour=rep("red", times=5), hjust=0)
+  geom_text(data=ann_text2, aes(x=week, y=pos), label=c(paste0(round(excess[2,6],0)," excess deaths in 2020\nvs. 2010-19 average (",
+                                                                    round(excess[2,7]*100, 1),"%)"), 
+                                                             paste0(round(excess[5,6],0)," deaths (+",
+                                                                    round(excess[5,7]*100, 0),"%)"),
+                                                             paste0(round(excess[8,6],0)," deaths (+",
+                                                                    round(excess[8,7]*100, 0),"%)"),
+                                                             paste0(round(excess[11,6],0)," deaths (+",
+                                                                    round(excess[11,7]*100, 0),"%)"),
+                                                             paste0(round(excess[14,6],0)," deaths (+",
+                                                                    round(excess[14,7]*100, 0),"%)"),
+                                                             paste0(round(excess[17,6],0)," deaths (+",
+                                                                    round(excess[17,7]*100, 0),"%)")), 
+            size=3, colour=rep("red", times=6), hjust=0)
 
 dev.off()  
 
 #Bring in date from HMD
 temp <- tempfile()
 temp <- curl_download(url="https://www.mortality.org/Public/STMF/Outputs/stmf.csv", destfile=temp, quiet=FALSE, mode="wb")
-HMDdata <- read.csv(temp)
+HMDdata <- read_delim(temp, delim=",", comment="#")
 
 #Keep only combined sex data and from years 2010 onwards
 HMDdata <- subset(HMDdata, Year>=2010 & Sex=="b")
@@ -323,8 +327,67 @@ HMD_long$age <- case_when(
   HMD_long$age=="75_84" ~ "75-84",
   HMD_long$age=="85p" ~ "85+")
 
+#Adjust HMD mortality rates from annualised per capite to weekly rates per 100,000
+HMD_long$mortrate <- HMD_long$mortrate*100000/52
+
+#Update UK data age groups to match HMD groups
 data.UK$age <- case_when(
   data.UK$age %in% c("15-44", "45-64") ~ "15-64",
   TRUE ~ data.UK$age)
 
+data.UK <- data.UK %>%
+  group_by(age, year, week, country) %>%
+  summarise(deaths=sum(deaths), pop=sum(pop))
+
+data.UK$mortrate <- data.UK$deaths*100000/data.UK$pop
+
 #Merge data
+fulldata <- bind_rows(subset(HMD_long, country!="GBRTENW"), data.UK[,-c(6)])
+
+#Calculate 2010-19 average, min and max
+hist.fulldata <- fulldata %>%
+  filter(year!=2020) %>%
+  group_by(age, country, week) %>%
+  summarise(mean_d=mean(deaths), max_d=max(deaths), min_d=min(deaths),
+            mean_r=mean(mortrate), max_r=max(mortrate), min_r=min(mortrate))
+
+fulldata <- merge(hist.fulldata, subset(fulldata, year==2020), all.x=TRUE, all.y=TRUE)
+
+#Tidy up names
+fulldata$country <- case_when(
+  fulldata$country=="AUT" ~ "Austria",
+  fulldata$country=="BEL" ~ "Belgium",
+  fulldata$country=="DNK" ~ "Denmark",
+  fulldata$country=="DEUTNP" ~ "Germany",
+  fulldata$country=="ESP" ~ "Spain",
+  fulldata$country=="FIN" ~ "Finland",
+  fulldata$country=="ISL" ~ "Iceland",
+  fulldata$country=="NLD" ~ "Netherlands",
+  fulldata$country=="NOR" ~ "Norway",
+  fulldata$country=="PRT" ~ "Portugal",
+  fulldata$country=="SWE" ~ "Sweden",
+  TRUE ~ fulldata$country)
+
+#Remove most recent week of data for FIN, NOR and USA which is wonky
+fulldata <- fulldata %>%
+  group_by(age, country, year) %>%
+  mutate(last_week=max(week)) %>%
+  ungroup() %>%
+  filter(!(country %in% c("Finland", "Norway", "USA") & year==2020 & week==last_week))
+
+png("Outputs/ExcessEURUSxAge.png", units="in", width=24, height=10, res=300)
+ggplot(fulldata)+
+  geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
+  geom_ribbon(aes(x=week, ymin=mean_r, ymax=mortrate), fill="Red", alpha=0.2)+
+  geom_line(aes(x=week, y=mean_r), colour="Grey50", linetype=2)+
+  geom_line(aes(x=week, y=mortrate), colour="Red")+
+  scale_x_continuous(name="Week number")+
+  scale_y_continuous("Weekly deaths per 100,000")+
+  facet_grid(age~country, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
+        plot.subtitle =element_markdown())+
+  labs(title="Excess mortality rates by age group across Europe & the US",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
+       caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+dev.off()
