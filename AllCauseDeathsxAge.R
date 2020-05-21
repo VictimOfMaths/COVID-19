@@ -391,3 +391,32 @@ ggplot(fulldata)+
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
        caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 dev.off()
+
+#15-64 year olds only
+tiff("Outputs/ExcessEURUSxAge1564.tiff", units="in", width=12, height=10, res=300)
+ggplot(subset(fulldata, age=="15-64"))+
+  geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
+  geom_ribbon(aes(x=week, ymin=mean_r, ymax=mortrate), fill="Red", alpha=0.2)+
+  geom_line(aes(x=week, y=mean_r), colour="Grey50", linetype=2)+
+  geom_line(aes(x=week, y=mortrate), colour="Red")+
+  scale_x_continuous(name="Week number")+
+  scale_y_continuous("Weekly deaths per 100,000")+
+  facet_wrap(~country)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
+        plot.subtitle =element_markdown())+
+  labs(title="15-64 year olds in England & Wales appear to fared poorly compared to their peers elsewhere",
+       subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
+       caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+dev.off()
+
+#Calculate excess mortality rate
+fulldata$excess <- fulldata$mortrate-fulldata$mean_r
+
+ggplot(subset(fulldata, age=="15-64"))+
+  geom_segment(aes(x=0, xend=25, y=0, yend=0))+
+  geom_line(aes(x=week, y=excess, colour=country))+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,25))+
+  scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
+  theme_classic()+
+  scale_colour_manual(values=c(rep("Grey50", times=3), "Red", rep("Grey50", times=7), "Blue", rep("Grey50", times=3)))
