@@ -17,7 +17,8 @@ data.EW <- read.csv("Data/deaths_age_EW.csv")
 data.EW <- data.EW[,c(5,6,4,3,7)]
 colnames(data.EW) <- c("year", "week", "age", "deaths", "country")
 data.EW <- subset(data.EW, age!="Total")
-levels(data.EW$age)[which(levels(data.EW$age)=="Under 1 year")] <- "01-14"
+levels(data.EW$age)[which(levels(data.EW$age)=="Under 1 year")] <- "0-14"
+levels(data.EW$age)[which(levels(data.EW$age)=="01-14")] <- "0-14"
 
 data.EW <- data.EW %>%
   group_by(age, year, week, country) %>%
@@ -43,7 +44,8 @@ data2020.S_long$date <- data2020.S_long$date+days(6)
 data2020.S_long$week <- week(data2020.S_long$date)
 
 data2020.S_long$age <- as.factor(data2020.S_long$age)
-levels(data2020.S_long$age)[which(levels(data2020.S_long$age)=="Under 1 year")] <- "01-14"
+levels(data2020.S_long$age)[which(levels(data2020.S_long$age)=="Under 1 year")] <- "0-14"
+levels(data2020.S_long$age)[which(levels(data2020.S_long$age)=="01-14")] <- "0-14"
 
 data2020.S_long <- data2020.S_long %>%
   group_by(week, year, age) %>%
@@ -108,10 +110,10 @@ data1019.S_long <- bind_rows(data2010.S_long, data2011.S_long, data2012.S_long, 
 
 #Match age bands
 data1019.S_long$age <- case_when(
-  data1019.S_long$Age=="0" ~ "01-14",
-  data1019.S_long$Age=="1-4" ~ "01-14",
-  data1019.S_long$Age=="5-9" ~ "01-14",
-  data1019.S_long$Age=="10-14" ~ "01-14",
+  data1019.S_long$Age=="0" ~ "0-14",
+  data1019.S_long$Age=="1-4" ~ "0-14",
+  data1019.S_long$Age=="5-9" ~ "0-14",
+  data1019.S_long$Age=="10-14" ~ "0-14",
   data1019.S_long$Age=="15-19" ~ "15-44",
   data1019.S_long$Age=="20-24" ~ "15-44",
   data1019.S_long$Age=="25-29" ~ "15-44",
@@ -149,7 +151,7 @@ data2020.NI <- read_excel(temp, sheet="Weekly_Deaths_Age by Sex", range="D6:U13"
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
-data2020.NI$age <- c("01-14", "01-14", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
+data2020.NI$age <- c("0-14", "0-14", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
 
 data2020.NI_long <- gather(data2020.NI, week, deaths, c(1:(ncol(data2020.NI)-2)))
 
@@ -171,7 +173,7 @@ unzip(zipfile=temp, exdir=temp2)
 popdata <- read.csv(file.path(temp2,"MYEB1_detailed_population_estimates_series_UK_(2019_geog20).csv"))
 
 popdata$age <- case_when(
-  popdata$age<15 ~ "01-14",
+  popdata$age<15 ~ "0-14",
   popdata$age<45 ~ "15-44",
   popdata$age<65 ~ "45-64",
   popdata$age<75 ~ "65-74",
@@ -198,6 +200,9 @@ data <- merge(data, popdata_long)
 
 data$mortrate <- data$deaths*100000/data$pop
 
+#take a copy for later
+data.UK <- data
+
 #Calculate 2010-19 average, min and max
 hist.data <- data %>%
   filter(year!=2020) %>%
@@ -214,7 +219,7 @@ data$age <- ifelse(data$age=="01-14", "0-14", data$age)
 #Calculate excess deaths in 2020 vs. historic mean
 excess <- data %>%
   group_by(age, country) %>%
-  filter(!is.na(deaths)) %>%
+  filter(!is.na(deaths) & week<20) %>%
   summarise(deaths=sum(deaths), mean=sum(mean_d), place=mean(mean_r))
 
 excess$excess <- excess$deaths-excess$mean
@@ -259,3 +264,67 @@ ggplot(data)+
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from ONS, NRS & NISRA | Plot by @VictimOfMaths")
 dev.off()
+
+#Scotland only age plot
+
+tiff("Outputs/NRSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
+ggplot(subset(data, country=="Scotland"))+
+  geom_ribbon(aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_line(aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
+  geom_line(aes(x=weekno, y=deaths), colour="Red")+
+  theme_classic()+
+  facet_wrap(~age2)+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="All-cause deaths in England & Wales are falling sharply across all age groups",
+       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
+       caption="Data from ONS | Plot by @VictimOfMaths")+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle =element_markdown())+
+  geom_text(data=ann_text3, aes(x=weekno, y=deaths), label=c(paste0(round(age.EW.excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
+                                                                    round(age.EW.excess[1,4]*100, 1),"%)"), 
+                                                             paste0(round(age.EW.excess[2,2],0)," excess deaths (+",
+                                                                    round(age.EW.excess[2,4]*100, 0),"%)"),
+                                                             paste0(round(age.EW.excess[3,2],0)," excess deaths (+",
+                                                                    round(age.EW.excess[3,4]*100, 0),"%)"),
+                                                             paste0(round(age.EW.excess[4,2],0)," excess deaths (+",
+                                                                    round(age.EW.excess[4,4]*100, 0),"%)"),
+                                                             paste0(round(age.EW.excess[5,2],0)," excess deaths (+",
+                                                                    round(age.EW.excess[5,4]*100, 0),"%)")), 
+            size=3, colour=rep("red", times=5), hjust=0)
+
+dev.off()  
+
+#Bring in date from HMD
+temp <- tempfile()
+temp <- curl_download(url="https://www.mortality.org/Public/STMF/Outputs/stmf.csv", destfile=temp, quiet=FALSE, mode="wb")
+HMDdata <- read.csv(temp)
+
+#Keep only combined sex data and from years 2010 onwards
+HMDdata <- subset(HMDdata, Year>=2010 & Sex=="b")
+
+#Lengthen (there's probably a more elegant pivot_longer() solution)
+HMD_long <- gather(HMDdata, age, deaths,c(5:9))[,c(1:3, 15, 16)]
+HMD_long$age <- substr(HMD_long$age, 2, 7)
+temp <- gather(HMDdata, age, mortrate, c(11:15))[,c(1:3, 15, 16)]
+temp$age <- substr(temp$age, 2, 7)
+
+HMD_long <- merge(HMD_long, temp)
+
+colnames(HMD_long) <- c("country", "year", "week", "age", "deaths", "mortrate")
+
+#Tidy up years
+HMD_long$age <- case_when(
+  HMD_long$age=="0_14" ~ "0-14",
+  HMD_long$age=="15_64" ~ "15-64",
+  HMD_long$age=="65_74" ~ "65-74",
+  HMD_long$age=="75_84" ~ "75-84",
+  HMD_long$age=="85p" ~ "85+")
+
+data.UK$age <- case_when(
+  data.UK$age %in% c("15-44", "45-64") ~ "15-64",
+  TRUE ~ data.UK$age)
+
+#Merge data
