@@ -54,10 +54,10 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-19-May-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-21-May-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-deaths<-as.data.table(read_excel(temp, sheet=2,col_names = F))
+deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
 deaths<-deaths[18:.N, c(1:85)]
 
@@ -65,6 +65,7 @@ deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:85)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
+deaths[procode3:=substr(procode3, 1, 3)]
 
 deaths[order(variable), date:=1:.N, by=.(procode3)]
 
