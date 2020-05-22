@@ -14,18 +14,18 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "8th May"
-ScotDate <- "9th May"
-NIDate="8th May"
+ScotDate <- "16th May"
+NIDate="15th May"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek192020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-19.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-20.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLS"
 
 #Stupid Excel range controls
 EngRange <- "U" #increment by one letter each week
-ScotRange <- "U" #incrememnt by one letter each week
-NIRange <- "22" #incremement by one number each week
+ScotRange <- "V" #incrememnt by one letter each week
+NIRange <- "23" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -773,8 +773,8 @@ ggplot()+
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=EWmaxweek+0.5, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
-                                                               " more deaths in 2020 than average (+", 
-                                                      round(EW.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
+                                                                " more deaths in 2020 than average (+", 
+                                                                round(EW.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=9700, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=8000, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=8800, label="Historic mean", colour="grey30")+
@@ -830,7 +830,7 @@ ggplot()+
         plot.subtitle =element_markdown())+
   geom_text(data=ann_text1, aes(x=weekno, y=deaths), label=c(paste0("+", round(sex.EW.excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
                                                                     round(sex.EW.excess[1,4]*100, 0),"%)"), 
-                                                             paste0("+", round(sex.EW.excess[2,2],0)," excess deaths (+",
+                                                             paste0("+", round(sex.EW.excess[2,2],0)," deaths (+",
                                                                     round(sex.EW.excess[2,4]*100, 0),"%)")), 
             size=3, colour=c("Red", "Red"), hjust=0)
 dev.off()  
@@ -858,7 +858,7 @@ sex.age.EW.excess <- data.sex.age.EW.new %>%
 labpos <-  data.sex.age.EW.new %>%
   filter(weekno==EWmaxweek) %>%
   group_by(sex, age) %>%
-  summarise(pos=max(deaths, max+300))
+  summarise(pos=max(deaths, max+500))
 
 ann_text2 <- data.frame(weekno=rep(EWmaxweek+0.5, times=8), deaths=labpos$pos, 
                         sex=rep(c("Male", "Female"), each=4), 
@@ -881,21 +881,21 @@ ggplot()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
   geom_text(data=ann_text2, aes(x=weekno, y=deaths), label=c(paste0(round(sex.age.EW.excess[1,3],0)," excess deaths in 2020 vs. 2010-19 average (+",
-                                                                   round(sex.age.EW.excess[1,5]*100, 0),"%)"), 
-                                                             paste0(round(sex.age.EW.excess[2,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[2,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[3,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[3,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[4,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[4,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[5,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[5,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[6,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[6,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[7,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[7,5]*100, 0),"%)"),
-                                                             paste0(round(sex.age.EW.excess[8,3],0)," excess deaths (+",
-                                                                   round(sex.age.EW.excess[8,5]*100, 0),"%)")),
+                                                                    round(sex.age.EW.excess[1,5]*100, 0),"%)"), 
+                                                             paste0("+", round(sex.age.EW.excess[2,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[2,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[3,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[3,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[4,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[4,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[5,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[5,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[6,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[6,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[7,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[7,5]*100, 0),"%)"),
+                                                             paste0("+", round(sex.age.EW.excess[8,3],0)," deaths (+",
+                                                                    round(sex.age.EW.excess[8,5]*100, 0),"%)")),
             size=3, colour=rep("red", times=8), hjust=0)
 
 dev.off()  
@@ -961,13 +961,13 @@ ggplot()+
         plot.subtitle =element_markdown())+
   geom_text(data=ann_text3, aes(x=weekno, y=deaths), label=c(paste0(round(age.EW.excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
                                                                     round(age.EW.excess[1,4]*100, 1),"%)"), 
-                                                             paste0(round(age.EW.excess[2,2],0)," excess deaths (+",
+                                                             paste0("+", round(age.EW.excess[2,2],0)," deaths (+",
                                                                     round(age.EW.excess[2,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[3,2],0)," excess deaths (+",
+                                                             paste0("+", round(age.EW.excess[3,2],0)," deaths (+",
                                                                     round(age.EW.excess[3,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[4,2],0)," excess deaths (+",
+                                                             paste0("+", round(age.EW.excess[4,2],0)," deaths (+",
                                                                     round(age.EW.excess[4,4]*100, 0),"%)"),
-                                                             paste0(round(age.EW.excess[5,2],0)," excess deaths (+",
+                                                             paste0("+", round(age.EW.excess[5,2],0)," deaths (+",
                                                                     round(age.EW.excess[5,4]*100, 0),"%)")), 
             size=3, colour=rep("red", times=5), hjust=0)
 
@@ -996,7 +996,7 @@ S.excess <- data.S.new %>%
 
 #Extract y=axis placement for excess deaths figure
 labpos <- data.S.new$mean[data.S.new$weekno==Scotmaxweek]+(data.S.new$deaths[data.S.new$weekno==Scotmaxweek]-
-                                                           data.S.new$mean[data.S.new$weekno==Scotmaxweek])/1.4
+                                                             data.S.new$mean[data.S.new$weekno==Scotmaxweek])/1.4
 
 
 tiff("Outputs/NRSWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
@@ -1013,7 +1013,7 @@ ggplot()+
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=Scotmaxweek+0.5, y=labpos, label=paste0(round(S.excess$excess, 0), 
-           " more deaths in 2020 than average (+", round(S.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
+                                                                  " more deaths in 2020 than average (+", round(S.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=1150, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=800, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=850, label="Historic mean", colour="grey30")+
@@ -1047,7 +1047,7 @@ NI.excess <- data.NI.new %>%
 
 #Extract y=axis placement for excess deaths figure
 labpos <- max(data.NI.new$mean[data.NI.new$weekno==NImaxweek]+(data.NI.new$deaths[data.NI.new$weekno==NImaxweek]-
-                                                               data.NI.new$mean[data.NI.new$weekno==NImaxweek])/1.4, 400)
+                                                                 data.NI.new$mean[data.NI.new$weekno==NImaxweek])/1.4, 400)
 
 
 tiff("Outputs/NISRAWeeklyDeaths.tiff", units="in", width=10, height=8, res=300)
@@ -1060,7 +1060,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland are almost back to 'usual' levels",
+  labs(title="Deaths from all causes in Northern Ireland have increased, but that may be a 'Bank Holiday' effect",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=NImaxweek+0.5, y=labpos, label=paste0(round(NI.excess$excess, 0), 
@@ -1110,7 +1110,7 @@ reg.UK.excess <- arrange(reg.UK.excess, reg.UK.excess$reg)
 labpos <-  data.reg.UK.new %>%
   filter(weekno==EWmaxweek) %>%
   group_by(reg) %>%
-  summarise(pos=max(mean+(deaths-mean)/1.6, max+350))
+  summarise(pos=max(mean+(deaths-mean)/1.6, max+400))
 
 #Sort out subtitle
 subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>England, Wales and Northern Ireland data to ", EWDate, ".<br>Scotland date to ", ScotDate, "."),
@@ -1138,38 +1138,38 @@ ggplot()+
   geom_text(data=ann_text4, aes(x=weekno, y=deaths), label=c(paste0(round(reg.UK.excess[1,2], 0), 
                                                                     " excess deaths in 2020\nvs. 2010-19 average (+", 
                                                                     round(reg.UK.excess[1,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[2,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[2,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[2,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[3,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[3,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[3,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[4,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[4,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[4,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[5,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[5,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[5,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[6,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[6,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[6,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[7,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[7,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[7,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[8,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[8,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[8,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[9,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[9,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[9,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[10,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[10,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[10,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[11,2], 0), 
+                                                             paste0("+", round(reg.UK.excess[11,2], 0), 
                                                                     " excess deaths (+", 
                                                                     round(reg.UK.excess[11,4]*100, 0),"%)"),
-                                                             paste0(round(reg.UK.excess[12,2], 0), 
-                                                                    " excess deaths (+", 
+                                                             paste0("+", round(reg.UK.excess[12,2], 0), 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[12,4]*100, 0),"%)")),
             size=3, colour="Red", hjust=0)
 
