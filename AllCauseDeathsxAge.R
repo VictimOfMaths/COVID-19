@@ -147,7 +147,7 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLS", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly_Deaths_Age by Sex", range="D6:U13", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Weekly_Deaths_Age by Sex", range="D6:V13", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
