@@ -280,7 +280,7 @@ CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=ge
 animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnim.gif"), end_pause=60)
 
 #Animation of death trajectories
-DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03")), aes(geometry=geometry, fill=maxdeathprop))+
+DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03") & date<as.Date("2020-05-20")), aes(geometry=geometry, fill=maxdeathprop))+
   geom_sf(colour=NA)+
   xlim(10000,655644)+
   ylim(5337,700000)+
