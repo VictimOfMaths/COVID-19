@@ -280,41 +280,27 @@ HexAnim <- ggplot()+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
-  #theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-  #      axis.title=element_blank(),  plot.title=element_text(face="bold", size=6),
-  #      legend.title=element_text(size=rel(0.5)), legend.text=element_text(size=rel(0.5)),
-  #      plot.subtitle=element_text(size=5), plot.caption=element_text(size=4))+
-  #guides(fill = guide_legend(override.aes = list(size = rel(0.5))))+
   transition_time(date)+
   labs(title="Visualising the spread of COVID-19 across the UK & Ireland",
        subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
        caption="Data from PHE, PHW, ScotGov, DoHNI/Tom White & Gov.ie\nVisualisation by @VictimOfMaths")
 
-#animate(HexAnim, duration=18, fps=10, width=1028, height=1200, res=300, renderer=gifski_renderer("Outputs/HexAnim.gif"), 
-#        end_pause=60)
 animate(HexAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnim.gif"), 
         end_pause=60)
 
 HexAnimUK <- ggplot()+
-  geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=as.Date("2020-05-13") & country!="Republic of Ireland"), 
+  geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=completeto & country!="Republic of Ireland"), 
                aes(x=long, y=lat, group=id, fill=casesroll_avg))+
   coord_fixed()+
   scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (5-day\nrolling avg.)", na.value="white")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
-  #theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-  #      axis.title=element_blank(),  plot.title=element_text(face="bold", size=6),
-  #      legend.title=element_text(size=rel(0.5)), legend.text=element_text(size=rel(0.5)),
-  #      plot.subtitle=element_text(size=5), plot.caption=element_text(size=4))+
-  #guides(fill = guide_legend(override.aes = list(size = rel(0.5))))+
   transition_time(date)+
   labs(title="Visualising the spread of COVID-19 across the UK",
        subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
        caption="Data from PHE, PHW, ScotGov & DoHNI/Tom White\nVisualisation by @VictimOfMaths")
 
-#animate(HexAnimUK, duration=18, fps=10, width=1028, height=1200, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
-#        end_pause=60)
 animate(HexAnimUK, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
         end_pause=60)
         
