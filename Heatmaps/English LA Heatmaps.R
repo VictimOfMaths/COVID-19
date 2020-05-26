@@ -59,9 +59,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:85)]
+deaths<-deaths[18:.N, c(1:89)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:85)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:89)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
