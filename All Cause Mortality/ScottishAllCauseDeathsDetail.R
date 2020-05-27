@@ -366,7 +366,7 @@ ggplot(data.age)+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
   labs(title="All-cause deaths in all ages below 85 are back to almost 'usual' levels",
-       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to", ScotDate, "."),
+       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())+
