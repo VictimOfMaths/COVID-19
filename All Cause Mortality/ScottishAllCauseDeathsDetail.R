@@ -8,9 +8,9 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "16th May"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-20.xlsx"
-ScotRange <- "V" #incrememnt by one letter each week
+ScotDate <- "23rd May"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-21.xlsx"
+ScotRange <- "W" #incrememnt by one letter each week
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -110,7 +110,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in Scottish care homes continue to fall, but deaths at home have risen",
+  labs(title="Hospital deaths are below 'usual' levels; care home deaths are high but falling; deaths elsewhere are coming down more slowly",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -132,7 +132,7 @@ ggplot(data.loc.new, aes(x=week, y=excess))+
                                               length.out=18), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
-  labs(title="Excess deaths in Scottish care homes have peaked later and higher than deaths elsewhere",
+  labs(title="Excess deaths in Scotland are niw highest at home/elsewhere",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -167,7 +167,7 @@ data.HB.old <- arrange(data.HB.old, data.HB.old$HB)
 labpos <-  data.HB.old %>%
   filter(!is.na(`2020`) & week==maxweek) %>%
   group_by(HB) %>%
-  mutate(pos=max(`2020`, max+60))
+  mutate(pos=max(`2020`*1.2, max+60))
 
 ann_text <- data.frame(weekno=rep(maxweek+0.5, times=14), deaths=labpos$pos, 
                        HB=levels(data.HB.old$HB))
@@ -184,7 +184,7 @@ ggplot(data.HB.old)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The stalling in mortality rate decline seems to have happened across most of Scotland",
+  labs(title="Deaths in many parts of Scotland are at or close to 'normal' levels, but not in Glasgow or Lothian",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=weekno, y=deaths), label=c(paste0(round(excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
@@ -207,7 +207,7 @@ ggplot(data.HB.old)+
                                                                    round(excess[9,4]*100, 0),"%)"),
                                                             paste0(round(excess[10,2],0)," excess deaths (+",
                                                                    round(excess[10,4]*100, 0),"%)"),
-                                                            paste0(round(excess[11,2],0)," excess deaths (+",
+                                                            paste0(round(excess[11,2],0)," excess deaths (",
                                                                    round(excess[11,4]*100, 0),"%)"),
                                                             paste0(round(excess[12,2],0)," excess deaths (+",
                                                                    round(excess[12,4]*100, 0),"%)"),
@@ -351,7 +351,7 @@ excess.age <- data.age %>%
   summarise(totalexcess=sum(excess), totalmean=sum(mean), propexcess=totalexcess/totalmean)
 
 #Scotland only age plot
-ann_text2 <- data.frame(week=rep(21, times=6), pos=c(75, 100, 240, 260, 400, 450),
+ann_text2 <- data.frame(week=rep(maxweek+0.5, times=6), pos=c(75, 100, 240, 260, 400, 450),
                         age=c("0-14", "15-44", "45-64", "65-74", "75-84", "85+"))
 
 tiff("Outputs/NRSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
@@ -365,7 +365,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in Scotland have stopped falling in under-65s and over-85s",
+  labs(title="All-cause deaths in all ages below 85 are back to almost 'usual' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -384,4 +384,4 @@ ggplot(data.age)+
                                                                round(excess.age[6,4]*100, 0),"%)")), 
             size=3, colour=rep("red", times=6), hjust=0)
 
-dev.off() 
+dev.off()
