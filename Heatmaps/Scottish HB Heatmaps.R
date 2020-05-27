@@ -66,3 +66,16 @@ casebars <- ggplot(subset(heatmap, Date==maxcaseday), aes(x=totalcases, y=fct_re
 tiff("Outputs/COVIDScottishLACasesHeatmap.tiff", units="in", width=12, height=5, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
+
+library(ggridges)
+
+tiff("Outputs/COVIDScottishHBCaseRidges.tiff", units="in", width=12, height=5, res=500)
+ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, totalcases), height=casesroll_avg, fill=casesroll_avg))+
+  geom_density_ridges_gradient(stat="identity", rel_min_height=0.01)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_y_discrete(name="")+
+  labs(title="Timelines of confirmed COVID-19 cases in Scottish Health Boards",
+       caption="Data from Scottish Government | Plot by @VictimOfMaths")
+dev.off()
