@@ -4,3 +4,6 @@ Visualising the spread of the pandemic.<br><br>
 [UK Hex Animation.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/UK%20Hex%20Animations.R) uses this data to generate an animated hex map of COVID-19 cases across the UK & Ireland, built on various excellent hex map resources from [@ODILeeds](https://twitter.com/ODILeeds) and [@olihawkins](https://twitter.com/olihawkins).
 
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDLACasesHeatmap.png)
+
+Suggested citation for any of this analysis:<br>
+Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v1
