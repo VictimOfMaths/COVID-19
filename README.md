@@ -26,4 +26,5 @@ Plots and analysis relating to the pandemic
 
 ![Inequality plot](https://github.com/VictimOfMaths/COVID-19/blob/master/Observed%20Inequality/COVIDIneqRate.png)
 
-DOI to cite any of this analysis: https://doi.org/10.15131/shef.data.12328226.v1
+Suggested citation for any of this analysis:
+Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v1
