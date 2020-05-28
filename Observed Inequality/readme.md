@@ -3,3 +3,6 @@ An analysis of published data on the inequality impacts of the pandemic, and how
 <br><br>[ONS DeathsIneq 2.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Observed%20Inequality/ONS%20Deaths%20Ineq%202.R) brings in historical data on socioeconomic inequalities in all-cause deaths to compare the inequality impacts of the pandemic on mortality to historical levels of inequality.
 
 ![Inequality plot](https://github.com/VictimOfMaths/COVID-19/blob/master/Observed%20Inequality/COVIDIneqRate.png)
+
+Suggested citation for any of this analysis:<br>
+Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v1
