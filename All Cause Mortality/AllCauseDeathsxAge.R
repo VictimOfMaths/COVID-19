@@ -27,8 +27,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-20.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:V21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-21.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:W21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -145,7 +145,7 @@ data <- bind_rows(data.S, data.EW)
 
 #Read in NI data (for 2020 only)
 temp <- tempfile()
-temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLS", 
+temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
 data2020.NI <- read_excel(temp, sheet="Weekly_Deaths_Age by Sex", range="D6:V13", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
@@ -265,8 +265,6 @@ ggplot(data)+
        caption="Date from ONS, NRS & NISRA | Plot by @VictimOfMaths")
 dev.off()
 
-
-
 #Bring in date from HMD
 temp <- tempfile()
 temp <- curl_download(url="https://www.mortality.org/Public/STMF/Outputs/stmf.csv", destfile=temp, quiet=FALSE, mode="wb")
@@ -323,6 +321,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
   fulldata$country=="BEL" ~ "Belgium",
+  fulldata$country=="BGR" ~ "Bulgaria",
+  fulldata$country=="CZE" ~ "Czechia",
   fulldata$country=="DNK" ~ "Denmark",
   fulldata$country=="DEUTNP" ~ "Germany",
   fulldata$country=="ESP" ~ "Spain",
@@ -385,7 +385,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,25))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey50", times=3), "Red", rep("Grey50", times=7), "Blue", rep("Grey50", times=3)))
+  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=7), "Blue", rep("Grey50", times=3)))
 
 #Heatmaps of country and age-specific excess deaths
 #Calculate excess mortality counts and proportion
@@ -407,7 +407,7 @@ excessrank <- excess %>%
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
 #Plots
-plotage <- "15-64"
+plotage <- "85+"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
