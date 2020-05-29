@@ -9,6 +9,7 @@ library(readxl)
 library(lubridate)
 library(forcats)
 library(ggtext)
+library(HMDHFDplus)
 
 #Read in data for England & Wales (created by AllCauseMortality.R)
 data.EW <- read.csv("Data/deaths_age_EW.csv")
@@ -147,11 +148,11 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly_Deaths_Age by Sex", range="D6:V13", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:W14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
-data2020.NI$age <- c("0-14", "0-14", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
+data2020.NI$age <- c("0-14", "0-14", "0-14", "15-44", "45-64", "65-74", "75-84", "85+")
 
 data2020.NI_long <- gather(data2020.NI, week, deaths, c(1:(ncol(data2020.NI)-2)))
 
@@ -317,6 +318,57 @@ hist.mergeddata <- mergeddata %>%
 
 fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, all.y=TRUE)
 
+#Bring in French data from Insee
+data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
+
+#Bring in French population from HMD (need to register and put your details in here)
+username <- "" 
+password <- ""
+
+FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
+
+FraPop <- subset(FraPop, Year>=2010)
+
+FraPop$age <- case_when(
+  FraPop$Age<15 ~ "0-14",
+  FraPop$Age<65 ~ "15-64",
+  FraPop$Age<75 ~ "65-74",
+  FraPop$Age<85 ~ "75-84",
+  TRUE ~ "85+",
+)
+
+FraPop <- FraPop %>%
+  group_by(Year, age) %>%
+  summarise(pop=sum(Total))
+
+#Replicate 2017 populations for 2018+
+temp <- subset(FraPop, Year==2017)
+temp2 <- temp
+temp3 <- temp
+temp$Year <- 2018
+temp2$Year <- 2019
+temp3$Year <- 2020
+
+FraPop <- bind_rows(FraPop, temp, temp2, temp3)
+
+data.FR <- merge(data.FR, FraPop, by.x=c("year", "ageband"), by.y=c("Year", "age"))
+colnames(data.FR) <- c("year", "age", "week", "deaths", "pop")
+data.FR$mortrate=data.FR$deaths*100000/data.FR$pop
+
+#Calculate 2010-19 average, min and max
+hist.FR <- data.FR %>%
+  filter(year!=2020) %>%
+  group_by(age,week) %>%
+  summarise(mean_d=mean(deaths), max_d=max(deaths), min_d=min(deaths),
+            mean_r=mean(mortrate), max_r=max(mortrate), min_r=min(mortrate))
+
+fulldata.FR <- merge(hist.FR, subset(data.FR, year==2020), all.x=TRUE, all.y=TRUE)
+
+fulldata.FR <- fulldata.FR[,-c(11)]
+fulldata.FR$country <- "France"
+
+fulldata <- bind_rows(fulldata, fulldata.FR)
+
 #Tidy up names
 fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
@@ -385,7 +437,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,25))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=7), "Blue", rep("Grey50", times=3)))
+  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=8), "Blue", rep("Grey50", times=3)))
 
 #Heatmaps of country and age-specific excess deaths
 #Calculate excess mortality counts and proportion
@@ -407,7 +459,7 @@ excessrank <- excess %>%
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
 #Plots
-plotage <- "85+"
+plotage <- "75-84"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
