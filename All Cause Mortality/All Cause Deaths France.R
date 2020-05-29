@@ -58,7 +58,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-05-22_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-05-29_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data1820 <- read.csv(file.path(temp2, "DC_jan2018-mai2020_det.csv"), sep=";")
@@ -96,6 +96,14 @@ aggdata <- fulldata %>%
   group_by(ageband, year, week, sex) %>%
   filter(year>=2010) %>%
   summarise(deaths=n())
+
+#Combines sexes for saving later
+data.FR <- aggdata %>%
+  group_by(ageband, year, week) %>%
+  summarise(deaths=sum(deaths))
+
+#Save data
+write.csv(data.FR, "Data/deaths_age_France.csv")
 
 #Calculate 2010-19 average, min and max
 hist.data <- aggdata %>%
@@ -147,6 +155,3 @@ ggplot(aggdata)+
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
-
-#Save data
-write.csv(aggdata, "Data/deaths_age_France.csv")
