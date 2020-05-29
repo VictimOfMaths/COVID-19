@@ -15,7 +15,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "15th May"
 ScotDate <- "23rd May"
-NIDate="15th May"
+NIDate="22nd May"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek202020.xlsx"
@@ -25,7 +25,7 @@ NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 EngRange <- "V" #increment by one letter each week
 ScotRange <- "W" #incrememnt by one letter each week
-NIRange <- "23" #incremement by one number each week
+NIRange <- "25" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -666,7 +666,7 @@ rm(date, data2004.S, data2005.S, data2006.S, data2007.S, data2008.S, data2009.S,
 #NI data from NISRA is published to the same Excel file (so no need to update link) each Friday
 temp <- tempfile()
 temp <- curl_download(url=NI2020, destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Weekly Deaths_2020", range=paste0("B5:C", NIRange), col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 1", range=paste0("B6:C", NIRange), col_names=FALSE)
 colnames(data2020.NI) <- c("date", "deaths")
 
 temp <- tempfile()
@@ -1060,7 +1060,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland have increased, but that may be a 'Bank Holiday' effect",
+  labs(title="Deaths from all causes in Northern Ireland have now fallen back to within 'usual' levels (just)",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=NImaxweek+0.5, y=labpos, label=paste0(round(NI.excess$excess, 0), 
