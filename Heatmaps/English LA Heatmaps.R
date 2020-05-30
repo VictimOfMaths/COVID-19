@@ -10,6 +10,7 @@ library(cowplot)
 library(sf)
 library(rmapshaper)
 library(gganimate)
+library(paletteer)
 
 options(scipen = 999)
 
@@ -54,14 +55,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-21-May-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-30-May-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:89)]
+deaths<-deaths[18:.N, c(1:94)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:89)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:94)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -140,7 +141,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000,2000,3000,4000))+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -257,6 +258,33 @@ int3$code <- "E10000009"
 
 temp <- rbind(heatmap, int1, int2, int3)
 
+#Calculate change in cases in the past week
+change <- temp %>%
+  mutate(change=casesroll_avg-lag(casesroll_avg,5))
+
+change <- subset(change, date==max)
+
+map.change <- full_join(simplemap, change, by="code", all.y=TRUE)
+map.change <- map.change %>% drop_na("maxcaseprop")
+
+#Map of past week changes
+tiff("Outputs/COVIDChangesmapEng.tiff", units="in", width=7, height=8, res=500)
+ggplot(map.change, aes(geometry=geometry, fill=change))+
+  geom_sf(colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  theme_classic()+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), 
+                         name="Change in case numbers\nin the past week", breaks=c(-10,0,10),
+                         labels=c("-10", "0", "+10"),direction=-1)+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.subtitle=element_markdown())+
+  labs(title="Recent changes in COVID-19 case numbers across England",
+       subtitle="Has the 5-day rolling average of case numbers <span style='color:#854B01FF;'>risen</span> or <span style='color:#014380FF;'>fallen</span> in the past week?",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+
+#For animation
 map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
 
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
