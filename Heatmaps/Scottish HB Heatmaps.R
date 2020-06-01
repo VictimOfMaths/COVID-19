@@ -84,7 +84,9 @@ dev.off()
 temp <- tempfile()
 source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdata%2Bby%2BNHS%2BBoard%2B26%2BMay%2B2020.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-ICUdata <- read_excel(temp, sheet=4, range="A3:O73")
+
+#Need to manually increment the numbers at the end of this range: 79 = 1st June
+ICUdata <- read_excel(temp, sheet=4, range="A3:O78")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:15))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", 0, ICUdata_long$cases))
