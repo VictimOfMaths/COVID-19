@@ -72,8 +72,8 @@ dev.off()
 library(ggridges)
 
 tiff("Outputs/COVIDIrishCountyCaseRidges.tiff", units="in", width=11, height=6, res=500)
-ggplot(heatmap, aes(x=date, y=fct_reorder(county, totalcases), height=casesroll_avg))+
-  geom_density_ridges_gradient(stat="identity", rel_min_height=0.01)+
+ggplot(heatmap, aes(x=date, y=fct_reorder(county, totalcases), height=casesroll_avg, fill=casesroll_avg))+
+  geom_density_ridges_gradient(stat="identity", rel_min_height=0.007)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
