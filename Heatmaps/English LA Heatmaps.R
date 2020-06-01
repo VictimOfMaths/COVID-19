@@ -55,14 +55,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-30-May-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/05/COVID-19-total-announced-deaths-31-May-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:94)]
+deaths<-deaths[18:.N, c(1:95)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:94)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:95)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -268,9 +268,10 @@ map.change <- full_join(simplemap, change, by="code", all.y=TRUE)
 map.change <- map.change %>% drop_na("maxcaseprop")
 
 #Map of past week changes
-tiff("Outputs/COVIDChangesmapEng.tiff", units="in", width=7, height=8, res=500)
-ggplot(map.change, aes(geometry=geometry, fill=change))+
-  geom_sf(colour=NA)+
+
+changemap <- ggplot()+
+  geom_sf(data=map.change, aes(geometry=geometry, fill=change), colour=NA)+
+  geom_sf(data=subset(map.change, casesroll_avg==0), aes(geometry=geometry), fill="#41ab5d", colour=NA)+
   xlim(10000,655644)+
   ylim(5337,700000)+
   theme_classic()+
@@ -280,9 +281,59 @@ ggplot(map.change, aes(geometry=geometry, fill=change))+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.subtitle=element_markdown())+
   labs(title="Recent changes in COVID-19 case numbers across England",
-       subtitle="Has the 5-day rolling average of case numbers <span style='color:#854B01FF;'>risen</span> or <span style='color:#014380FF;'>fallen</span> in the past week?",
-       caption="Data from Public Health England | Plot by @VictimOfMaths")
+       subtitle="<span style='color:Grey50;'>Has the 5-day rolling average of case numbers <span style='color:#854B01FF;'>risen<span style='color:Grey50;'> or <span style='color:#014380FF;'>fallen<span style='color:Grey50;'> in the past week?<br>Areas with 0 cases shown in <span style='color:#41ab5d;'>green",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")+
+  geom_rect(aes(xmin=500000, xmax=560000, ymin=156000, ymax=200000), fill="transparent",
+          colour="gray50")+
+  geom_rect(aes(xmin=310000, xmax=405000, ymin=370000, ymax=430000), fill="transparent",
+            colour="gray50")+
+  geom_rect(aes(xmin=405000, xmax=490000, ymin=505000, ymax=580000), fill="transparent",
+            colour="gray50")
+#Add zoomed in areas
+#London
+London <- ggplot()+
+  geom_sf(data=map.change, aes(geometry=geometry, fill=change), colour=NA, show.legend=FALSE)+
+  geom_sf(data=subset(map.change, casesroll_avg==0), aes(geometry=geometry), fill="#41ab5d", colour=NA)+
+  scale_x_continuous(limits=c(500000,560000), expand=c(0,0))+
+  scale_y_continuous(limits=c(156000,200000), expand=c(0,0))+
+  theme_classic()+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), direction=-1)+
+  labs(title="Greater London")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(size=rel(0.9)))
+
+#North-West England
+NWEng <-ggplot()+
+  geom_sf(data=map.change, aes(geometry=geometry, fill=change), colour=NA, show.legend=FALSE)+
+  geom_sf(data=subset(map.change, casesroll_avg==0), aes(geometry=geometry), fill="#41ab5d", colour=NA)+
+  scale_x_continuous(limits=c(310000,405000), expand=c(0,0))+
+  scale_y_continuous(limits=c(370000,430000), expand=c(0,0))+
+  theme_classic()+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), direction=-1)+
+  labs(title="The North West")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(size=rel(0.9)))
+
+#Tyne/Tees  
+NEEng <- ggplot()+
+  geom_sf(data=map.change, aes(geometry=geometry, fill=change), colour=NA, show.legend=FALSE)+
+  geom_sf(data=subset(map.change, casesroll_avg==0), aes(geometry=geometry), fill="#41ab5d", colour=NA)+
+  scale_x_continuous(limits=c(405000,490000), expand=c(0,0))+
+  scale_y_continuous(limits=c(505000,580000), expand=c(0,0))+
+  theme_classic()+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), direction=-1)+
+  labs(title="The North East")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(size=rel(0.9)))
+
+tiff("Outputs/COVIDChangesmapEng.tiff", units="in", width=9, height=11, res=500)
+ggdraw()+
+  draw_plot(changemap)+
+  draw_plot(London, 0.01,0.34,0.32,0.21)+
+  draw_plot(NWEng, 0.01,0.57, 0.32, 0.24)+
+  draw_plot(NEEng, 0.57, 0.62, 0.22, 0.22)
 dev.off()
+
 
 #For animation
 map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
