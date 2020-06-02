@@ -13,7 +13,7 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "23rd May"
+EWDate <- "22nd May"
 ScotDate <- "23rd May"
 NIDate="22nd May"
 
