@@ -6,6 +6,8 @@ library(readxl)
 library(lubridate)
 library(forcats)
 library(ggtext)
+library(HMDHFDplus)
+library(paletteer)
 
 #Read in historic French mortality data for 2010-18
 #Source: https://www.insee.fr/fr/information/4190491
@@ -154,4 +156,91 @@ ggplot(aggdata)+
   labs(title="Mortality rates in France in people of working age have <i style='color:black'>fallen</i> during the pandemic",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
+dev.off()
+
+#Plots by single year of age.
+#Find latest year in 2020 data
+temp <- fulldata %>%
+  filter(year==2020) %>%
+  summarise (maxweek2020=max(week))
+
+maxweek20 <- temp[1,1]
+
+#Collapse data for the pandemic period only
+agedata <- fulldata %>%
+  filter(year>=2010 & week>9 & week<=maxweek20 & age>=0 & age<100) %>%
+  group_by(age, year, sex) %>%
+  summarise(deaths=n())
+
+#Import population size
+#Bring in French population from HMD (need to register and put your details in here)
+username <- "" 
+password <- ""
+
+FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
+
+FraPop <- subset(FraPop, Year>=2010)
+
+#Replicate 2017 populations for 2018+ there is probably a clever person's solution to this, but it won't make much difference
+temp <- subset(FraPop, Year==2017)
+temp2 <- temp
+temp3 <- temp
+temp$Year <- 2018
+temp2$Year <- 2019
+temp3$Year <- 2020
+
+FraPop <- bind_rows(FraPop, temp, temp2, temp3)
+
+FraPop_long <- gather(FraPop, sex, pop, c(3,4))
+
+agedata <- merge(agedata, FraPop_long[,-c(3,4)], by.x=c("sex", "age", "year"), by.y=c("sex", "Age", "Year"))
+
+agedata$mortrate <- agedata$deaths*100000/agedata$pop
+
+#Look at 2010-19 data
+olddata <- agedata %>%
+  filter(year<2020) %>%
+  group_by(age, sex) %>%
+  summarise(mean_d=mean(deaths), min_d=min(deaths), max_d=max(deaths), mean_r=mean(mortrate),
+            min_r=min(mortrate), max_r=max(mortrate))
+
+newdata <- merge(olddata, subset(agedata, year==2020))
+
+newdata$excess <- newdata$mortrate-newdata$mean_r
+newdata$propexcess <- newdata$excess/newdata$mean_r
+
+write.csv(newdata, "Data/FrenchDeathsByAge.csv")
+
+newdata <- read.csv("Data/FrenchDeathsByAge.csv")
+
+tiff("Outputs/AgeSpecificDeathsFr.tiff", units="in", width=12, height=7, res=300)
+ggplot(newdata)+
+  geom_ribbon(aes(x=age, ymin=log10(min_r), ymax=log10(max_r)), fill="Skyblue2")+
+  geom_line(aes(x=age, y=log10(mean_r)), colour="Grey50", linetype=2)+
+  geom_point(aes(x=age, y=log10(mortrate)), colour="red")+
+  scale_x_continuous(name="Age", breaks=seq(0,100, by=10))+
+  scale_y_continuous(name="Log mortality rate\n(deaths/100,000 | base 10)")+
+  facet_wrap(~sex)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle=element_markdown())+
+  labs(title="Age-specific mortality rates in France during the pandemic",
+       subtitle="Deaths in weeks 9-20 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/AgeSpecificDeathsPropFr.tiff", units="in", width=12, height=7, res=300)
+ggplot(newdata)+
+  geom_bar(stat="identity", aes(x=age, y=propexcess, fill=propexcess), show.legend=FALSE)+
+  scale_fill_paletteer_c("ggthemes::Classic Red-White-Green", limit=c(-1,1)*max(abs(newdata$propexcess)))+
+  scale_x_continuous(name="Age", breaks=seq(0,100, by=10))+
+  scale_y_continuous(name="Proportional change in mortality rate in 2020 vs. 2010-19 average",
+                     breaks=seq(-0.5, 1, by=0.5), labels=c("-50%", "0%", "+50%", "+100%"))+
+  facet_wrap(~sex)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle=element_markdown())+
+  labs(title="Age-specific variation in mortality rates in France during the pandemic",
+       subtitle="Relative change in all-cause mortality rates in weeks 9-20 of 2020 versus the average between 2010-19",
+       caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
