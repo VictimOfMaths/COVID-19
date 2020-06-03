@@ -11,6 +11,7 @@ library(sf)
 library(rmapshaper)
 library(gganimate)
 library(paletteer)
+library(ggtext)
 
 options(scipen = 999)
 
