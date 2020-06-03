@@ -110,7 +110,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="HExcess deaths in Scotland are now highest at home",
+  labs(title="Excess deaths in Scotland are now highest at home",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -124,15 +124,15 @@ data.loc.new$excess <- data.loc.new$deaths-data.loc.new$mean
 #plot excess deaths over time
 tiff("Outputs/NRSWeeklyDeathsExcessxLocation.tiff", units="in", width=12, height=8, res=300)
 ggplot(data.loc.new, aes(x=week, y=excess))+
-  geom_segment(aes(x=0, xend=19, y=0, yend=0), colour="Grey40")+
+  geom_segment(aes(x=0, xend=22, y=0, yend=0), colour="Grey40")+
   geom_line(aes(colour=loc))+
   theme_classic()+
-  scale_x_continuous(name="Week commencing", breaks=c(1:18), 
+  scale_x_continuous(name="Week commencing", breaks=c(1:21), 
                      labels=c(format(seq.Date(from=as.Date("2019-12-30"), by="7 days", 
-                                              length.out=18), "%d/%m/%y")))+
+                                              length.out=21), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
-  labs(title="Excess deaths in Scotland are niw highest at home/elsewhere",
+  labs(title="Excess deaths in Scotland are now highest at home/elsewhere",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
