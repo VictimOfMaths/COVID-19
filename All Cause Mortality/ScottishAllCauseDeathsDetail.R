@@ -159,6 +159,7 @@ excess <- data.HB.old %>%
 
 #Order HBs by total excess deaths
 excess$HB <- fct_reorder(as.factor(excess$HB), -excess$totalexcess)
+excess <- arrange(excess, HB)
 data.HB.old$HB <- factor(data.HB.old$HB, levels=levels(excess$HB))
 
 data.HB.old <- arrange(data.HB.old, data.HB.old$HB)
