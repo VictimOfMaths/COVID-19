@@ -28,8 +28,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-21.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:W21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-22.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:X21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -148,7 +148,7 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:W14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:X14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -322,8 +322,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "" 
-password <- ""
+username <- "c.r.angus@sheffield.ac.uk" 
+password <- "1574553541"
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -393,8 +393,7 @@ fulldata <- fulldata %>%
   ungroup() %>%
   filter(!(country %in% c("Finland", "Norway", "USA") & year==2020 & week==last_week))
 
-tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=24, height=10, res=300)
-ggplot(fulldata)+
+Excessplot <- ggplot(fulldata)+
   geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
   geom_ribbon(aes(x=week, ymin=mean_r, ymax=mortrate), fill="Red", alpha=0.2)+
   geom_line(aes(x=week, y=mean_r), colour="Grey50", linetype=2)+
@@ -408,6 +407,13 @@ ggplot(fulldata)+
   labs(title="Excess mortality rates by age group across Europe & the US",
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
        caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+
+tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=24, height=10, res=300)
+Excessplot
+dev.off()
+
+png("Outputs/ExcessEURUSxAge.png", units="in", width=24, height=10, res=300)
+Excessplot
 dev.off()
 
 #15-64 year olds only
@@ -459,7 +465,7 @@ excessrank <- excess %>%
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
 #Plots
-plotage <- "75-84"
+plotage <- "85+"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
@@ -479,7 +485,7 @@ ggplot()+
   geom_text(data=subset(excess, age==plotage), aes(x=maxweek+1, y=country, label=excessprop), hjust=0, size=rel(3), colour="White")+
   labs(title=paste0("International variation in mortality rates in ages ", plotage),
        subtitle=paste0("Excess weekly all-cause death rates in 2020 compared to 2010-19 average.\nCountries ordered by overall change in deaths across all ages."),
-       caption="Data from mortality.org, ONS & NRS | Plot by @VictimOfMaths")+
+       caption="Data from mortality.org, Insee, ONS & NRS | Plot by @VictimOfMaths")+
   theme_classic()+
   theme(panel.background=element_rect(fill="Black"), plot.background=element_rect(fill="Black"),
         axis.line=element_line(colour="White"), text=element_text(colour="White"),
@@ -487,3 +493,5 @@ ggplot()+
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
 dev.off()
+  
+  
