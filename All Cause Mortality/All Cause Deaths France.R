@@ -57,13 +57,13 @@ data$ageband <- case_when(
 #Tidy up sex variable
 data$sex <- if_else(data$sex==1, "Male", "Female")
 
-#Bring in deaths data for 2020
+#Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-05-29_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-05_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
-data1820 <- read.csv(file.path(temp2, "DC_jan2018-mai2020_det.csv"), sep=";")
+data1820 <- read.csv(file.path(temp2, "DC_2018-2020.csv"), sep=";")
 
 #Set up dates
 data1820$MNAIS <- as.character(formatC(data1820$MNAIS, width=2, format="d", flag="0"))
@@ -158,7 +158,6 @@ ggplot(aggdata)+
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
 
-#Plots by single year of age.
 #Find latest year in 2020 data
 temp <- fulldata %>%
   filter(year==2020) %>%
@@ -174,14 +173,14 @@ agedata <- fulldata %>%
 
 #Import population size
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "" 
-password <- ""
+username <- "c.r.angus@sheffield.ac.uk" 
+password <- "1574553541"
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
 FraPop <- subset(FraPop, Year>=2010)
 
-#Replicate 2017 populations for 2018+ there is probably a clever person's solution to this, but it won't make much difference
+#Replicate 2017 populations for 2018+
 temp <- subset(FraPop, Year==2017)
 temp2 <- temp
 temp3 <- temp
@@ -225,7 +224,7 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific mortality rates in France during the pandemic",
-       subtitle="Deaths in weeks 9-20 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       subtitle="Deaths in weeks 9-21 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
 
@@ -241,6 +240,6 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific variation in mortality rates in France during the pandemic",
-       subtitle="Relative change in all-cause mortality rates in weeks 9-20 of 2020 versus the average between 2010-19",
+       subtitle="Relative change in all-cause mortality rates in weeks 9-21 of 2020 versus the average between 2010-19",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
