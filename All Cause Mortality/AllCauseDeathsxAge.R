@@ -266,7 +266,7 @@ ggplot(data)+
        caption="Date from ONS, NRS & NISRA | Plot by @VictimOfMaths")
 dev.off()
 
-#Bring in date from HMD
+#Bring in data from HMD
 temp <- tempfile()
 temp <- curl_download(url="https://www.mortality.org/Public/STMF/Outputs/stmf.csv", destfile=temp, quiet=FALSE, mode="wb")
 HMDdata <- read_delim(temp, delim=",", comment="#")
@@ -306,8 +306,8 @@ data.UK <- data.UK %>%
 
 data.UK$mortrate <- data.UK$deaths*100000/data.UK$pop
 
-#Merge data
-mergeddata <- bind_rows(subset(HMD_long, country!="GBRTENW"), data.UK[,-c(6)])
+#Merge data excluding countries which are in HMD data, but which we've collected separately (with longer coverage)
+mergeddata <- bind_rows(subset(HMD_long, !(country %in% c("GBRTENW", "FRATNP", "ITA"))), data.UK[,-c(6)])
 
 #Calculate 2010-19 average, min and max
 hist.mergeddata <- mergeddata %>%
@@ -319,11 +319,12 @@ hist.mergeddata <- mergeddata %>%
 fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, all.y=TRUE)
 
 #Bring in French data from Insee
+#File created by All Cause Deaths France.R
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "c.r.angus@sheffield.ac.uk" 
-password <- "1574553541"
+username <- "" 
+password <- ""
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -369,6 +370,83 @@ fulldata.FR$country <- "France"
 
 fulldata <- bind_rows(fulldata, fulldata.FR)
 
+#Bring in Italian data from ISTAT
+#File created by All Cause Deaths Italy.R
+data.IT <- read.csv("Data/deaths_age_Italy.csv")[,-c(1)]
+
+#Compress to match
+data.IT$age <- case_when(
+  data.IT$age=="0" ~ "0-14",
+  data.IT$age=="1-4" ~ "0-14",
+  data.IT$age=="5-9" ~ "0-14",
+  data.IT$age=="10-14" ~ "0-14",
+  data.IT$age=="15-19" ~ "15-64",
+  data.IT$age=="20-24" ~ "15-64",
+  data.IT$age=="25-29" ~ "15-64",
+  data.IT$age=="30-34" ~ "15-64",
+  data.IT$age=="35-39" ~ "15-64",
+  data.IT$age=="40-44" ~ "15-64",
+  data.IT$age=="45-49" ~ "15-64",
+  data.IT$age=="50-54" ~ "15-64",
+  data.IT$age=="55-59" ~ "15-64",
+  data.IT$age=="60-64" ~ "15-64",
+  data.IT$age=="65-69" ~ "65-74",
+  data.IT$age=="70-74" ~ "65-74",
+  data.IT$age=="75-79" ~ "75-84",
+  data.IT$age=="80-84" ~ "75-84",
+  data.IT$age=="85-89" ~ "85+",
+  data.IT$age=="90-94" ~ "85+",
+  data.IT$age=="95-99" ~ "85+",
+TRUE ~ "85+")
+
+data.IT <- data.IT %>%
+  group_by(age, year, week) %>%
+  summarise(deaths=sum(deaths))
+
+#Bring in Italian population data from HMD
+ItaPop <- readHMDweb(CNTRY="ITA", "Exposures_1x1", username, password)
+
+ItaPop <- subset(ItaPop, Year>=2010)
+
+ItaPop$age <- case_when(
+  ItaPop$Age<15 ~ "0-14",
+  ItaPop$Age<65 ~ "15-64",
+  ItaPop$Age<75 ~ "65-74",
+  ItaPop$Age<85 ~ "75-84",
+  TRUE ~ "85+",
+)
+
+ItaPop <- ItaPop %>%
+  group_by(Year, age) %>%
+  summarise(pop=sum(Total))
+
+#Replicate 2017 populations for 2018+
+temp <- subset(ItaPop, Year==2017)
+temp2 <- temp
+temp3 <- temp
+temp$Year <- 2018
+temp2$Year <- 2019
+temp3$Year <- 2020
+
+ItaPop <- bind_rows(ItaPop, temp, temp2, temp3)
+
+data.IT <- merge(data.IT, ItaPop, by.x=c("year", "age"), by.y=c("Year", "age"))
+data.IT$mortrate=data.IT$deaths*100000/data.IT$pop
+
+#Calculate 2010-19 average, min and max
+hist.IT <- data.IT %>%
+  filter(year!=2020) %>%
+  group_by(age,week) %>%
+  summarise(mean_d=mean(deaths), max_d=max(deaths), min_d=min(deaths),
+            mean_r=mean(mortrate), max_r=max(mortrate), min_r=min(mortrate))
+
+fulldata.IT <- merge(hist.IT, subset(data.IT, year==2020), all.x=TRUE, all.y=TRUE)
+
+fulldata.IT <- fulldata.IT[,-c(11)]
+fulldata.IT$country <- "Italy"
+
+fulldata <- bind_rows(fulldata, fulldata.IT)
+
 #Tidy up names
 fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
@@ -379,19 +457,21 @@ fulldata$country <- case_when(
   fulldata$country=="DEUTNP" ~ "Germany",
   fulldata$country=="ESP" ~ "Spain",
   fulldata$country=="FIN" ~ "Finland",
+  fulldata$country=="HUN" ~ "Hungary",
   fulldata$country=="ISL" ~ "Iceland",
   fulldata$country=="NLD" ~ "Netherlands",
   fulldata$country=="NOR" ~ "Norway",
   fulldata$country=="PRT" ~ "Portugal",
   fulldata$country=="SWE" ~ "Sweden",
+  fulldata$country=="SVK" ~ "Slovakia",
   TRUE ~ fulldata$country)
 
-#Remove most recent week of data for FIN, NOR and USA which is wonky
+#Remove most recent week of data for FIN, NOR, SVK and USA which is wonky
 fulldata <- fulldata %>%
   group_by(age, country, year) %>%
   mutate(last_week=max(week)) %>%
   ungroup() %>%
-  filter(!(country %in% c("Finland", "Norway", "USA") & year==2020 & week==last_week))
+  filter(!(country %in% c("Finland", "Norway", "USA", "Slovakia") & year==2020 & week==last_week))
 
 Excessplot <- ggplot(fulldata)+
   geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
@@ -406,7 +486,7 @@ Excessplot <- ggplot(fulldata)+
         plot.subtitle =element_markdown())+
   labs(title="Excess mortality rates by age group across Europe & the US",
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
-       caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+       caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=24, height=10, res=300)
 Excessplot
@@ -431,7 +511,7 @@ ggplot(subset(fulldata, age=="15-64"))+
         plot.subtitle =element_markdown())+
   labs(title="15-64 year olds in England & Wales appear to fared poorly compared to their peers elsewhere",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
-       caption="Data from mortality.org, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+       caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 dev.off()
 
 #Calculate excess mortality rate
@@ -443,7 +523,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,25))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=8), "Blue", rep("Grey50", times=3)))
+  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=10), "Blue", rep("Grey50", times=4)))
 
 #Heatmaps of country and age-specific excess deaths
 #Calculate excess mortality counts and proportion
@@ -465,7 +545,7 @@ excessrank <- excess %>%
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
 #Plots
-plotage <- "85+"
+plotage <- "15-64"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
@@ -485,7 +565,7 @@ ggplot()+
   geom_text(data=subset(excess, age==plotage), aes(x=maxweek+1, y=country, label=excessprop), hjust=0, size=rel(3), colour="White")+
   labs(title=paste0("International variation in mortality rates in ages ", plotage),
        subtitle=paste0("Excess weekly all-cause death rates in 2020 compared to 2010-19 average.\nCountries ordered by overall change in deaths across all ages."),
-       caption="Data from mortality.org, Insee, ONS & NRS | Plot by @VictimOfMaths")+
+       caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")+
   theme_classic()+
   theme(panel.background=element_rect(fill="Black"), plot.background=element_rect(fill="Black"),
         axis.line=element_line(colour="White"), text=element_text(colour="White"),
@@ -493,5 +573,3 @@ ggplot()+
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
 dev.off()
-  
-  
