@@ -86,7 +86,7 @@ source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Need to manually increment the numbers at the end of this range: 79 = 1st June
-ICUdata <- read_excel(temp, sheet=4, range="A3:O78")
+ICUdata <- read_excel(temp, sheet=4, range="A3:O85")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:15))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", 0, ICUdata_long$cases))
