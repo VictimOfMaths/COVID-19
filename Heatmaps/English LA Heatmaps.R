@@ -277,8 +277,8 @@ changemap <- ggplot()+
   ylim(5337,700000)+
   theme_classic()+
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), 
-                         name="Change in case numbers\nin the past week", breaks=c(-10,0,10),
-                         labels=c("-10", "0", "+10"),direction=-1)+
+                         name="Change in case numbers\nin the past week", breaks=c(-5,0,5),
+                         labels=c("-5", "0", "+5"),direction=-1)+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.subtitle=element_markdown())+
   labs(title="Recent changes in COVID-19 case numbers across England",
