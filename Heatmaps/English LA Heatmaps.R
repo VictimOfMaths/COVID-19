@@ -71,7 +71,7 @@ deaths$procode3 <- substr(deaths$procode3, 1, 3)
 
 deaths[order(variable), date:=1:.N, by=.(procode3)]
 
-deaths[, date:=as.Date("2020-02-29")+as.numeric(substr(variable, 4, 5))-5]
+deaths[, date:=as.Date("2020-02-29")+as.numeric(substr(variable, 4, 6))-5]
 
 deaths[, variable:=NULL]
 
