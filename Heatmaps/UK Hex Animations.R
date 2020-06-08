@@ -50,7 +50,7 @@ fulldata$country <- "England"
 temp <- tempfile()
 source <- "http://www2.nphs.wales.nhs.uk:8080/CommunitySurveillanceDocs.nsf/3dc04669c9e1eaa880257062003b246b/77fdb9a33544aee88025855100300cab/$FILE/Rapid%20COVID-19%20surveillance%20data.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data.w <- read_excel(temp, sheet=2)[,c(1:4)]
+data.w <- read_excel(temp, sheet=3)[,c(1:4)]
 
 colnames(data.w) <- c("name", "date", "cases", "cumul_cases")
 data.w$date <- as.Date(data.w$date)
@@ -177,7 +177,7 @@ fulldata <- bind_rows(fulldata, fulldata.ni)
 
 #Read in data by Irish counties
 temp <- tempfile()
-source <- "http://opendata-geohive.hub.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv?outSR={%22latestWkid%22:3857,%22wkid%22:102100}"
+source <- "http://opendata-geohive.hub.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data.i <- read_csv(temp)
 
@@ -303,4 +303,4 @@ HexAnimUK <- ggplot()+
 
 animate(HexAnimUK, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
         end_pause=60)
-        
+
