@@ -9,7 +9,7 @@ library(cowplot)
 
 #Read in data
 temp <- tempfile()
-source <- "http://opendata-geohive.hub.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv?outSR={%22latestWkid%22:3857,%22wkid%22:102100}"
+source <- "http://opendata-geohive.hub.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data <- read_csv(temp)
 
