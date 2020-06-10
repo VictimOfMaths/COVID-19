@@ -15,7 +15,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "29th May"
 ScotDate <- "6th June"
-NIDate="29th May"
+NIDate <- "29th May"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek222020.xlsx"
