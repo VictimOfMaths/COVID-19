@@ -60,7 +60,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-05_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-12_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data1820 <- read.csv(file.path(temp2, "DC_2018-2020.csv"), sep=";")
@@ -87,6 +87,13 @@ data1820$ageband <- case_when(
   data1820$age<85 ~ "75-84",
   TRUE ~ "85+")
 
+#Check latest date in deaths data aligns with the end of a week
+maxdate <- max(data1820$dod)
+maxweek <- week(maxdate)
+
+#May need to manually set maxweek to a lower value if they don't align
+maxweek <- 21
+
 #Merge all years
 fulldata <- bind_rows(data, data1820)
 
@@ -107,13 +114,56 @@ data.FR <- aggdata %>%
 #Save data
 write.csv(data.FR, "Data/deaths_age_France.csv")
 
+#Draw overall plot
+data.full <- aggdata %>%
+  group_by(year, week) %>%
+  summarise(deaths=sum(deaths))
+
+hist.full <- data.full %>%
+  filter(year!=2020) %>%
+  group_by(week) %>%
+  summarise(mean_d=mean(deaths), max_d=max(deaths), min_d=min(deaths))
+
+data.full <- merge(hist.full, subset(data.full, year==2020 & week<=maxweek), all.x=TRUE, all.y=TRUE)
+
+#Calculate excess deaths in 2020 vs. historic mean
+excess.full <- data.full %>%
+  filter(!is.na(deaths)) %>%
+  summarise(deaths=sum(deaths), mean=sum(mean_d))
+
+excess.full$excess <- excess.full$deaths-excess.full$mean
+excess.full$prop <- excess.full$excess/excess.full$mean
+
+tiff("Outputs/ExcessDeathsFrance.tiff", units="in", width=8, height=6, res=300)
+ggplot(data.full)+
+  geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
+  geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_line(aes(x=week, y=mean_d), colour="Grey50", linetype=2)+
+  geom_line(aes(x=week, y=deaths), colour="Red")+
+  scale_x_continuous(name="Week number")+
+  scale_y_continuous("Weekly deaths recorded")+
+  annotate(geom="text", x=maxweek-4.5, y=15000, label=paste0("+", round(excess.full$excess, 0), 
+                                                                " more deaths in 2020 than average (+", 
+                                                                round(excess.full$prop*100, 0),"%)"), colour="Red", hjust=0)+
+  annotate(geom="text", x=30, y=12000, label="Historic maximum", colour="Skyblue4")+
+  annotate(geom="text", x=30, y=9200, label="Historic minimum", colour="Skyblue4")+
+  annotate(geom="text", x=46, y=9200, label="Historic mean", colour="grey30")+
+  geom_curve(aes(x=48, y=9400, xend=47, yend=11200), colour="grey30", curvature=0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
+  theme_classic()+
+  theme(plot.subtitle =element_markdown())+
+  labs(title="No signs of a 'second wave' in France since restrictions were lifted",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       caption="Date from Insee | Plot by @VictimOfMaths")
+dev.off()
+
 #Calculate 2010-19 average, min and max
 hist.data <- aggdata %>%
   filter(year!=2020) %>%
   group_by(ageband, sex, week) %>%
   summarise(mean_d=mean(deaths), max_d=max(deaths), min_d=min(deaths))
 
-aggdata <- merge(hist.data, subset(aggdata, year==2020), all.x=TRUE, all.y=TRUE)
+aggdata <- merge(hist.data, subset(aggdata, year==2020 & week<=maxweek), all.x=TRUE, all.y=TRUE)
 
 #Calculate excess deaths in 2020 vs. historic mean
 excess <- aggdata %>%
@@ -129,7 +179,7 @@ ann_text <- data.frame(week=rep(20, times=10),
                        sex=rep(c("Female", "Male"), times=5),
                        ageband=rep(c("0-14", "15-64", "65-74", "75-84", "85+"), each=2))
 
-tiff("Outputs/ExcessDeathsFrancexAge.tiff", units="in", width=16, height=6, res=300)
+tiff("Outputs/ExcessDeathsFrancexAge.tiff", units="in", width=14, height=8, res=300)
 ggplot(aggdata)+
   geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
   geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
@@ -153,7 +203,7 @@ ggplot(aggdata)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
         plot.subtitle =element_markdown(), plot.title=element_markdown())+
-  labs(title="Mortality rates in France in people of working age have <i style='color:black'>fallen</i> during the pandemic",
+  labs(title="France has seen a substantial <i style='color:black'>fall</i> in deaths among working age men during the pandemic",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
@@ -173,8 +223,8 @@ agedata <- fulldata %>%
 
 #Import population size
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "c.r.angus@sheffield.ac.uk" 
-password <- "1574553541"
+username <- "" 
+password <- ""
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -224,7 +274,7 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific mortality rates in France during the pandemic",
-       subtitle="Deaths in weeks 9-21 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       subtitle="Deaths in weeks 9-23 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
 
@@ -240,6 +290,6 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific variation in mortality rates in France during the pandemic",
-       subtitle="Relative change in all-cause mortality rates in weeks 9-21 of 2020 versus the average between 2010-19",
+       subtitle="Relative change in all-cause mortality rates in weeks 9-23 of 2020 versus the average between 2010-19",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
