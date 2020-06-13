@@ -7,9 +7,10 @@ library(lubridate)
 library(ggtext)
 
 #Download Italian deaths data from Istat (link helpfully provided by @MazzucoStefano)
+#From this web page: https://www.istat.it/it/archivio/240401
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://t.co/LPX5KaLivx?amp=1"
+source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record-4giugno.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 
@@ -67,6 +68,7 @@ data$age <- factor(data$age, levels=c("0", "1-4", "5-9", "10-14", "15-19", "20-2
                                       "90-94", "95-99", "100+"))
 
 #Explore missingness in the deaths data
+#This seems to be throwing a weird error at the moment?
 test <- data %>%
   + filter(is.na(deaths)) %>%
   + group_by(date) %>%
@@ -204,12 +206,17 @@ excess.reg <- tempdata.reg %>%
 
 excess.reg$excess <- excess.reg$deaths-excess.reg$mean
 excess.reg$prop <- excess.reg$excess/excess.reg$mean
+excess.reg$NOME_REGIONE <- fct_reorder(excess.reg$NOME_REGIONE, -excess.reg$prop)
+excess.reg <- arrange(excess.reg, NOME_REGIONE)
+
+tempdata.reg$NOME_REGIONE <- factor(tempdata.reg$NOME_REGIONE, levels=levels(excess.reg$NOME_REGIONE))
+tempdata.reg <- arrange(tempdata.reg, NOME_REGIONE)
 
 labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]+1000
 
-ann_text2 <- data.frame(week=rep(cut+0.5, times=20), NOME_REGIONE=levels(data$NOME_REGIONE), position=labpos)
+ann_text2 <- data.frame(week=rep(cut+0.5, times=20), NOME_REGIONE=levels(tempdata.reg$NOME_REGIONE), position=labpos)
 
-tiff("Outputs/ExcessDeathsItalyxReg.tiff", units="in", width=12, height=9, res=300)
+tiff("Outputs/ExcessDeathsItalyxReg.tiff", units="in", width=14, height=9, res=300)
 ggplot(subset(tempdata.reg, week<53))+
   geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
   geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
@@ -226,26 +233,26 @@ ggplot(subset(tempdata.reg, week<53))+
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=week, y=position), 
-            label=c(paste0(round(excess.reg[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (", round(excess.reg[1,5]*100,0),"%)"),
-                    paste0(round(excess.reg[2,4],0)," deaths (", round(excess.reg[2,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[3,4],0)," deaths (", round(excess.reg[3,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[4,4],0)," deaths (", round(excess.reg[4,5]*100,0),"%)"), 
+            label=c(paste0(round(excess.reg[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.reg[1,5]*100,0),"%)"),
+                    paste0(round(excess.reg[2,4],0)," deaths (+", round(excess.reg[2,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[3,4],0)," deaths (+", round(excess.reg[3,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[4,4],0)," deaths (+", round(excess.reg[4,5]*100,0),"%)"), 
                     paste0(round(excess.reg[5,4],0)," deaths (+", round(excess.reg[5,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[6,4],0)," deaths (", round(excess.reg[6,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[7,4],0)," deaths (", round(excess.reg[7,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[6,4],0)," deaths (+", round(excess.reg[6,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[7,4],0)," deaths (+", round(excess.reg[7,5]*100,0),"%)"), 
                     paste0(round(excess.reg[8,4],0)," deaths (+", round(excess.reg[8,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[9,4],0)," deaths (+", round(excess.reg[9,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[10,4],0)," deaths (+", round(excess.reg[10,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[9,4],0)," deaths (", round(excess.reg[9,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[10,4],0)," deaths (", round(excess.reg[10,5]*100,0),"%)"), 
                     paste0(round(excess.reg[11,4],0)," deaths (", round(excess.reg[11,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[12,4],0)," deaths (+", round(excess.reg[12,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[12,4],0)," deaths (", round(excess.reg[12,5]*100,0),"%)"), 
                     paste0(round(excess.reg[13,4],0)," deaths (", round(excess.reg[13,5]*100,0),"%)"), 
                     paste0(round(excess.reg[14,4],0)," deaths (", round(excess.reg[14,5]*100,0),"%)"), 
                     paste0(round(excess.reg[15,4],0)," deaths (", round(excess.reg[15,5]*100,0),"%)"), 
                     paste0(round(excess.reg[16,4],0)," deaths (", round(excess.reg[16,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[17,4],0)," deaths (+", round(excess.reg[17,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[17,4],0)," deaths (", round(excess.reg[17,5]*100,0),"%)"), 
                     paste0(round(excess.reg[18,4],0)," deaths (", round(excess.reg[18,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[19,4],0)," deaths (+", round(excess.reg[19,5]*100,0),"%)"), 
-                    paste0(round(excess.reg[20,4],0)," deaths (+", round(excess.reg[20,5]*100,0),"%)")), 
+                    paste0(round(excess.reg[19,4],0)," deaths (", round(excess.reg[19,5]*100,0),"%)"), 
+                    paste0(round(excess.reg[20,4],0)," deaths (", round(excess.reg[20,5]*100,0),"%)")), 
             colour="Red", size=3, hjust=0)
 
 dev.off()
