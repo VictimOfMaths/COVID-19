@@ -9,4 +9,4 @@ Analysis of data on weekly all-cause mortality during the pandemic<br><br>
 ![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVIDDeathsMSOA.png)
 
 Suggested citation for any of this analysis:<br>
-Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v1
+Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v3
