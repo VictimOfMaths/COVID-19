@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/06/COVID-19-total-announced-deaths-7-June-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/06/COVID-19-total-announced-deaths-15-June-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:103)]
+deaths<-deaths[18:.N, c(1:111)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:103)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:111)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -335,6 +335,22 @@ ggdraw()+
   draw_plot(NEEng, 0.57, 0.62, 0.22, 0.22)
 dev.off()
 
+#3D version
+library(rayshader)
+
+plot <- ggplot()+
+  geom_sf(data=map.change, aes(geometry=geometry, fill=change), colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), 
+                         name="Change in case numbers\nin the past week", breaks=c(-10,0,10),
+                         labels=c("-10", "0", "+10"),direction=-1)+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), panel.background=element_blank())+
+  labs(title="Recent changes in COVID-19 case numbers across England",
+        caption="Data from Public Health England | Plot by @VictimOfMaths")
+
+plot_gg(plot, width=8, height=10, scale=250)
 
 #For animation
 map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
@@ -360,7 +376,7 @@ CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=ge
 animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnim.gif"), end_pause=60)
 
 #Animation of death trajectories
-DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03") & date<as.Date("2020-05-20")), aes(geometry=geometry, fill=maxdeathprop))+
+DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03")), aes(geometry=geometry, fill=maxdeathprop))+
   geom_sf(colour=NA)+
   xlim(10000,655644)+
   ylim(5337,700000)+
