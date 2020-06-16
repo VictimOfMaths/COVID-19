@@ -4,4 +4,4 @@ Mapping potential population exposure to COVID-19.<br><br>
 ![Bivariate map](https://github.com/VictimOfMaths/COVID-19/blob/master/Exposure%20mapping/COVIDBivariateLondon.png)
 
 Suggested citation for any of this analysis:<br>
-Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v1
+Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v3
