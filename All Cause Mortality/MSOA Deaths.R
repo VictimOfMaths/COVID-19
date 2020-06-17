@@ -3,6 +3,7 @@ rm(list=ls())
 library(tidyverse)
 library(curl)
 library(readxl)
+library(sf)
 library(paletteer)
 library(hrbrthemes)
 
