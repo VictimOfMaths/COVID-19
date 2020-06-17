@@ -43,3 +43,33 @@ ggplot(map)+
 dev.off()
 
 #Then crop out the little bit of whitespace around the impact, import into Aerialod and make it look pretty!
+
+#Bring in Local Authority to allow LA-specific plots
+#Read in MSOA to LA lookup
+temp <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/fe6c55f0924b4734adf1cf7104a0173e_0.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+MSOAtoLAD <- read.csv(temp)[,c(8,10,11,15,17)]
+colnames(MSOAtoLAD) <- c("code", "LAcode", "LAname", "Region", "Country")
+
+#Remove duplicate rows, as original data was LSOA-level
+MSOAtoLAD <- MSOAtoLAD %>% 
+  distinct(.keep_all = TRUE)
+
+map <- full_join(map, MSOAtoLAD, by="code", all.y=TRUE)
+
+#Set up outputs for any LA by name
+LA <- "Sheffield"
+
+png(paste0("Outputs/COVIDDeathsMapBW", LA, ".png"), units="in", width=20, height=20, res=500)
+ggplot(subset(map, LAname==LA))+
+  geom_sf(aes(geometry=geometry, fill=CV19Deaths), colour=NA, show.legend=FALSE)+
+  scale_fill_paletteer_c("oompaBase::greyscale", name="")+
+  theme_ipsum_rc()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_text(colour="Black"),
+        axis.title=element_blank(), plot.background=element_rect(fill="black"),
+        panel.background=element_rect(fill="Black"), legend.background=element_rect(fill="Black"),
+        text=element_text(colour="White", size=rel(5)), legend.text=element_text(colour="White", size=rel(3)),
+        panel.grid.major=element_line(colour="transparent"))+
+  guides(fill=guide_colourbar(ticks=FALSE))
+dev.off()
