@@ -124,15 +124,15 @@ data.loc.new$excess <- data.loc.new$deaths-data.loc.new$mean
 #plot excess deaths over time
 tiff("Outputs/NRSWeeklyDeathsExcessxLocation.tiff", units="in", width=12, height=8, res=300)
 ggplot(data.loc.new, aes(x=week, y=excess))+
-  geom_segment(aes(x=0, xend=23, y=0, yend=0), colour="Grey40")+
+  geom_segment(aes(x=0, xend=24, y=0, yend=0), colour="Grey40")+
   geom_line(aes(colour=loc))+
   theme_classic()+
-  scale_x_continuous(name="Week commencing", breaks=c(1:23), 
+  scale_x_continuous(name="Week commencing", breaks=c(1:24), 
                      labels=c(format(seq.Date(from=as.Date("2019-12-30"), by="7 days", 
-                                              length.out=23), "%d/%m/%y")))+
+                                              length.out=24), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
-  labs(title="The fall in excess deaths is happening slowest in deaths at home",
+  labs(title="Deaths are happening at home, not in hospitals",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
