@@ -13,7 +13,7 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "5th June"
+EWDate <- "12th June"
 ScotDate <- "13th June"
 NIDate <- "5th June"
 
@@ -25,7 +25,7 @@ NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 EngRange <- "Y" #increment by one letter each week
 ScotRange <- "Z" #incrememnt by one letter each week
-NIRange <- "27" #incremement by one number each week
+NIRange <- "28" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
