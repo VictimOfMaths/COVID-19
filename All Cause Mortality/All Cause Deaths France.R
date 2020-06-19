@@ -60,7 +60,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-12_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-19_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data1820 <- read.csv(file.path(temp2, "DC_2018-2020.csv"), sep=";")
@@ -92,7 +92,7 @@ maxdate <- max(data1820$dod)
 maxweek <- week(maxdate)
 
 #May need to manually set maxweek to a lower value if they don't align
-maxweek <- 21
+maxweek <- 22
 
 #Merge all years
 fulldata <- bind_rows(data, data1820)
@@ -135,7 +135,7 @@ excess.full$excess <- excess.full$deaths-excess.full$mean
 excess.full$prop <- excess.full$excess/excess.full$mean
 
 tiff("Outputs/ExcessDeathsFrance.tiff", units="in", width=8, height=6, res=300)
-ggplot(data.full)+
+ggplot(subset(data.full, week<53))+
   geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
   geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=week, y=mean_d), colour="Grey50", linetype=2)+
@@ -274,14 +274,14 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific mortality rates in France during the pandemic",
-       subtitle="Deaths in weeks 9-23 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       subtitle="Deaths in weeks 9-22 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
 
 tiff("Outputs/AgeSpecificDeathsPropFr.tiff", units="in", width=12, height=7, res=300)
 ggplot(newdata)+
   geom_bar(stat="identity", aes(x=age, y=propexcess, fill=propexcess), show.legend=FALSE)+
-  scale_fill_paletteer_c("ggthemes::Classic Red-White-Green", limit=c(-1,1)*max(abs(newdata$propexcess)))+
+  scale_fill_paletteer_c("ggthemes::Classic Red-White-Green", direction=-1, limit=c(-1,1)*max(abs(newdata$propexcess)))+
   scale_x_continuous(name="Age", breaks=seq(0,100, by=10))+
   scale_y_continuous(name="Proportional change in mortality rate in 2020 vs. 2010-19 average",
                      breaks=seq(-0.5, 1, by=0.5), labels=c("-50%", "0%", "+50%", "+100%"))+
@@ -290,6 +290,6 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific variation in mortality rates in France during the pandemic",
-       subtitle="Relative change in all-cause mortality rates in weeks 9-23 of 2020 versus the average between 2010-19",
+       subtitle="Relative change in all-cause mortality rates in weeks 9-22 of 2020 versus the average between 2010-19",
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
