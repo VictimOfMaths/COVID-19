@@ -28,8 +28,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-22.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:X21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-24.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:Z21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -148,7 +148,7 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:X14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:Z14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -307,7 +307,7 @@ data.UK <- data.UK %>%
 data.UK$mortrate <- data.UK$deaths*100000/data.UK$pop
 
 #Merge data excluding countries which are in HMD data, but which we've collected separately (with longer coverage)
-mergeddata <- bind_rows(subset(HMD_long, !(country %in% c("GBRTENW", "FRATNP", "ITA"))), data.UK[,-c(6)])
+mergeddata <- bind_rows(subset(HMD_long, !(country %in% c("GBRTENW", "GBR_SCO", "FRATNP", "ITA"))), data.UK[,-c(6)])
 
 #Calculate 2010-19 average, min and max
 hist.mergeddata <- mergeddata %>%
@@ -466,12 +466,12 @@ fulldata$country <- case_when(
   fulldata$country=="SVK" ~ "Slovakia",
   TRUE ~ fulldata$country)
 
-#Remove most recent week of data for FIN, NOR, SVK and USA which is wonky
+#Remove most recent week of data for FIN, NOR, SVK, SWE and USA which is wonky
 fulldata <- fulldata %>%
   group_by(age, country, year) %>%
   mutate(last_week=max(week)) %>%
   ungroup() %>%
-  filter(!(country %in% c("Finland", "Norway", "USA", "Slovakia") & year==2020 & week==last_week))
+  filter(!(country %in% c("Finland", "Norway", "USA", "Slovakia", "Sweden","France") & year==2020 & week==last_week))
 
 Excessplot <- ggplot(fulldata)+
   geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
@@ -512,6 +512,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   labs(title="15-64 year olds in England & Wales appear to fared poorly compared to their peers elsewhere",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+
 dev.off()
 
 #Calculate excess mortality rate
@@ -545,7 +546,7 @@ excessrank <- excess %>%
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
 #Plots
-plotage <- "15-64"
+plotage <- "0-14"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
@@ -573,3 +574,5 @@ ggplot()+
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
 dev.off()
+  
+  
