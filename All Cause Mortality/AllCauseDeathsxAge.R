@@ -545,6 +545,22 @@ excessrank <- excess %>%
 
 excessrank$country <- fct_reorder(as.factor(excessrank$country), -excessrank$excessprop)
 
+#plot of excess mortality in 2020
+tiff("Outputs/ExcessDeathsBars.tiff", units="in", width=10, height=8, res=500)
+ggplot(excessrank, aes(y=country, x=excessprop, fill=excessprop))+
+  geom_col(show.legend=FALSE)+
+  scale_fill_paletteer_c("ggthemes::Classic Red-White-Green", direction=-1, 
+                         limit=c(-1,1)*max(abs(excessrank$excessprop)))+
+  scale_x_continuous(name="Change in all-cause deaths in 2020 vs. average in 2010-19",
+                     breaks=c(-0.1,0,0.1,0.2), labels=c("-10%", "0", "+10%", "+20%"))+
+  scale_y_discrete(name="")+
+  theme_classic()+
+  theme(plot.title.position="plot")+
+  labs(title="England & Wales have seen the biggest rise in mortality in 2020 in Europe",
+       subtitle="All-cause deaths in 2020 vs. the average for 2010-19",
+       caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")
+dev.off()
+
 #Plots
 plotage <- "0-14"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
