@@ -35,7 +35,21 @@ data_long$cases <- ifelse(is.na(data_long$cases), 0, data_long$cases)
 heatmap <- data_long %>%
   arrange(HB, Date) %>%
   group_by(HB) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>%
+  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) 
+
+#Since 15th June 2020, Pillar 2 cases are now included in the Scottish total,
+#this means that all Pillar 2 cases *prior* to this date all show up on 15th June.
+#To fix this for the time series we *could* redistribute these back across the time
+#series, but easier just to leave them out and allocate the moving average from 
+#14th June as the number of new cases on 15th.
+
+heatmap$cases <- if_else(heatmap$Date=="2020-06-15", lag(heatmap$casesroll_avg, 1),
+                         heatmap$cases)
+
+#Recalculate rolling average
+heatmap <-  heatmap %>%
+  group_by(HB) %>% 
+  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>% 
   mutate(maxcaserate=max(casesroll_avg), maxcaseday=Date[which(casesroll_avg==maxcaserate)][1],
          totalcases=max(cumul_cases))
 
@@ -48,12 +62,16 @@ plotto <- max(heatmap$Date)
 #Plot case trajectories
 casetiles <- ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
+  geom_segment(aes(x=as.Date("2020-06-15"), xend=as.Date("2020-06-15"), y=0.5, yend=14.5),
+               colour="grey20")+
+  annotate("text", x=as.Date("2020-06-15"), y=14.6, label="*", size=5)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  coord_cartesian(clip = 'off')+
   labs(title="Timelines for COVID-19 cases in Scottish Health Boards",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData since 15th June (denoted with an asterisk) has included additional tests conducted under the UK Government testing programme (Pillar 2).\nAs a result, data for the 15th June itself is estimated. Data updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -62,7 +80,7 @@ casebars <- ggplot(subset(heatmap, Date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000, 2000, 3000))+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000, 2000, 3000, 4000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -74,7 +92,7 @@ library(ggridges)
 
 tiff("Outputs/COVIDScottishHBCaseRidges.tiff", units="in", width=12, height=5, res=500)
 ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, totalcases), height=casesroll_avg, fill=casesroll_avg))+
-  geom_density_ridges_gradient(stat="identity", rel_min_height=0.01)+
+  geom_density_ridges_gradient(stat="identity", rel_min_height=0.001)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
@@ -89,7 +107,7 @@ source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Need to manually increment the numbers at the end of this range: 79 = 1st June
-ICUdata <- read_excel(temp, sheet=4, range="A3:O94")
+ICUdata <- read_excel(temp, sheet=4, range="A3:O99")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:15))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", 0, ICUdata_long$cases))
