@@ -60,7 +60,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-19_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-06-26_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data1820 <- read.csv(file.path(temp2, "DC_2018-2020.csv"), sep=";")
@@ -91,14 +91,11 @@ data1820$ageband <- case_when(
 maxdate <- max(data1820$dod)
 maxweek <- week(maxdate)
 
-#May need to manually set maxweek to a lower value if they don't align
-maxweek <- 22
-
 #Merge all years
 fulldata <- bind_rows(data, data1820)
 
 fulldata$year <- year(fulldata$dod)
-fulldata$week <- week(fulldata$dod)
+fulldata$week <- week(fulldata$dod+days(1))
 
 #Aggregate to weekly data
 aggdata <- fulldata %>%
@@ -196,14 +193,14 @@ ggplot(aggdata)+
     paste0("+",round(excess[5,5],0)," deaths (+", round(excess[5,6]*100,0),"%)"),
     paste0("+",round(excess[6,5],0)," deaths (+", round(excess[6,6]*100,0),"%)"),
     paste0(round(excess[7,5],0)," deaths (", round(excess[7,6]*100,0),"%)"),
-    paste0("+",round(excess[8,5],0)," deaths (+", round(excess[8,6]*100,0),"%)"),
+    paste0(round(excess[8,5],0)," deaths (", round(excess[8,6]*100,0),"%)"),
     paste0("+",round(excess[9,5],0)," deaths (+", round(excess[9,6]*100,0),"%)"),
     paste0("+",round(excess[10,5],0)," deaths (+", round(excess[10,6]*100,0),"%)")),
             size=3.5, colour="Red", hjust=0)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
         plot.subtitle =element_markdown(), plot.title=element_markdown())+
-  labs(title="France has seen a substantial <i style='color:black'>fall</i> in deaths among working age men during the pandemic",
+  labs(title="All cause deaths in France are lower than 'usual' levels in many age groups",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
@@ -274,7 +271,7 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific mortality rates in France during the pandemic",
-       subtitle="Deaths in weeks 9-22 in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
+       subtitle=paste0("Deaths in weeks 9-", maxweek, " in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>."),
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
 
@@ -290,6 +287,6 @@ ggplot(newdata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Age-specific variation in mortality rates in France during the pandemic",
-       subtitle="Relative change in all-cause mortality rates in weeks 9-22 of 2020 versus the average between 2010-19",
+       subtitle=paste0("Relative change in all-cause mortality rates in weeks 9-", maxweek, " of 2020 versus the average between 2010-19"),
        caption="Data from Insee and Human Mortality Database | Plot by @VictimOfMaths")
 dev.off()
