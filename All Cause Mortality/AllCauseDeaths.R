@@ -15,7 +15,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "12th June"
 ScotDate <- "20th June"
-NIDate <- "12th June"
+NIDate <- "19th June"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek242020.xlsx"
@@ -25,7 +25,7 @@ NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 EngRange <- "Z" #increment by one letter each week
 ScotRange <- "AA" #incrememnt by one letter each week
-NIRange <- "28" #incremement by one number each week
+NIRange <- "29" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
