@@ -4,4 +4,4 @@ An initial attempt to understand the potential inequality impacts of the pandemi
 ![Quintile plot](https://github.com/VictimOfMaths/COVID-19/blob/master/Initial%20Inequality%20Estimates/COVIDQuintilesLonRate.png)
 
 Suggested citation for any of this analysis:<br>
-Angus, C. COVID plots and analysis, https://doi.org/10.15131/shef.data.12328226.v3
+Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226.v4
