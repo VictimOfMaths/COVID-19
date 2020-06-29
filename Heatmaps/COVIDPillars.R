@@ -9,10 +9,15 @@ library(RcppRoll)
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/893818/2020-06-21_COVID-19_UK_testing_time_series.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/896043/2020-06-28-COVID-19-UK-testing-time-series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read.csv(temp)[,c(1,3,4,9)]
 colnames(rawdata) <- c("Date", "Nation", "Pillar", "Cases")
+
+#Manually correct an error in the .csv file on 20th June
+rawdata$Date <- as.character(rawdata$Date)
+rawdata$Date <- if_else(rawdata$Date=="the ", "20/06/2020", rawdata$Date)
+
 rawdata$Date <- as.Date(rawdata$Date, format="%d/%m/%Y")
 
 #Calculate rolling 7 day average
@@ -31,3 +36,4 @@ ggplot(subset(rawdata, Nation=="UK"), aes(x=Date, y=Cases_roll, fill=Pillar))+
        subtitle="Rolling 7-day average of new COVID-19 cases in the UK identified through <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2</span> testing<br>(Pillar 1 data includes Welsh data on both Pillars).",
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
+
