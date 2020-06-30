@@ -13,17 +13,17 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "12th June"
+EWDate <- "19th June"
 ScotDate <- "20th June"
 NIDate <- "19th June"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek242020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek252020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-25.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "Z" #increment by one letter each week
+EngRange <- "AA" #increment by one letter each week
 ScotRange <- "AA" #incrememnt by one letter each week
 NIRange <- "29" #incremement by one number each week
 
@@ -768,7 +768,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are back within typical levels, but only <i style='color:black'>just</i>",
+  labs(title="All-cause deaths in England & Wales are still within typical levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=EWmaxweek-2.5, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
@@ -822,7 +822,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in men are still slightly above 'usual' levels",
+  labs(title="All-cause deaths are higher relative to historic levels for men than women",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -874,7 +874,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="85+ year old men are still seeing excess deaths",
+  labs(title="All age groups are now within 'usual' levels of mortality",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1127,7 +1127,7 @@ RegPlot <- ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Some regions of the UK are still recording small numbers of excess deaths",
+  labs(title="All regions of the UK are back within 'normal' levels of mortality from all causes",
        subtitle=subtitle,
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1233,7 +1233,7 @@ temp11 <- as.data.frame(t(read_excel(temp, sheet=12, range="BJ9:BJ14", col_names
 temp12 <- as.data.frame(t(read_excel(temp, sheet=12, range="BP9:BP14", col_names=FALSE)))
 temp13 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV9:BV14", col_names=FALSE)))
 temp14 <- as.data.frame(t(read_excel(temp, sheet=12, range="CB9:CB14", col_names=FALSE)))
-
+temp15 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH9:CH14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1241,7 +1241,7 @@ temp1$week <- 11
 temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
-                    temp12, temp13, temp14)
+                    temp12, temp13, temp14, temp15)
 data20$week <- c(12:EWmaxweek)
 
 colnames(data20) <- colnames(temp1)
@@ -1281,3 +1281,34 @@ ggplot()+
        subtitle=paste0("Registered weekly deaths in England & Wales in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2015-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
+
+##############################
+#COVID vs. non-COVID excess deaths
+temp <- tempfile()
+temp <- curl_download(url=Eng2020, destfile=temp, quiet=FALSE, mode="wb")
+EngCause <- as.data.frame(t(read_excel(temp, sheet=5, range=paste0("C9:", EngRange, "19"), 
+                                       col_names=FALSE)))[,c(1,3,11)]
+colnames(EngCause) <- c("Total2020", "Mean1519", "COVID")
+EngCause$week <- seq(1:nrow(EngCause))
+EngCause$other <- EngCause$Total2020-EngCause$COVID
+EngCause$excess <- EngCause$other-EngCause$Mean1519
+EngCause$allexcess <- EngCause$Total2020-EngCause$Mean1519
+EngCause_long <- gather(EngCause, cause, deaths, c(6,3,7))
+
+tiff("Outputs/ONSExcessxCause.tiff", units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_col(data=subset(EngCause_long, cause!="allexcess"), 
+           aes(x=week, y=deaths, fill=cause), position="stack")+
+  geom_segment(aes(x=0.5, xend=max(EngCause$week)+0.5, y=0, yend=0), colour="Grey30")+
+  geom_line(data=subset(EngCause_long, cause=="allexcess"),
+            aes(x=week, y=deaths, colour=cause))+
+  scale_x_continuous(name="Week")+
+  scale_y_continuous(name="Excess deaths vs. 2015-19 mean")+
+  scale_fill_paletteer_d("LaCroixColoR::PinaFraise", name="Cause", labels=c("COVID-19", "Other causes"))+
+  scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
+  theme_classic()+
+  labs(title="No excess deaths does not mean no COVID-19 deaths",
+       subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
+       caption="Data from ONS | Plot by @VictimOfMaths")
+dev.off()
+
