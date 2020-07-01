@@ -5,6 +5,9 @@ library(curl)
 library(paletteer)
 library(ggtext)
 library(RcppRoll)
+library(readxl)
+library(googledrive)
+library(sf)
 
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
@@ -37,3 +40,60 @@ ggplot(subset(rawdata, Nation=="UK"), aes(x=Date, y=Cases_roll, fill=Pillar))+
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
 
+#Download from Google Drive compiled by Daniel Howdon
+#https://twitter.com/danielhowdon/status/1278062684622258177?s=20
+temp <- tempfile()
+drive_download(as_id("1JcyH0Z85Fi8LS_1F4l92-12biPQHY7biYO2EgwFK6CE"), path=temp, overwrite=TRUE)
+temp <- paste0(temp, ".xlsx")
+data <- read_excel(temp, sheet=, range="A1:J151")
+
+#Calculate pillar 2 cases as a proportion of total
+data$pillar2prop <- data$`Implied pillar 2 cases`/data$`Week 26 implied cases`
+
+#set negative proportions to missing
+data$pillar2prop <- if_else(data$pillar2prop<0, -1, data$pillar2prop)
+data$pillar2prop <- na_if(data$pillar2prop, -1)
+
+#Download LA shapefile
+#Download shapefile of LA boundaries
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/6638c31a8e9842f98a037748f72258ed_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
+
+names(shapefile)[names(shapefile) == "ctyua17cd"] <- "UTLA code"
+
+int1 <- filter(data, `UTLA name`=="Bournemouth, Christchurch and Poole")
+int1$`UTLA code` <- "E06000028"
+int2 <- filter(data, `UTLA name`=="Bournemouth, Christchurch and Poole")
+int2$`UTLA code` <- "E06000029"
+int3 <- filter(data, `UTLA name`=="Bournemouth, Christchurch and Poole")
+int3$`UTLA code` <- "E10000009"
+
+data <- rbind(data, int1, int2, int3)
+
+map.data <- full_join(shapefile, data, by="UTLA code", all.y=TRUE)
+map.data <- map.data %>% drop_na("population")
+
+tiff("Outputs/COVIDPillars1vs2.tiff", units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_sf(data=map.data, aes(geometry=geometry, fill=pillar2prop), colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  scale_fill_paletteer_c("scico::roma", name="Proportion coming\nfrom Pillar 2",
+                         breaks=c(0,0.25,0.5,0.75,1), 
+                         labels=c("0%", "25%", "50%", "75%", "100%"), 
+                         na.value="grey60")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title.position="plot",
+        plot.subtitle=element_markdown())+
+  labs(title="New COVID cases are being identified through different routes across England",
+       subtitle="Proportion of new confirmed cases estimated to have come from <span style='color:#1c3699;'>Pillar 2 </span>vs. <span style='color:#801f01;'>Pillar 1 </span>tests",
+       caption="Data estimated fromn PHE figures by @danielhowdon | Plot by @VictimOfMaths")
+dev.off()
