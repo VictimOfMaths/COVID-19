@@ -12,7 +12,7 @@ library(sf)
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/896043/2020-06-28-COVID-19-UK-testing-time-series.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/897065/2020-07-01_COVID-19_UK_testing_time_series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read.csv(temp)[,c(1,3,4,9)]
 colnames(rawdata) <- c("Date", "Nation", "Pillar", "Cases")
@@ -42,17 +42,22 @@ dev.off()
 
 #Download from Google Drive compiled by Daniel Howdon
 #https://twitter.com/danielhowdon/status/1278062684622258177?s=20
+#New version:https://twitter.com/danielhowdon/status/1278676343631347712?s=20
 temp <- tempfile()
-drive_download(as_id("1JcyH0Z85Fi8LS_1F4l92-12biPQHY7biYO2EgwFK6CE"), path=temp, overwrite=TRUE)
+#drive_download(as_id("1JcyH0Z85Fi8LS_1F4l92-12biPQHY7biYO2EgwFK6CE"), path=temp, overwrite=TRUE)
+drive_download(as_id("1uh3E396yMFCTr_d6P__gyi99EshQ1BxFpjqwljXxR_M"), path=temp, overwrite=TRUE)
 temp <- paste0(temp, ".xlsx")
-data <- read_excel(temp, sheet=, range="A1:J151")
+data <- read_excel(temp, sheet=, range="A1:R151")
 
 #Calculate pillar 2 cases as a proportion of total
-data$pillar2prop <- data$`Implied pillar 2 cases`/data$`Week 26 implied cases`
+data$pillar2propwk26 <- data$`Week 26 pillar 2 cases`/data$`Week 26 implied cases`
+data$pillar2propwk27 <- data$`Week 27 pillar 2 cases`/data$`Week 27 implied cases`
 
 #set negative proportions to missing
-data$pillar2prop <- if_else(data$pillar2prop<0, -1, data$pillar2prop)
-data$pillar2prop <- na_if(data$pillar2prop, -1)
+data$pillar2propwk26 <- if_else(data$pillar2propwk26<0, -1, data$pillar2propwk26)
+data$pillar2propwk26 <- na_if(data$pillar2propwk26, -1)
+data$pillar2propwk27 <- if_else(data$pillar2propwk27<0, -1, data$pillar2propwk27)
+data$pillar2propwk27 <- na_if(data$pillar2propwk27, -1)
 
 #Download LA shapefile
 #Download shapefile of LA boundaries
@@ -80,9 +85,9 @@ data <- rbind(data, int1, int2, int3)
 map.data <- full_join(shapefile, data, by="UTLA code", all.y=TRUE)
 map.data <- map.data %>% drop_na("population")
 
-tiff("Outputs/COVIDPillars1vs2.tiff", units="in", width=8, height=6, res=500)
+tiff("Outputs/COVIDPillars1vs2wk26.tiff", units="in", width=8, height=6, res=500)
 ggplot()+
-  geom_sf(data=map.data, aes(geometry=geometry, fill=pillar2prop), colour=NA)+
+  geom_sf(data=map.data, aes(geometry=geometry, fill=pillar2propwk26), colour=NA)+
   xlim(10000,655644)+
   ylim(5337,700000)+
   scale_fill_paletteer_c("scico::roma", name="Proportion coming\nfrom Pillar 2",
@@ -94,6 +99,24 @@ ggplot()+
         axis.title=element_blank(), plot.title.position="plot",
         plot.subtitle=element_markdown())+
   labs(title="New COVID cases are being identified through different routes across England",
-       subtitle="Proportion of new confirmed cases estimated to have come from <span style='color:#1c3699;'>Pillar 2 </span>vs. <span style='color:#801f01;'>Pillar 1 </span>tests",
+       subtitle="Proportion of new confirmed cases estimated to have come from <span style='color:#1c3699;'>Pillar 2 </span>vs. <span style='color:#801f01;'>Pillar 1 </span>tests in week 26",
+       caption="Data estimated fromn PHE figures by @danielhowdon | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDPillars1vs2wk27.tiff", units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_sf(data=map.data, aes(geometry=geometry, fill=pillar2propwk27), colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  scale_fill_paletteer_c("scico::roma", name="Proportion coming\nfrom Pillar 2",
+                         breaks=c(0,0.25,0.5,0.75,1), 
+                         labels=c("0%", "25%", "50%", "75%", "100%"), 
+                         na.value="grey60")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title.position="plot",
+        plot.subtitle=element_markdown())+
+  labs(title="New COVID cases are being identified through different routes across England",
+       subtitle="Proportion of new confirmed cases estimated to have come from <span style='color:#1c3699;'>Pillar 2 </span>vs. <span style='color:#801f01;'>Pillar 1 </span>tests in week27",
        caption="Data estimated fromn PHE figures by @danielhowdon | Plot by @VictimOfMaths")
 dev.off()
