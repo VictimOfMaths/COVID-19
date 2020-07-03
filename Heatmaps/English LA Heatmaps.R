@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/06/COVID-19-total-announced-deaths-22-June-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/07/COVID-19-total-announced-deaths-2-Jul-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:118)]
+deaths<-deaths[18:.N, c(1:131)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:118)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:131)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -142,7 +142,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000))+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000,6000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -218,11 +218,15 @@ abscasebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=cumul_caserate, y
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases\nper 100,000 population", breaks=c(0,200,400))+
+  scale_x_continuous(name="Total confirmed cases\nper 100,000 population", breaks=c(0,500,1000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDLACasesHeatmapAbs.tiff", units="in", width=10, height=16, res=500)
+plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLACasesHeatmapAbs.png", units="in", width=10, height=16, res=500)
 plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -248,6 +252,10 @@ deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=cumul_deathrate, 
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDLADeathsHeatmapAbs.tiff", units="in", width=10, height=16, res=500)
+plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=10, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -284,7 +292,8 @@ temp <- rbind(heatmap, int1, int2, int3)
 change <- temp %>%
   mutate(change=casesroll_avg-lag(casesroll_avg,5))
 
-change <- subset(change, date==max)
+#Exclude most recent day as reporting is usually very incomplete
+change <- subset(change, date==max-1)
 
 map.change <- full_join(simplemap, change, by="code", all.y=TRUE)
 map.change <- map.change %>% drop_na("maxcaseprop")
@@ -298,8 +307,8 @@ changemap <- ggplot()+
   ylim(5337,700000)+
   theme_classic()+
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), 
-                         name="Change in case numbers\nin the past week", breaks=c(-10,-5,0,5,10),
-                         labels=c("-10", "-5", "0", "+5", "+10"),direction=-1)+
+                         name="Change in case numbers\nin the past week", breaks=c(-20,-10,0,10,20),
+                         labels=c("-20", "-10", "0", "+10", "+20"),direction=-1)+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.subtitle=element_markdown())+
   labs(title="Recent changes in COVID-19 case numbers across England",
@@ -355,6 +364,9 @@ ggdraw()+
   draw_plot(NWEng, 0.01,0.57, 0.32, 0.24)+
   draw_plot(NEEng, 0.57, 0.62, 0.22, 0.22)
 dev.off()
+
+#For animation
+map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
 
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
 map.data <- map.data %>% drop_na("maxcaseprop")
@@ -439,5 +451,36 @@ ggplot(subset(temp2, date>"2020-05-01"), aes(x=date, y=name, fill=avgcaserates))
   theme_classic()+
   labs(title="No clear evidence of a rise in cases after the protests in Central London",
        subtitle="7-day rolling average of new confirmed COVID-19 cases",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
+temp3 <- subset(heatmap, name %in% c("Leicester", "Bedford", "Barnsley", "Rotherham",
+                                     "Kirklees", "Bradford", "Rochdale", "Oldham",
+                                     "Tameside", "Blackburn with Darwen"))
+
+tiff("Outputs/COVIDPillarsHeatmap.tiff", units="in", width=10, height=5, res=500)
+ggplot(subset(temp3, date>"2020-05-01"), aes(x=date, y=name, fill=avgcaserates))+
+  geom_tile(colour="white")+
+  scale_fill_distiller(palette="Spectral", name="New cases\nper 100,000")+
+  scale_x_date(name="Date")+
+  scale_y_discrete(name="")+
+  theme_classic()+
+  labs(title="Mixed Pillar 1 trajectories in areas with high combined Pillar 1 and 2 tests in week 25",
+       subtitle="7-day rolling average of new confirmed COVID-19 cases",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
+#Graph of pillar 1 tests in any LA you like
+LA <- "Leicester"
+tiff(paste0("Outputs/COVIDNewCases", LA, ".tiff"), units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_col(data=subset(heatmap, name==LA), aes(x=date, y=cases), fill="skyblue2")+
+  geom_line(data=subset(heatmap, name==LA & date<max-1), aes(x=date, y=casesroll_avg), colour="red")+
+  scale_x_date(name="Date")+
+  scale_y_continuous("New COVID-19 cases")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title=paste0("Confirmed new COVID cases in ",LA),
+       subtitle="Confirmed new COVID-19 cases identified through combined pillar 1 & 2 testing and the <span style='color:Red;'>5-day rolling average",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
