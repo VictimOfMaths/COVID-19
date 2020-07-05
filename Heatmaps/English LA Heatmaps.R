@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/07/COVID-19-total-announced-deaths-2-Jul-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/07/COVID-19-total-announced-deaths-5-July-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:131)]
+deaths<-deaths[18:.N, c(1:134)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:131)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:134)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -113,7 +113,7 @@ fulldata <- merge(fulldata, deaths, by=c("code", "date"), all.x=TRUE)
 
 heatmap <- fulldata %>%
   group_by(code) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0), deathsroll_avg=roll_mean(deaths, 5, align="right", fill=0)) %>%
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0), deathsroll_avg=roll_mean(deaths, 7, align="right", fill=0)) %>%
   mutate(totalcases=max(cumul_cases), maxcaserate=max(casesroll_avg), maxcaseday=date[which(casesroll_avg==maxcaserate)][1],
          cumul_deaths=sum(deaths, na.rm=TRUE), totaldeaths=max(cumul_deaths, na.rm=TRUE), maxdeathrate=max(deathsroll_avg, na.rm=TRUE),
          maxdeathsday=date[which(deathsroll_avg==maxdeathrate)][1])
@@ -133,7 +133,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill=m
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in English Local Authorities",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -163,7 +163,7 @@ deathtiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fil
   scale_y_discrete(name="")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from NHS England & Ben Barr | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -209,7 +209,7 @@ abscasetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fil
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in English Local Authorities",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -238,7 +238,7 @@ death <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill=dea
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -290,7 +290,7 @@ temp <- rbind(heatmap, int1, int2, int3)
 
 #Calculate change in cases in the past week
 change <- temp %>%
-  mutate(change=casesroll_avg-lag(casesroll_avg,5))
+  mutate(change=casesroll_avg-lag(casesroll_avg,7))
 
 #Exclude most recent day as reporting is usually very incomplete
 change <- subset(change, date==max-1)
@@ -312,7 +312,7 @@ changemap <- ggplot()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.subtitle=element_markdown())+
   labs(title="Recent changes in COVID-19 case numbers across England",
-       subtitle="<span style='color:Grey50;'>Has the 5-day rolling average of case numbers <span style='color:#854B01FF;'>risen<span style='color:Grey50;'> or <span style='color:#014380FF;'>fallen<span style='color:Grey50;'> in the past week?<br>Areas with 0 cases shown in <span style='color:#41ab5d;'>green",
+       subtitle="<span style='color:Grey50;'>Has the 7-day rolling average of case numbers <span style='color:#854B01FF;'>risen<span style='color:Grey50;'> or <span style='color:#014380FF;'>fallen<span style='color:Grey50;'> in the past week?<br>Areas with 0 cases shown in <span style='color:#41ab5d;'>green",
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   geom_rect(aes(xmin=500000, xmax=560000, ymin=156000, ymax=200000), fill="transparent",
           colour="gray50")+
@@ -365,9 +365,6 @@ ggdraw()+
   draw_plot(NEEng, 0.57, 0.62, 0.22, 0.22)
 dev.off()
 
-#For animation
-map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
-
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
 map.data <- map.data %>% drop_na("maxcaseprop")
 
@@ -383,7 +380,7 @@ CaseAnim <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry=ge
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of the pandemic across England",
-       subtitle="Rolling 5-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nDate: {frame_time}",
+       subtitle="Rolling 7-day average number of new confirmed cases coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak of new cases).\nDate: {frame_time}",
        caption="Data from Public Health England | Visualisation by @VictimOfMaths")
 
 animate(CaseAnim, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnim.gif"), end_pause=60)
@@ -400,7 +397,7 @@ DeathAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03")), aes(geometry=g
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of the pandemic across England",
-       subtitle="Rolling 5-day average number of new confirmed deaths coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak in deaths).\nDate: {frame_time}",
+       subtitle="Rolling 7-day average number of new confirmed deaths coloured relative to the\npeak in each Local Authority (i.e. dark red represents the peak in deaths).\nDate: {frame_time}",
        caption="Data from NHS England | Visualisation by @VictimOfMaths")
 
 animate(DeathAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/DeathAnim.gif"), end_pause=60)
@@ -416,7 +413,7 @@ CaseAnimAbs <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of the pandemic across England",
-       subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
+       subtitle="Rolling 7-day average number of new confirmed cases.\nDate: {frame_time}",
        caption="Data from Public Health England | Visualisation by @VictimOfMaths")
 
 animate(CaseAnimAbs, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnimAbs.gif"), end_pause=60)
@@ -481,6 +478,6 @@ ggplot()+
   theme_classic()+
   theme(plot.subtitle=element_markdown())+
   labs(title=paste0("Confirmed new COVID cases in ",LA),
-       subtitle="Confirmed new COVID-19 cases identified through combined pillar 1 & 2 testing and the <span style='color:Red;'>5-day rolling average",
+       subtitle="Confirmed new COVID-19 cases identified through combined pillar 1 & 2 testing and the <span style='color:Red;'>7-day rolling average",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
