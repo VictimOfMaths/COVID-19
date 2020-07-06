@@ -183,14 +183,34 @@ data_summary$country <- if_else(substr(data_summary$code,1,1)=="E", "England", "
 
 data_summary <- bind_rows(data_summary, data_summary.s)
 
-tiff("Outputs/ExcessLAGB.tiff", units="in", width=8, height=32, res=500)
+#Plot of excess deaths by Local Authority
+png("Outputs/ExcessLAGB.png", units="in", width=8, height=32, res=500)
 ggplot(data_summary, aes(x=excessprop*100, y=fct_reorder(name, excessprop), fill=country))+
   geom_col()+
   scale_x_continuous(name="Change in all-cause deaths in 2020 vs. 2015-19 mean", 
                      breaks=c(-25,0,25,50), labels=c("-25%", "0%", "+25%", "+50%"))+
   scale_y_discrete(name="Local Authority")+
   scale_fill_manual(values=c("#B01824", "#82D0F0", "#326529"), name="Country")+
-  theme_classic()
+  theme_classic()+
+  labs(title="Excess mortality in 2020 by Local Authority",
+       subtitle="Relative increase in deaths from all causes in 2020 vs. the average in 2015-19",
+       caption="Data from ONS & NRS | Plot by @VictimOfMaths")
+dev.off()
+
+#Plot of top 25 Local Authorities
+tiff("Outputs/ExcessLAGBtop25.tiff", units="in", width=8, height=6, res=500)
+data_summary %>% 
+  slice_max(excessprop, n=25) %>% 
+  ggplot(aes(x=excessprop*100, y=fct_reorder(name, excessprop), fill=country))+
+  geom_col()+
+  scale_x_continuous(name="Change in all-cause deaths in 2020 vs. 2015-19 mean", 
+                     breaks=c(-25,0,25,50), labels=c("-25%", "0%", "+25%", "+50%"))+
+  scale_y_discrete(name="")+
+  scale_fill_manual(values=c("#B01824", "#82D0F0", "#326529"), name="Country")+
+  theme_classic()+
+  labs(title="Local Authorities with the highest levels of excess deaths in 2020",
+       subtitle="Relative increase in deaths from all causes in 2020 vs. the average in 2015-19",
+       caption="Data from ONS & NRS | Plot by @VictimOfMaths")
 dev.off()
 
 #Read in cases data for England
