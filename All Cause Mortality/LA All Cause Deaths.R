@@ -7,8 +7,9 @@ library(ggtext)
 library(paletteer)
 library(lubridate)
 library(forcats)
+library(Rcpp)
 
-#Bring in 2020 data (released by ONS on a Tuesday)
+#Bring in 2020 data for England & Wales (released by ONS on a Tuesday)
 temp <- tempfile()
 source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fcausesofdeath%2fdatasets%2fdeathregistrationsandoccurrencesbylocalauthorityandhealthboard%2f2020/lahbtablesweek25.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
@@ -21,7 +22,7 @@ data20$week <- as.numeric(data20$week)
 maxweek <- max(data20$week)
 enddate <- as.Date("2020-01-03")+weeks(maxweek-1)
 
-#Read in 2015-19 historic data
+#Read in 2015-19 historic data for England & Wales
 temp <- tempfile()
 source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/adhocs/11826fiveyearaverageweeklydeathsbylocalauthorityandplaceofoccurrenceenglandandwalesdeathsregistered2015to2019/weeklyfiveyearaveragesbylaandplaceofoccurrence20152019.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
@@ -98,10 +99,86 @@ ggplot(data_summary, aes(x=excessprop*100, y=fct_reorder(name, excessprop), fill
   scale_y_discrete(name="Local Authority")+
   theme_classic()
 
+#Read in cases data for England
+temp <- tempfile()
+source <- "https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+casedata.E <- read.csv(temp)[,c(1:5)]
+colnames(casedata.E) <- c("name", "code", "geography", "date", "cases")
+
+#Collapse to weeks
+casedata.E$week <- week(as.Date(casedata.E$date)-days(4))
+
+casedata.E <- casedata.E %>% 
+  filter(geography=="Lower tier local authority" & week<=maxweek) %>% 
+  group_by(name, code, week) %>% 
+  summarise(cases=sum(cases))
+
+#Read in cases data for Wales
+temp <- tempfile()
+source <- "http://www2.nphs.wales.nhs.uk:8080/CommunitySurveillanceDocs.nsf/3dc04669c9e1eaa880257062003b246b/77fdb9a33544aee88025855100300cab/$FILE/Rapid%20COVID-19%20surveillance%20data.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+casedata.W <- read_excel(temp, sheet=3)[,c(1:3)]
+
+colnames(casedata.W) <- c("name", "date", "cases")
+
+#Collapse to weeks
+casedata.W$week <- week(as.Date(casedata.W$date)-days(4))
+
+casedata.W <- casedata.W %>% 
+  filter(week<=maxweek) %>% 
+  group_by(name, week) %>% 
+  summarise(cases=sum(cases))
+
+casedata <- bind_rows(casedata.E, casedata.W)
+
+#Experimental pillar 1 & 2 separation - England only
+#Archive files from 1st & 2nd July - either side of pillar 2 addition to data
+#Available from https://coronavirus.data.gov.uk/archive
+#Pillar 1 data
+temp <- tempfile()
+source <- "https://coronavirus.data.gov.uk/downloads/csv/dated/coronavirus-cases_202007011400.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+p1data <- read.csv(temp)[,c(1:5)]
+colnames(p1data) <- c("name", "code", "geography", "date", "p1cases")
+p1data$date <- as.Date(p1data$date)
+p1data <- subset(p1data, geography=="Lower tier local authority" & date<"2020-07-01")
+
+#Pillar 1 & 2 combined
+temp <- tempfile()
+source <- "https://coronavirus.data.gov.uk/downloads/csv/dated/coronavirus-cases_202007021618.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+p12data <- read.csv(temp)[,c(1:5)]
+colnames(p12data) <- c("name", "code", "geography", "date", "p12cases")
+p12data$date <- as.Date(p12data$date)
+p12data <- subset(p12data, geography=="Lower tier local authority" & date<"2020-07-01")
+
+pillardata <- data.frame(date=rep(unique(p1data$date), times=length(unique(p1data$name))),
+                         name=rep(unique(p1data$name), each=length(unique(p1data$date))),
+                         code=rep(unique(p1data$code), each=length(unique(p1data$date))))
+
+pillardata <- merge(pillardata, p1data, all=TRUE)
+pillardata <- merge(pillardata, p12data, all=TRUE)
+
+pillardata$p1cases <- if_else(is.na(pillardata$p1cases), 0, pillardata$p1cases)
+pillardata$p12cases <- if_else(is.na(pillardata$p12cases), 0, pillardata$p12cases)
+
+pillardata$p2cases <- pillardata$p12cases-pillardata$p1cases
+
+pillardata <- pillardata %>% 
+  group_by(name) %>% 
+  arrange(date) %>% 
+  mutate(p1avg=roll_mean(p1cases, 7, align="right", fill=0), 
+         p2avg=roll_mean(p2cases, 7, align="right", fill=0))
+
+pillardata_long <- gather(pillardata, pillar, cases, c(8,9))
+
 #All-cause only dataset
 data.all <- merge(data1519, data20.all, by=c("code", "week", "name"), all.x=TRUE)[,c(1:4,7)]
 colnames(data.all) <- c("code", "week", "name", "hist", "2020")
 data.all <- data.all %>% drop_na(name)
+data.all$excess <- data.all$`2020`-data.all$hist
 
 #LA level excess deaths
 LA <- "Sheffield"
@@ -152,3 +229,31 @@ ggplot(subset(data.loc, name==LA), aes(x=week, y=excess, fill=location))+
   labs(title=paste0("Excess deaths in ", LA, " during the pandemic"),
        subtitle=paste0("Excess deaths by place of death in 2020 vs. 2015-19 average by cause\nData up to ", enddate),
        caption="Data from ONS | Plot by @VictimOfMaths")
+
+#Cases vs. deaths
+ggplot()+
+  geom_segment(aes(x=0.5, xend=maxweek+0.5, y=0, yend=0), colour="Grey30")+
+  geom_line(data=subset(casedata, name==LA), aes(x=week, y=cases), colour="#B25D91")+
+  geom_line(data=subset(data20, name==LA & cause=="COVID 19"), 
+            aes(x=week, y=deaths), colour="#1BB6AF")+
+  scale_x_continuous(name="Week", limits=c(0,maxweek+1))+
+  scale_y_continuous(name="")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title=paste0("Timeline of COVID-19 in ", LA),
+       subtitle=paste0("Confirmed new COVID-19 <span style='color:#B25D91;'>cases</span> compared to <span style='color:#1BB6AF;'>deaths</span> by week of occurance<br>Data up to ", enddate),
+       caption="Data from ONS | Plot by @VictimOfMaths")
+
+#Cases by pillar (experimental and for England only)
+ggplot()+
+  geom_line(data=subset(pillardata_long, name==LA), aes(x=date, y=cases, colour=pillar),
+            show.legend=FALSE)+
+  scale_x_date(name="Date")+
+  scale_y_continuous(name="Confirmed new cases")+
+  scale_colour_paletteer_d("NineteenEightyR::malibu")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title=paste0("Estimated timeline of COVID-19 cases by source in ", LA),
+       subtitle="Rolling 7-day average of new COVID-19 cases identified through <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2</span> testing<br>Note that this data may include some double counting from people tested under both pillars",
+       caption="Date from PHE | Plot by @VictimOfMaths")
+
