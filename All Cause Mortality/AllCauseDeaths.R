@@ -13,17 +13,17 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "19th June"
+EWDate <- "26th June"
 ScotDate <- "27th June"
 NIDate <- "26th June"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek252020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek262020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-26.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AA" #increment by one letter each week
+EngRange <- "AB" #increment by one letter each week
 ScotRange <- "AB" #incrememnt by one letter each week
 NIRange <- "30" #incremement by one number each week
 
@@ -822,7 +822,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths are higher relative to historic levels for men than women",
+  labs(title="All-cause deaths for both men and women are at 'normal' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1234,6 +1234,7 @@ temp12 <- as.data.frame(t(read_excel(temp, sheet=12, range="BP9:BP14", col_names
 temp13 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV9:BV14", col_names=FALSE)))
 temp14 <- as.data.frame(t(read_excel(temp, sheet=12, range="CB9:CB14", col_names=FALSE)))
 temp15 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH9:CH14", col_names=FALSE)))
+temp16 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN9:CN14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1241,7 +1242,7 @@ temp1$week <- 11
 temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
-                    temp12, temp13, temp14, temp15)
+                    temp12, temp13, temp14, temp15, temp16)
 data20$week <- c(12:EWmaxweek)
 
 colnames(data20) <- colnames(temp1)
@@ -1311,5 +1312,3 @@ ggplot()+
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
-
-
