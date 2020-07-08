@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/07/COVID-19-total-announced-deaths-5-July-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/07/COVID-19-total-announced-deaths-7-July-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:134)]
+deaths<-deaths[18:.N, c(1:136)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:134)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:136)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -146,11 +146,11 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLACasesHeatmap.tiff", units="in", width=10, height=16, res=500)
+tiff("Outputs/COVIDLACasesHeatmap.tiff", units="in", width=14, height=16, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLACasesHeatmap.png", units="in", width=10, height=16, res=500)
+png("Outputs/COVIDLACasesHeatmap.png", units="in", width=14, height=16, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -176,11 +176,11 @@ deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=totaldeaths, y=fc
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLADeathHeatmap.tiff", units="in", width=10, height=16, res=500)
+tiff("Outputs/COVIDLADeathHeatmap.tiff", units="in", width=14, height=16, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLADeathHeatmap.png", units="in", width=10, height=16, res=500)
+png("Outputs/COVIDLADeathHeatmap.png", units="in", width=14, height=16, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -222,11 +222,11 @@ abscasebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=cumul_caserate, y
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLACasesHeatmapAbs.tiff", units="in", width=10, height=16, res=500)
+tiff("Outputs/COVIDLACasesHeatmapAbs.tiff", units="in", width=14, height=16, res=500)
 plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLACasesHeatmapAbs.png", units="in", width=10, height=16, res=500)
+png("Outputs/COVIDLACasesHeatmapAbs.png", units="in", width=14, height=16, res=500)
 plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -251,11 +251,11 @@ deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=cumul_deathrate, 
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLADeathsHeatmapAbs.tiff", units="in", width=10, height=16, res=500)
+tiff("Outputs/COVIDLADeathsHeatmapAbs.tiff", units="in", width=14, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=10, height=16, res=500)
+png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=14, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -365,6 +365,9 @@ ggdraw()+
   draw_plot(NEEng, 0.57, 0.62, 0.22, 0.22)
 dev.off()
 
+#For animation
+map.data <- full_join(simplemap, temp, by="code", all.y=TRUE)
+
 #remove areas with no HLE data (i.e. Scotland, Wales & NI)
 map.data <- map.data %>% drop_na("maxcaseprop")
 
@@ -468,7 +471,7 @@ ggplot(subset(temp3, date>"2020-05-01"), aes(x=date, y=name, fill=avgcaserates))
 dev.off()
 
 #Graph of pillar 1 tests in any LA you like
-LA <- "Leicester"
+LA <- "Bradford"
 tiff(paste0("Outputs/COVIDNewCases", LA, ".tiff"), units="in", width=8, height=6, res=500)
 ggplot()+
   geom_col(data=subset(heatmap, name==LA), aes(x=date, y=cases), fill="skyblue2")+
