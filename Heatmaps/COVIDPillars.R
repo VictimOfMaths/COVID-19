@@ -12,24 +12,26 @@ library(sf)
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/897065/2020-07-01_COVID-19_UK_testing_time_series.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/898377/2020-07-07_COVID-19_UK_testing_time_series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-rawdata <- read.csv(temp)[,c(1,3,4,9)]
-colnames(rawdata) <- c("Date", "Nation", "Pillar", "Cases")
-
-#Manually correct an error in the .csv file on 20th June
-rawdata$Date <- as.character(rawdata$Date)
-rawdata$Date <- if_else(rawdata$Date=="the ", "20/06/2020", rawdata$Date)
-
+rawdata <- read.csv(temp)[,c(1,3,4,11,13)]
+colnames(rawdata) <- c("Date", "Nation", "Pillar", "Cases.old", "Cases.new")
 rawdata$Date <- as.Date(rawdata$Date, format="%d/%m/%Y")
 
-#Calculate rolling 7 day average
+rawdata$Cases.new <- as.numeric(as.character(rawdata$Cases.new))
+
+#Do some mangling of the data to address the change in methodology on 1st July
 rawdata <- rawdata %>% 
-  group_by(Pillar) %>% 
+  filter(!Pillar %in% c("Pillar 3", "Pillar 4") & Nation=="UK") %>% 
+  mutate(Cases=coalesce(Cases.old, Cases.new), Cases=replace_na(Cases,0),
+         Pillar=substr(Pillar,1,8)) %>% 
+  group_by(Pillar, Date) %>% 
+  arrange(Date) %>% 
+  summarise(Cases=sum(Cases)) %>% 
   mutate(Cases_roll=roll_mean(Cases, 7, align="right", fill=0))
 
 tiff("Outputs/COVIDPillars.tiff", units="in", width=8, height=6, res=500)
-ggplot(subset(rawdata, Nation=="UK"), aes(x=Date, y=Cases_roll, fill=Pillar))+
+ggplot(rawdata, aes(x=Date, y=Cases_roll, fill=Pillar))+
   geom_area(show.legend=FALSE)+
   scale_fill_paletteer_d("NineteenEightyR::malibu")+
   scale_y_continuous("New confirmed COVID-19 cases")+
