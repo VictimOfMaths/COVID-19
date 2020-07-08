@@ -27,6 +27,13 @@ data <- data %>%
   group_by(county) %>%
   mutate(cases=cumul_cases-lag(cumul_cases,1))
 
+#Add in missing data for 30th June - assume no new cases
+temp <- data.frame(date=as.Date("2020-06-30"),
+                   county=unique(data$county),
+                   cases=0)
+
+data <- bind_rows(data, temp)
+
 #For 3 counties (Leitrim, Limerick and Sligo) the case count goes *down* in early May. Ignore these for now
 data$cases <- ifelse(is.na(data$cases), 0, data$cases)
 data$cases <- ifelse(data$cases<0, 0, data$cases)
@@ -34,7 +41,8 @@ data$cumul_cases <- ifelse(is.na(data$cumul_cases), 0, data$cumul_cases)
 
 heatmap <- data %>%
   group_by(county) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>%
+  arrange(date) %>% 
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0)) %>%
   mutate(maxcaserate=max(casesroll_avg), maxcaseday=date[which(casesroll_avg==maxcaserate)][1],
          totalcases=max(cumul_cases))
 
@@ -52,7 +60,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(county, maxcaseday), fill
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in Irish Counties",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the county.\nCounties are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each county.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the county.\nCounties are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each county.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from data.gov.ie | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -75,7 +83,7 @@ tiff("Outputs/COVIDIrishCountyCaseRidges.tiff", units="in", width=11, height=6, 
 ggplot(heatmap, aes(x=date, y=fct_reorder(county, totalcases), height=casesroll_avg, fill=casesroll_avg))+
   geom_density_ridges_gradient(stat="identity", rel_min_height=0.007)+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
+  scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Irish counties",
