@@ -15,7 +15,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "26th June"
 ScotDate <- "4th July"
-NIDate <- "26th June"
+NIDate <- "3rd July"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek262020.xlsx"
@@ -25,7 +25,7 @@ NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 EngRange <- "AB" #increment by one letter each week
 ScotRange <- "AC" #incrememnt by one letter each week
-NIRange <- "30" #incremement by one number each week
+NIRange <- "31" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -1058,7 +1058,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland are back within 'usual' levels",
+  labs(title="Deaths from all causes in Northern Ireland are still within 'usual' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=NImaxweek-2.5, y=labpos, label=paste0(round(NI.excess$excess, 0), 
