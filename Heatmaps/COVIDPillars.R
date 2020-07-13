@@ -14,21 +14,25 @@ library(sf)
 temp <- tempfile()
 source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/899764/2020-07-12-covid19-uk-testing-time-series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-rawdata <- read.csv(temp)[,c(1,3,4,11,13)]
-colnames(rawdata) <- c("Date", "Nation", "Pillar", "Cases.old", "Cases.new")
+rawdata <- read.csv(temp)[,c(1,3,4,7,11,13)]
+colnames(rawdata) <- c("Date", "Nation", "Pillar", "Tests", "Cases.old", "Cases.new")
 rawdata$Date <- as.Date(rawdata$Date, format="%d/%m/%Y")
 
 rawdata$Cases.new <- as.numeric(as.character(rawdata$Cases.new))
+rawdata$Tests <- as.numeric(as.character(rawdata$Tests))
 
 #Do some mangling of the data to address the change in methodology on 1st July
 rawdata <- rawdata %>% 
   filter(!Pillar %in% c("Pillar 3", "Pillar 4") & Nation=="UK") %>% 
   mutate(Cases=coalesce(Cases.old, Cases.new), Cases=replace_na(Cases,0),
-         Pillar=substr(Pillar,1,8)) %>% 
+         Pillar=substr(Pillar,1,8), Tests=replace_na(Tests,0)) %>% 
   group_by(Pillar, Date) %>% 
   arrange(Date) %>% 
-  summarise(Cases=sum(Cases)) %>% 
-  mutate(Cases_roll=roll_mean(Cases, 7, align="right", fill=0))
+  summarise(Cases=sum(Cases), Tests=sum(Tests)) %>% 
+  mutate(Cases_roll=roll_mean(Cases, 7, align="right", fill=0),
+         Tests_roll=roll_mean(Tests, 7, align="right", fill=0),
+         Posrate=Cases/Tests,
+         Posrate_roll=roll_mean(Posrate, 7, align="right", fill=0))
 
 tiff("Outputs/COVIDPillars.tiff", units="in", width=8, height=6, res=500)
 ggplot(rawdata, aes(x=Date, y=Cases_roll, fill=Pillar))+
@@ -42,7 +46,7 @@ ggplot(rawdata, aes(x=Date, y=Cases_roll, fill=Pillar))+
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
 
-data_wide <- spread(rawdata[,-c(4)], Pillar, Cases)
+data_wide <- spread(rawdata[,-c(4:6)], Pillar, Cases)
 data_wide$Cases=data_wide$`Pillar 1`+data_wide$`Pillar 2`
 data_wide$Cases_roll <- roll_mean(data_wide$Cases, 7, align="right", fill=0)
 
@@ -62,7 +66,21 @@ ggplot()+
            colour="navyblue", hjust=0)
 dev.off()
   
-             
+#Plot of positivity rates
+tiff("Outputs/COVIDPillarsPosRate.tiff", units="in", width=8, height=6, res=500)
+ggplot(subset(rawdata, Date>as.Date("2020-04-06")), 
+       aes(x=Date, y=Posrate_roll, colour=Pillar))+
+  geom_line(show.legend=FALSE)+
+  scale_y_continuous(name="Proportion of tests returning a positive result",
+                     breaks=c(0,0.1,0.2,0.3), labels=c("0%", "10%", "20%", "30%"))+
+  scale_colour_paletteer_d("NineteenEightyR::malibu")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The proportion of COVID-19 tests returning positive remains low",
+       subtitle="Rolling 7-day average test positivity rate for <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2</span> testing<br>(Pillar 1 data includes Welsh data on both Pillars).",
+       caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
+dev.off()
+
 
 #Download from Google Drive compiled by Daniel Howdon
 #https://twitter.com/danielhowdon/status/1278062684622258177?s=20
