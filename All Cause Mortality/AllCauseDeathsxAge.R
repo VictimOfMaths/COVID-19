@@ -490,7 +490,7 @@ Excessplot <- ggplot(fulldata)+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
         plot.subtitle =element_markdown())+
   labs(title="Excess mortality rates by age group across Europe & the US",
-       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=24, height=10, res=300)
@@ -515,7 +515,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
         plot.subtitle =element_markdown())+
   labs(title="15-64 year olds in England & Wales appear to fared poorly compared to their peers elsewhere",
-       subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
+       subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 dev.off()
@@ -597,7 +597,7 @@ ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53)
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
     labs(title="Excess mortality rates across Europe & the US",
-         subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the average for 2010-19",
+         subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
          caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 dev.off()  
