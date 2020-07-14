@@ -13,17 +13,17 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "26th June"
+EWDate <- "3rd July"
 ScotDate <- "4th July"
 NIDate <- "3rd July"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek262020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek272020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-27.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AB" #increment by one letter each week
+EngRange <- "AC" #increment by one letter each week
 ScotRange <- "AC" #incrememnt by one letter each week
 NIRange <- "31" #incremement by one number each week
 
@@ -1235,6 +1235,7 @@ temp13 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV9:BV14", col_names
 temp14 <- as.data.frame(t(read_excel(temp, sheet=12, range="CB9:CB14", col_names=FALSE)))
 temp15 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH9:CH14", col_names=FALSE)))
 temp16 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN9:CN14", col_names=FALSE)))
+temp17 <- as.data.frame(t(read_excel(temp, sheet=12, range="CT9:CT14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1242,7 +1243,7 @@ temp1$week <- 11
 temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
-                    temp12, temp13, temp14, temp15, temp16)
+                    temp12, temp13, temp14, temp15, temp16, temp17)
 data20$week <- c(12:EWmaxweek)
 
 colnames(data20) <- colnames(temp1)
