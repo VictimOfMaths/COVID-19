@@ -14,17 +14,17 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "3rd July"
-ScotDate <- "4th July"
+ScotDate <- "11th July"
 NIDate <- "3rd July"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek272020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-27.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-28.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
 EngRange <- "AC" #increment by one letter each week
-ScotRange <- "AC" #incrememnt by one letter each week
+ScotRange <- "AD" #incrememnt by one letter each week
 NIRange <- "31" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
@@ -1007,7 +1007,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in Scotland are still falling",
+  labs(title="All-cause deaths in Scotland look very 'normal'",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=Scotmaxweek-5.5, y=labpos, label=paste0(round(S.excess$excess, 0), 
