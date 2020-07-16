@@ -8,9 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "4th July"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-27.xlsx"
-ScotRange <- "AC" #incrememnt by one letter each week
+ScotDate <- "11th July"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-28.xlsx"
+ScotRange <- "AD" #incrememnt by one letter each week
+Weekno <- 28
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -124,12 +125,12 @@ data.loc.new$excess <- data.loc.new$deaths-data.loc.new$mean
 #plot excess deaths over time
 tiff("Outputs/NRSWeeklyDeathsExcessxLocation.tiff", units="in", width=12, height=8, res=300)
 ggplot(data.loc.new, aes(x=week, y=excess))+
-  geom_segment(aes(x=0, xend=26, y=0, yend=0), colour="Grey40")+
+  geom_segment(aes(x=0, xend=Weekno, y=0, yend=0), colour="Grey40")+
   geom_line(aes(colour=loc))+
   theme_classic()+
-  scale_x_continuous(name="Week commencing", breaks=c(1:26), 
+  scale_x_continuous(name="Week commencing", breaks=c(1:Weekno), 
                      labels=c(format(seq.Date(from=as.Date("2019-12-30"), by="7 days", 
-                                              length.out=26), "%d/%m/%y")))+
+                                              length.out=Weekno), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
   labs(title="Deaths are happening at home, not in hospitals",
