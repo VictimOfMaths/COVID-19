@@ -12,7 +12,7 @@ library(sf)
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/899764/2020-07-12-covid19-uk-testing-time-series.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/900967/2020-07-15_COVID-19_UK_testing_time_series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read.csv(temp)[,c(1,3,4,7,11,13)]
 colnames(rawdata) <- c("Date", "Nation", "Pillar", "Tests", "Cases.old", "Cases.new")
@@ -46,7 +46,7 @@ ggplot(rawdata, aes(x=Date, y=Cases_roll, fill=Pillar))+
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
 
-data_wide <- spread(rawdata[,-c(4:6)], Pillar, Cases)
+data_wide <- spread(rawdata[,-c(4:8)], Pillar, Cases)
 data_wide$Cases=data_wide$`Pillar 1`+data_wide$`Pillar 2`
 data_wide$Cases_roll <- roll_mean(data_wide$Cases, 7, align="right", fill=0)
 
@@ -59,7 +59,7 @@ ggplot()+
   scale_y_continuous("New confirmed COVID-19 cases")+
   theme_classic()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Overall numbers of new COVID-19 cases might be on the rise again",
+  labs(title="It looks like the uptick in COVID-19 cases was more of a bump",
        subtitle="Rolling 7-day average of new COVID-19 cases in the UK identified through <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2</span> testing<br>(Pillar 1 data includes Welsh data on both Pillars).",
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2020-05-13"), y=4200, label="Rolling 7-day average of new cases",
