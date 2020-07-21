@@ -11,7 +11,7 @@ library(cowplot)
 temp <- tempfile()
 source <- "https://raw.githubusercontent.com/DataScienceScotland/COVID-19-Management-Information/master/COVID19%20-%20Daily%20Management%20Information%20-%20Scottish%20Health%20Boards%20-%20Cumulative%20cases.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- read.csv(temp)
+data <- read.csv(temp)[-c(136),-c(16,17)]
 
 #Remove blank rows
 data <- data %>% filter_all(all_vars(complete.cases(.)))  
