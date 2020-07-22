@@ -8,68 +8,70 @@ library(paletteer)
 temp <- tempfile()
 source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-29.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+endcol <- "AE"
+
 
 #Historic data for all locations
-all.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B6:AA10", col_names=FALSE)
+all.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B6:",endcol,"10"), col_names=FALSE)
 colnames(all.hist) <- c("cause", seq(1:(ncol(all.hist)-1)))
 all.hist <- bind_rows(all.hist, data.frame(cause="COVID-19"))
 all.hist$time <- "hist"
 all.hist$loc <- "All"
 
 #2020 data for all locations
-all.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B14:AA19", col_names=FALSE)
+all.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B14:",endcol,"19"), col_names=FALSE)
 colnames(all.2020) <- c("cause", seq(1:(ncol(all.2020)-1)))
 all.2020$time <- "now"
 all.2020$loc <- "All"
 
 #Historic data for care homes
-ch.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B32:AA36", col_names=FALSE)
+ch.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B32:",endcol,"36"), col_names=FALSE)
 colnames(ch.hist) <- c("cause", seq(1:(ncol(ch.hist)-1)))
 ch.hist <- bind_rows(ch.hist, data.frame(cause="COVID-19"))
 ch.hist$time <- "hist"
 ch.hist$loc <- "Care Home"
 
 #2020 data for care homes
-ch.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B40:AA45", col_names=FALSE)
+ch.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B40:",endcol,"45"), col_names=FALSE)
 colnames(ch.2020) <- c("cause", seq(1:(ncol(ch.2020)-1)))
 ch.2020$time <- "now"
 ch.2020$loc <- "Care Home"
 
 #Historic data for hospitals
-hosp.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B58:AA62", col_names=FALSE)
+hosp.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B58:",endcol,"62"), col_names=FALSE)
 colnames(hosp.hist) <- c("cause", seq(1:(ncol(hosp.hist)-1)))
 hosp.hist <- bind_rows(hosp.hist, data.frame(cause="COVID-19"))
 hosp.hist$time <- "hist"
 hosp.hist$loc <- "Hospital"
 
 #2020 data for hospitals
-hosp.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B66:AA71", col_names=FALSE)
+hosp.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B66:",endcol,"71"), col_names=FALSE)
 colnames(hosp.2020) <- c("cause", seq(1:(ncol(hosp.2020)-1)))
 hosp.2020$time <- "now"
 hosp.2020$loc <- "Hospital"
 
 #Historic data for homes
-home.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B84:AA88", col_names=FALSE)
+home.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B84:",endcol,"88"), col_names=FALSE)
 colnames(home.hist) <- c("cause", seq(1:(ncol(home.hist)-1)))
 home.hist <- bind_rows(home.hist, data.frame(cause="COVID-19"))
 home.hist$time <- "hist"
 home.hist$loc <- "Home"
 
 #2020 data for homes
-home.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B92:AA97", col_names=FALSE)
+home.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B92:",endcol,"97"), col_names=FALSE)
 colnames(home.2020) <- c("cause", seq(1:(ncol(home.2020)-1)))
 home.2020$time <- "now"
 home.2020$loc <- "Home"
 
 #Historic data for other locations
-other.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B110:AA114", col_names=FALSE)
+other.hist <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B110:",endcol,"114"), col_names=FALSE)
 colnames(other.hist) <- c("cause", seq(1:(ncol(other.hist)-1)))
 other.hist <- bind_rows(other.hist, data.frame(cause="COVID-19"))
 other.hist$time <- "hist"
 other.hist$loc <- "Other"
 
 #2020 data for other locations
-other.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range="B118:AA123", col_names=FALSE)
+other.2020 <- read_excel(temp, sheet="Table 4 - Excess deaths", range=paste0("B118:",endcol,"123"), col_names=FALSE)
 colnames(other.2020) <- c("cause", seq(1:(ncol(other.2020)-1)))
 other.2020$time <- "now"
 other.2020$loc <- "Other"
@@ -149,3 +151,4 @@ ggplot(subset(data, loc!="All" & loc!="Other"))+
        subtitle="Excess mortality in Scotland in 2020 by cause and location",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
 dev.off()
+
