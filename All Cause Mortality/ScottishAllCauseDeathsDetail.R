@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "11th July"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-28.xlsx"
-ScotRange <- "AD" #incrememnt by one letter each week
-Weekno <- 28
+ScotDate <- "18th July"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-29.xlsx"
+ScotRange <- "AE" #incrememnt by one letter each week
+Weekno <- 29
 
 #Read in 2015-2019 location data
 temp <- tempfile()
