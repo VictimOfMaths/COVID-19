@@ -323,8 +323,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "" 
-password <- ""
+username <- "c.r.angus@sheffield.ac.uk" 
+password <- "1574553541"
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -514,7 +514,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
         plot.subtitle =element_markdown())+
-  labs(title="15-64 year olds in England & Wales appear to fared poorly compared to their peers elsewhere",
+  labs(title="15-64 year olds in England, Wales and the US appear to fared poorly compared to their peers elsewhere",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
@@ -523,13 +523,20 @@ dev.off()
 #Calculate excess mortality rate
 fulldata$excess_r <- fulldata$mortrate-fulldata$mean_r
 
+tiff("Outputs/ExcessRatexAgeEUR.tiff", units="in", width=10, height=6, res=500)
 ggplot(subset(fulldata, age=="15-64"))+
-  geom_segment(aes(x=0, xend=25, y=0, yend=0))+
+  geom_segment(aes(x=0, xend=29, y=0, yend=0))+
   geom_line(aes(x=week, y=excess_r, colour=country))+
-  scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,25))+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey50", times=5), "Red", rep("Grey50", times=12), "Blue", rep("Grey50", times=4)))
+  scale_colour_manual(values=c(rep("Grey90", times=5), "#1b9e77", rep("Grey90", times=14), 
+                               "#d95f02", "Grey90", "#7570b3", rep("Grey90", times=2), 
+                               "#e7298a"), name="Country")+
+  labs(title="Some of these countries are not like the others",
+       subtitle="Excess mortality rates in 15-64 year-olds in 2020",
+       caption="Data from mortality.org, ONS, NRS, NISRA, Insee and ISTAT\nPlot by @VictimOfMaths")
+dev.off()
 
 #Heatmaps of country and age-specific excess deaths
 #Calculate excess mortality counts and proportion
@@ -561,7 +568,21 @@ ggplot(excessrank, aes(y=country, x=excessprop, fill=excessprop))+
   scale_y_discrete(name="")+
   theme_classic()+
   theme(plot.title.position="plot")+
-  labs(title="England & Wales have seen the biggest rise in mortality in 2020 in Europe",
+  labs(title="England & Wales, alongside Spain, have seen the biggest rise in mortality in 2020 in Europe",
+       subtitle="All-cause deaths in 2020 vs. the average for 2010-19",
+       caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/ExcessDeathsBarsAbs.tiff", units="in", width=10, height=8, res=500)
+ggplot(excessrank, aes(y=fct_reorder(country, -excess), x=excess, fill=excess))+
+  geom_col(show.legend=FALSE)+
+  scale_fill_paletteer_c("ggthemes::Classic Red-White-Green", direction=-1, 
+                         limit=c(-1,1)*max(abs(excessrank$excess)))+
+  scale_x_continuous(name="Change in all-cause deaths in 2020 vs. average in 2010-19")+
+  scale_y_discrete(name="")+
+  theme_classic()+
+  theme(plot.title.position="plot")+
+  labs(title="The US has seen far more deaths than anywhere in Europe during the pandemic",
        subtitle="All-cause deaths in 2020 vs. the average for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -603,7 +624,7 @@ ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53)
 dev.off()  
 
 #Plots
-plotage <- "85+"
+plotage <- "0-14"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
