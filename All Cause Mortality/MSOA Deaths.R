@@ -9,9 +9,9 @@ library(sf)
 
 #Read in data
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fdeathsinvolvingcovid19bylocalareaanddeprivation%2f1march2020to31may2020/referencetablesworkbook1.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fdeathsinvolvingcovid19bylocalareaanddeprivation%2f1march2020to30june2020/referencetablesworkbook2.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- read_excel(temp, sheet="Table 5", range="A14:R7214", col_names=FALSE)[,c(1,2,3,8,13,18)]
+data <- read_excel(temp, sheet="Table 5", range="A14:U7214", col_names=FALSE)[,c(1,2,3,9,15,21)]
 colnames(data) <- c("code", "ONSName", "Name", "CV19Deaths", "OtherDeaths", "AllDeaths")
 
 #Read in MSOA populations
@@ -56,7 +56,7 @@ ggplot(map)+
   guides(fill=guide_colourbar(ticks=FALSE))
 dev.off()
 
-#Then crop out the little bit of whitespace around the impact, import into Aerialod and make it look pretty!
+#Then crop out the little bit of whitespace around the image, import into Aerialod and make it look pretty!
 
 #Bring in Local Authority to allow LA-specific plots
 #Read in MSOA to LA lookup
@@ -73,10 +73,16 @@ MSOAtoLAD <- MSOAtoLAD %>%
 map <- full_join(map, MSOAtoLAD, by="code", all.y=TRUE)
 
 #Set up outputs for any LA by name
-LA <- "Sheffield"
+LA <- c("Barking and Dagenham", "Barnet", "Bexley", "Brent", "Bromley", "Camden", "City of London",
+        "Croydon", "Ealing", "Enfield", "Greenwich", "Hackney", "Hammersmith and Fulham",
+        "Haringey", "Harrow", "Havering", "Hillingdon", "Hounslow", "Islington", "Kensington and Chelsea",
+        "Kingston upon Thames", "Lambeth", "Lewisham", "Merton", "Newham", "Redbridge", 
+        "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", "Waltham Forest",
+        "Wandsworth", "Westminster")
 
-png(paste0("Outputs/COVIDDeathsMapBW", LA, ".png"), units="in", width=20, height=20, res=500)
-ggplot(subset(map, LAname==LA))+
+#png(paste0("Outputs/COVIDDeathsMapBW", LA, ".png"), units="in", width=20, height=20, res=500)
+png("Outputs/COVIDDeathsMapBWLondon.png", units="in", width=20, height=20, res=500)
+ggplot(subset(map, LAname %in% LA))+
   geom_sf(aes(geometry=geometry, fill=CV19Deaths), colour=NA, show.legend=FALSE)+
   scale_fill_paletteer_c("oompaBase::greyscale", name="")+
   theme_ipsum_rc()+
@@ -93,7 +99,7 @@ dev.off()
 ##################
 #Read in data
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-extra-tables-week-24.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-extra-tables-week-28.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data.S <- read_excel(temp, sheet="Table S8", range="A5:F1283", col_names=FALSE)
 colnames(data.S) <- c("code", "IZname", "LAname", "CV19Deaths", "pop", "CV19rate")
