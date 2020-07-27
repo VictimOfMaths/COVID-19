@@ -6,4 +6,4 @@ Visualising the spread of the pandemic.<br><br>
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDLACasesHeatmap.png)
 
 Suggested citation for any of this analysis:<br>
-Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226.v6
+Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226
