@@ -859,7 +859,7 @@ labpos <-  data.sex.age.EW.new %>%
   group_by(sex, age) %>%
   summarise(pos=max(deaths, max+500))
 
-ann_text2 <- data.frame(weekno=rep(EWmaxweek+0.5, times=8), deaths=labpos$pos, 
+ann_text2 <- data.frame(weekno=rep(EWmaxweek-5, times=8), deaths=labpos$pos, 
                         sex=rep(c("Male", "Female"), each=4), 
                         age=rep(c("45-64", "65-74", "75-84", "85+"), times=2))
 
@@ -1115,7 +1115,7 @@ subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:r
                    paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to ",  EWDate, ".<br>Northern Ireland data to ", NIDate, ".<br>Scotland data to ", ScotDate, "."))
 
 #Add labels to each facet w/ excess deaths
-ann_text4 <- data.frame(weekno=rep(EWmaxweek, times=12), deaths=labpos$pos, reg=unique(labpos$reg))
+ann_text4 <- data.frame(weekno=rep(EWmaxweek-5, times=12), deaths=labpos$pos, reg=unique(labpos$reg))
 
 RegPlot <- ggplot()+
   geom_ribbon(data=data.reg.UK.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
@@ -1237,6 +1237,7 @@ temp15 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH9:CH14", col_names
 temp16 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN9:CN14", col_names=FALSE)))
 temp17 <- as.data.frame(t(read_excel(temp, sheet=12, range="CT9:CT14", col_names=FALSE)))
 temp18 <- as.data.frame(t(read_excel(temp, sheet=12, range="CZ9:CZ14", col_names=FALSE)))
+temp19 <- as.data.frame(t(read_excel(temp, sheet=12, range="DF9:DF14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1244,7 +1245,7 @@ temp1$week <- 11
 temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
-                    temp12, temp13, temp14, temp15, temp16, temp17, temp18)
+                    temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19)
 data20$week <- c(12:EWmaxweek)
 
 colnames(data20) <- colnames(temp1)
