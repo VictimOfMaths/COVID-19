@@ -19,10 +19,10 @@ options(scipen = 999)
 temp <- tempfile()
 source <- "https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- fread(temp)[,c(1,2,3,4,5,8)]
+data <- fread(temp)[,c(1:6)]
 colnames(data) <- c("name", "code", "type", "date", "cases", "cumul_cases")
 data$date <- as.Date(data$date)
-data <- subset(data, type=="Upper tier local authority")
+data <- subset(data, type=="utla")
 
 #Set up skeleton dataframe with dates
 LAcodes <- unique(data$code)
@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/08/COVID-19-total-announced-deaths-3-August-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/08/COVID-19-total-announced-deaths-4-August-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:163)]
+deaths<-deaths[18:.N, c(1:164)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:163)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:164)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -161,7 +161,7 @@ deathtiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fil
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="")+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c("2020-03-06", plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from NHS England & Ben Barr | Plot by @VictimOfMaths")+
@@ -236,7 +236,7 @@ death <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill=dea
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c("2020-03-06", plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in English Local Authorities",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
@@ -315,7 +315,7 @@ changemap <- ggplot()+
        subtitle="<span style='color:Grey50;'>Has the 7-day rolling average of case numbers <span style='color:#854B01FF;'>risen<span style='color:Grey50;'> or <span style='color:#014380FF;'>fallen<span style='color:Grey50;'> in the past week?<br>Areas with 0 cases shown in <span style='color:#41ab5d;'>green",
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   geom_rect(aes(xmin=500000, xmax=560000, ymin=156000, ymax=200000), fill="transparent",
-          colour="gray50")+
+            colour="gray50")+
   geom_rect(aes(xmin=310000, xmax=405000, ymin=370000, ymax=430000), fill="transparent",
             colour="gray50")+
   geom_rect(aes(xmin=405000, xmax=490000, ymin=505000, ymax=580000), fill="transparent",
@@ -424,7 +424,7 @@ animate(CaseAnimAbs, duration=25, fps=10, width=2000, height=3000, res=300, rend
 #Quick analysis of potential COVID 'bumps'
 
 temp1 <- subset(heatmap, name %in% c("Dorset", "Cornwall and Isles of Scilly", "Devon", "Bournemouth, Christchurch and Poole",
-                                    "West Sussex", "East Sussex", "Brighton and Hove"))
+                                     "West Sussex", "East Sussex", "Brighton and Hove"))
 
 tiff("Outputs/COVIDSouthCoast.tiff", units="in", width=8, height=4, res=500)
 ggplot(subset(temp1, date>"2020-05-01"), aes(x=date, y=name, fill=avgcaserates))+
@@ -482,5 +482,24 @@ ggplot()+
   theme(plot.subtitle=element_markdown())+
   labs(title=paste0("Confirmed new COVID cases in ",LA),
        subtitle="Confirmed new COVID-19 cases identified through combined pillar 1 & 2 testing and the <span style='color:Red;'>7-day rolling average",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
+#New lockdown areas
+LA <- c("Calderdale", "Blackburn with Darwen", "Leicester", "Bury", "Oldham", "Manchester",
+        "Salford", "Rochdale", "Stockport", "Tameside", "Trafford", "Wigan", "Bolton",
+        "Kirklees", "Lancashire")
+
+tiff("Outputs/COVIDNewLockdown.tiff", units="in", width=10, height=5, res=500)
+ggplot(subset(heatmap, name %in% LA), aes(x=date, y=name, fill=avgcaserates))+
+  geom_tile(colour="white")+
+  geom_segment(aes(x=as.Date("2020-06-29"), xend=as.Date("2020-06-29"), y=0, yend=16), colour="NavyBlue", linetype=2)+
+  geom_segment(aes(x=as.Date("2020-07-31"), xend=as.Date("2020-07-31"), y=0, yend=16), colour="Red", linetype=2)+
+  scale_fill_distiller(palette="Spectral", name="New cases\nper 100,000")+
+  scale_x_date(name="Date")+
+  scale_y_discrete(name="")+
+  theme_classic()+
+  labs(title="Trajectories of COVID cases in areas with second lockdown restrictions",
+       subtitle="7-day rolling average of new confirmed COVID-19 cases per 100,000 inhabitants",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
