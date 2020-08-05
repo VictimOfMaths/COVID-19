@@ -15,7 +15,7 @@ The code also generates a map of Local Authority-level changes in case numbers i
 [MSOA Deaths.R](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/MSOA%20Deaths.R) takes mortality data from England & Wales at Middle Super Output Area level and from Scotland at Intermediate Zone level and maps it, ready for 3D visualisation using [Aerialod](https://ephtracy.github.io/index.html?page=aerialod).
 
 ![Excess deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/ONSNRSNISRAWeeklyDeathsxReg.png)
-![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVIDDeathsUK.png)
+![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVID19MSOAUKv2.png)
 
 3) [Exposure Mapping](https://github.com/VictimOfMaths/COVID-19/tree/master/Exposure%20mapping):<br>[COVIDExposures.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Exposure%20mapping/COVIDExposures.R) brings together data on health deprivation and estimates of the potential COVID-19 mortality risk based on the age-sex structure of the population (following the approach developed by [@ikashnitsky](https://twitter.com/ikashnitsky) and [@jm_aburto](https://twitter.com/jm_aburto)) at Lower Super Output Area level and plots bivariate maps highlighting areas with the greatest potential COVID-19 risk. I also made a Shiny app which creates slightly lower resolution versions of the same plots online, which you can find [here](https://victimofmaths.shinyapps.io/covidmapper/).
 
