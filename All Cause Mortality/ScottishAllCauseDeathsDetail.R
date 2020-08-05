@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "25th July"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-30.xlsx"
-ScotRange <- "AF" #incrememnt by one letter each week
-Weekno <- 30
+ScotDate <- "1st August"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-31.xlsx"
+ScotRange <- "AG" #incrememnt by one letter each week
+Weekno <- 31
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -68,6 +68,8 @@ data.loc.2020$year <- "2020"
 
 #Merge with older years
 data.loc.2020_long <- gather(data.loc.2020, location, deaths, c(2:5))
+data.loc.2020_long$deaths <- as.numeric(data.loc.2020_long$deaths)
+data.loc.2020_long$deaths <- replace_na(data.loc.2020_long$deaths, 0)
 data.loc <- bind_rows(data.loc_long, data.loc.2020_long)
 
 #merge 'Other institution' deaths into 'home/other'
@@ -169,10 +171,10 @@ data.HB.old <- arrange(data.HB.old, data.HB.old$HB)
 labpos <-  data.HB.old %>%
   filter(!is.na(`2020`) & week==maxweek) %>%
   group_by(HB) %>%
-  mutate(pos=max(`2020`*1.2, max+60))
+  mutate(pos=max(`2020`*1.4, max+60))
 
-ann_text <- data.frame(weekno=rep(maxweek+0.5, times=14), deaths=labpos$pos, 
-                       HB=levels(data.HB.old$HB))
+ann_text <- data.frame(weekno=rep(24, times=14), deaths=labpos$pos, 
+                       HB=as.factor(levels(data.HB.old$HB)))
 
 
 tiff("Outputs/NRSWeeklyDeathsxHB.tiff", units="in", width=12, height=8, res=300)
@@ -191,35 +193,36 @@ ggplot(data.HB.old)+
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=weekno, y=deaths), label=c(paste0(round(excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
                                                                    round(excess[1,4]*100, 0),"%)"),
-                                                            paste0(round(excess[2,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[2,2],0),"  deaths (+",
                                                                    round(excess[2,4]*100, 0),"%)"),
-                                                            paste0(round(excess[3,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[3,2],0),"  deaths (+",
                                                                    round(excess[3,4]*100, 0),"%)"),
-                                                            paste0(round(excess[4,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[4,2],0),"  deaths (+",
                                                                    round(excess[4,4]*100, 0),"%)"),
-                                                            paste0(round(excess[5,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[5,2],0),"  deaths (+",
                                                                    round(excess[5,4]*100, 0),"%)"),
-                                                            paste0(round(excess[6,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[6,2],0),"  deaths (+",
                                                                    round(excess[6,4]*100, 0),"%)"),
-                                                            paste0(round(excess[7,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[7,2],0),"  deaths (+",
                                                                    round(excess[7,4]*100, 0),"%)"),
-                                                            paste0(round(excess[8,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[8,2],0),"  deaths (+",
                                                                    round(excess[8,4]*100, 0),"%)"),
-                                                            paste0(round(excess[9,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[9,2],0),"  deaths (+",
                                                                    round(excess[9,4]*100, 0),"%)"),
-                                                            paste0(round(excess[10,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[10,2],0),"  deaths (+",
                                                                    round(excess[10,4]*100, 0),"%)"),
-                                                            paste0(round(excess[11,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[11,2],0),"  deaths (+",
                                                                    round(excess[11,4]*100, 0),"%)"),
-                                                            paste0(round(excess[12,2],0)," excess deaths (+",
+                                                            paste0("+",round(excess[12,2],0),"  deaths (+",
                                                                    round(excess[12,4]*100, 0),"%)"),
-                                                            paste0(round(excess[13,2],0)," excess deaths (",
+                                                            paste0(round(excess[13,2],0),"  deaths (",
                                                                    round(excess[13,4]*100, 0),"%)"),
-                                                            paste0(round(excess[14,2],0)," excess deaths (",
+                                                            paste0(round(excess[14,2],0),"  deaths (",
                                                                    round(excess[14,4]*100, 0),"%)")),
             size=3, colour=rep("red", times=14), hjust=0)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown())
+
 dev.off()
 
 #Read in age data
@@ -353,7 +356,7 @@ excess.age <- data.age %>%
   summarise(totalexcess=sum(excess), totalmean=sum(mean), propexcess=totalexcess/totalmean)
 
 #Scotland only age plot
-ann_text2 <- data.frame(week=rep(maxweek+0.5, times=6), pos=c(75, 100, 240, 260, 400, 450),
+ann_text2 <- data.frame(week=rep(24, times=6), pos=c(75, 100, 240, 260, 400, 450),
                         age=c("0-14", "15-44", "45-64", "65-74", "75-84", "85+"))
 
 tiff("Outputs/NRSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
