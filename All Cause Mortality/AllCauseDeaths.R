@@ -1,6 +1,4 @@
 rm(list=ls())
-#Install the ggtext package from GitHub if you don't have it already
-#remotes::install_github("wilkelab/ggtext")
 
 library(tidyverse)
 library(paletteer)
@@ -13,19 +11,19 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "17th July"
-ScotDate <- "25th July"
-NIDate <- "17th July"
+EWDate <- "24th July"
+ScotDate <- "1st August"
+NIDate <- "24th July"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek292020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-30.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek302020.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-31.xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AE" #increment by one letter each week
-ScotRange <- "AF" #incrememnt by one letter each week
-NIRange <- "33" #incremement by one number each week
+EngRange <- "AF" #increment by one letter each week
+ScotRange <- "AG" #incrememnt by one letter each week
+NIRange <- "34" #incremement by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -771,7 +769,7 @@ ggplot()+
   labs(title="All-cause deaths in England & Wales are still within typical levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=EWmaxweek-2.5, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
+  annotate(geom="text", x=24, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
                                                                 " more deaths in 2020 than average (+", 
                                                                 round(EW.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=9700, label="Historic maximum", colour="Skyblue4")+
@@ -809,7 +807,7 @@ labpos <-  data.sex.EW.new %>%
   summarise(pos=max(deaths, max+800))
 
 
-ann_text1 <- data.frame(weekno=rep(EWmaxweek+0.5, times=2), deaths=labpos$pos, sex=c("Male", "Female"))
+ann_text1 <- data.frame(weekno=rep(26, times=2), deaths=labpos$pos, sex=c("Male", "Female"))
 
 tiff("Outputs/ONSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
@@ -939,7 +937,7 @@ labpos <-  data.age.EW.new %>%
 #Manually adjust up Under45s label to handle text wrapping
 labpos[1,2] <- labpos[1,2]+1000
 
-ann_text3 <- data.frame(weekno=rep(EWmaxweek+0.5, times=5), deaths=labpos$pos, 
+ann_text3 <- data.frame(weekno=rep(26, times=5), deaths=labpos$pos, 
                         age2=c("Under 45", "45-64", "65-74", "75-84", "85+"))
 
 tiff("Outputs/ONSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=300)
@@ -1010,7 +1008,7 @@ ggplot()+
   labs(title="All-cause deaths in Scotland look very 'normal'",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=Scotmaxweek-5.5, y=labpos, label=paste0(round(S.excess$excess, 0), 
+  annotate(geom="text", x=22, y=labpos, label=paste0(round(S.excess$excess, 0), 
                                                                   " more deaths in 2020 than average (+", round(S.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=1150, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=800, label="Historic minimum", colour="Skyblue4")+
@@ -1061,7 +1059,7 @@ ggplot()+
   labs(title="Deaths from all causes in Northern Ireland are still within 'usual' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=NImaxweek-2.5, y=labpos, label=paste0(round(NI.excess$excess, 0), 
+  annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
                                                                 " more deaths in 2020 than average (+", 
                                                                 round(NI.excess$percexcess*100, 0),"%)"), 
            colour="Red", hjust=0)+
@@ -1115,7 +1113,7 @@ subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:r
                    paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to ",  EWDate, ".<br>Northern Ireland data to ", NIDate, ".<br>Scotland data to ", ScotDate, "."))
 
 #Add labels to each facet w/ excess deaths
-ann_text4 <- data.frame(weekno=rep(EWmaxweek-5, times=12), deaths=labpos$pos, reg=unique(labpos$reg))
+ann_text4 <- data.frame(weekno=rep(24, times=12), deaths=labpos$pos, reg=unique(labpos$reg))
 
 RegPlot <- ggplot()+
   geom_ribbon(data=data.reg.UK.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
@@ -1163,7 +1161,7 @@ RegPlot <- ggplot()+
                                                                     " deaths (+", 
                                                                     round(reg.UK.excess[10,4]*100, 0),"%)"),
                                                              paste0("+", round(reg.UK.excess[11,2], 0), 
-                                                                    " excess deaths (+", 
+                                                                    " deaths (+", 
                                                                     round(reg.UK.excess[11,4]*100, 0),"%)"),
                                                              paste0("+", round(reg.UK.excess[12,2], 0), 
                                                                     " deaths (+", 
@@ -1238,6 +1236,7 @@ temp16 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN9:CN14", col_names
 temp17 <- as.data.frame(t(read_excel(temp, sheet=12, range="CT9:CT14", col_names=FALSE)))
 temp18 <- as.data.frame(t(read_excel(temp, sheet=12, range="CZ9:CZ14", col_names=FALSE)))
 temp19 <- as.data.frame(t(read_excel(temp, sheet=12, range="DF9:DF14", col_names=FALSE)))
+temp20 <- as.data.frame(t(read_excel(temp, sheet=12, range="DL9:DL14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1245,7 +1244,7 @@ temp1$week <- 11
 temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character, as.numeric)
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
-                    temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19)
+                    temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20)
 data20$week <- c(12:EWmaxweek)
 
 colnames(data20) <- colnames(temp1)
