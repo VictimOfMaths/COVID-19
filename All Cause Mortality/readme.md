@@ -6,7 +6,7 @@ Analysis of data on weekly all-cause mortality during the pandemic<br><br>
 [MSOA Deaths.R](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/MSOA%20Deaths.R) takes mortality data from England & Wales at Middle Super Output Area level and from Scotland at Intermediate Zone level and maps it, ready for 3D visualisation using [Aerialod](https://ephtracy.github.io/index.html?page=aerialod).
 
 ![Excess deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/ONSNRSNISRAWeeklyDeathsxReg.png)
-![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVIDDeathsUK.png)
+![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVID19MSOAUKv2.png)
 
 Suggested citation for any of this analysis:<br>
 Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226
