@@ -10,11 +10,11 @@ library(ggtext)
 #From this web page: https://www.istat.it/it/archivio/240401
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record-4giugno.zip"
+source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record-2.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 
-rawdata <- read.csv(file.path(temp2, "comuni_giornaliero-decessi.csv"))
+rawdata <- read.csv(file.path(temp2, "dati-mortalit…-comuni_giornalieri-al_31maggio.csv"))
 
 #Tidy up data
 rawdata$age <- case_when(
@@ -69,13 +69,15 @@ data$age <- factor(data$age, levels=c("0", "1-4", "5-9", "10-14", "15-19", "20-2
 
 #Explore missingness in the deaths data
 #This seems to be throwing a weird error at the moment?
+data <- as.data.frame(data)
+data$test <- if_else(is.na(data$deaths),1,0)
+
 test <- data %>%
-  + filter(is.na(deaths)) %>%
   + group_by(date) %>%
-  + summarise(test=n())
+  + summarise(measure=mean(test))
 
 #Looking at this, a clear jump in missingness after 30th April 2020, so censor the data here
-cut <- week(as.Date("2020-04-30"))-1
+cut <- week(as.Date("2020-05-31"))-1
 
 data_prov <- data %>%
   filter(sex!="Total" & !(year==2020 & week>cut)) %>%
@@ -130,8 +132,8 @@ ggplot(subset(tempdata, week<53))+
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   annotate(geom="text", x=cut-2, y=18000, label=paste0("+", round(excess$excess, 0), 
-                                                                " more deaths in 2020 than average (+", 
-                                                                round(excess$prop*100, 0),"%)"), colour="Red", hjust=0)+
+                                                       " more deaths in 2020 than average (+", 
+                                                       round(excess$prop*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=15000, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=10000, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=11000, label="Historic mean", colour="grey30")+
@@ -181,8 +183,8 @@ ggplot(subset(tempdata.sex, week<53))+
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=week, y=position), 
             label=c(paste0(round(excess.sex[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.sex[1,5]*100,0),"%)"),
-            paste0(round(excess.sex[2,4],0)," deaths (+", round(excess.sex[2,5]*100,0),"%)")), colour="Red", size=3.5, hjust=0)
- 
+                    paste0(round(excess.sex[2,4],0)," deaths (+", round(excess.sex[2,5]*100,0),"%)")), colour="Red", size=3.5, hjust=0)
+
 dev.off()
 
 #Plot by region
@@ -214,7 +216,7 @@ tempdata.reg <- arrange(tempdata.reg, NOME_REGIONE)
 
 labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]+1000
 
-ann_text2 <- data.frame(week=rep(cut+0.5, times=20), NOME_REGIONE=levels(tempdata.reg$NOME_REGIONE), position=labpos)
+ann_text2 <- data.frame(week=rep(cut+0.5, times=20), NOME_REGIONE=as.factor(levels(tempdata.reg$NOME_REGIONE)), position=labpos)
 
 tiff("Outputs/ExcessDeathsItalyxReg.tiff", units="in", width=14, height=9, res=300)
 ggplot(subset(tempdata.reg, week<53))+
