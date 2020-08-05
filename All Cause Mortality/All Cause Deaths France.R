@@ -1,4 +1,4 @@
-rm(list=ls())
+ rm(list=ls())
 
 library(tidyverse)
 library(curl)
@@ -8,6 +8,7 @@ library(forcats)
 library(ggtext)
 library(HMDHFDplus)
 library(paletteer)
+library(ggthemes)
 
 #Read in historic French mortality data for 2010-18
 #Source: https://www.insee.fr/fr/information/4190491
@@ -60,7 +61,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-07-10_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-07-31_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data18 <- read.csv(file.path(temp2, "DC_2018_det.csv"), sep=";")
@@ -143,9 +144,9 @@ ggplot(subset(data.full, week<53))+
   geom_line(aes(x=week, y=deaths), colour="Red")+
   scale_x_continuous(name="Week number")+
   scale_y_continuous("Weekly deaths recorded")+
-  annotate(geom="text", x=maxweek-4.5, y=15000, label=paste0("+", round(excess.full$excess, 0), 
-                                                                " more deaths in 2020 than average (+", 
-                                                                round(excess.full$prop*100, 0),"%)"), colour="Red", hjust=0)+
+  annotate(geom="text", x=19, y=15000, label=paste0("+", round(excess.full$excess, 0), 
+                                                             " more deaths in 2020 than average (+", 
+                                                             round(excess.full$prop*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=12000, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=9200, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=46, y=9200, label="Historic mean", colour="grey30")+
@@ -200,7 +201,7 @@ ggplot(aggdata)+
     paste0(round(excess[8,5],0)," deaths (", round(excess[8,6]*100,0),"%)"),
     paste0("+",round(excess[9,5],0)," deaths (+", round(excess[9,6]*100,0),"%)"),
     paste0("+",round(excess[10,5],0)," deaths (+", round(excess[10,6]*100,0),"%)")),
-            size=3.5, colour="Red", hjust=0)+
+    size=3.5, colour="Red", hjust=0)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
         plot.subtitle =element_markdown(), plot.title=element_markdown())+
