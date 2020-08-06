@@ -129,7 +129,7 @@ ggplot(subset(tempdata, week<53))+
   theme(plot.subtitle =element_markdown())+
   expand_limits(y=0)+
   labs(title="All-cause mortality in Italy during the pandemic",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   annotate(geom="text", x=cut-2, y=18000, label=paste0("+", round(excess$excess, 0), 
                                                        " more deaths in 2020 than average (+", 
@@ -163,7 +163,7 @@ excess.sex <- tempdata.sex %>%
 excess.sex$excess <- excess.sex$deaths-excess.sex$mean
 excess.sex$prop <- excess.sex$excess/excess.sex$mean
 
-ann_text <- data.frame(week=rep(cut-0.5, times=2), sex=c("Male", "Female"), position=c(9000,9000))
+ann_text <- data.frame(week=rep(cut-0.5, times=2), sex=as.factor(c("Male", "Female")), position=c(9000,9000))
 
 tiff("Outputs/ExcessDeathsItalyxSex.tiff", units="in", width=10, height=8, res=300)
 ggplot(subset(tempdata.sex, week<53))+
@@ -179,7 +179,7 @@ ggplot(subset(tempdata.sex, week<53))+
         strip.text=element_text(face="bold", size=rel(1)))+
   expand_limits(y=0)+
   labs(title="Excess deaths are almost twice as high in Italian men compared to women",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=week, y=position), 
             label=c(paste0(round(excess.sex[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.sex[1,5]*100,0),"%)"),
@@ -232,7 +232,7 @@ ggplot(subset(tempdata.reg, week<53))+
         strip.text=element_text(face="bold", size=rel(1)))+
   expand_limits(y=0)+
   labs(title="Excess deaths in Italy are very heavily concentrated in the Northern regions",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=week, y=position), 
             label=c(paste0(round(excess.reg[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.reg[1,5]*100,0),"%)"),
@@ -272,7 +272,7 @@ ggplot(subset(tempdata.reg, week<53 & NOME_REGIONE=="Lazio"))+
   theme(plot.subtitle=element_markdown(), plot.title=element_markdown())+
   expand_limits(y=0)+
   labs(title="All-cause deaths in the Italian capital are <i style='color:black'>lower</i> than in previous years",
-       subtitle="Weekly deaths in the Lazio region in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 28th April 2020.",
+       subtitle="Weekly deaths in the Lazio region in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   annotate(geom="text", x=cut+0.5, y=850, label=paste0(abs(round(excess.reg[7,4], 0)), 
                                                        " fewer deaths in 2020 than average (", 
