@@ -1,6 +1,4 @@
 rm(list=ls())
-#Install the ggtext package from GitHub if you don't have it already
-#remotes::install_github("wilkelab/ggtext")
 
 library(tidyverse)
 library(paletteer)
@@ -18,8 +16,8 @@ data.EW <- read.csv("Data/deaths_age_EW.csv")
 data.EW <- data.EW[,c(5,6,4,3,7)]
 colnames(data.EW) <- c("year", "week", "age", "deaths", "country")
 data.EW <- subset(data.EW, age!="Total")
-levels(data.EW$age)[which(levels(data.EW$age)=="Under 1 year")] <- "0-14"
-levels(data.EW$age)[which(levels(data.EW$age)=="01-14")] <- "0-14"
+data.EW$age <- if_else(data.EW$age=="Under 1 year", "0-14", data.EW$age)
+data.EW$age <- if_else(data.EW$age=="01-14", "0-14", data.EW$age)
 
 data.EW <- data.EW %>%
   group_by(age, year, week, country) %>%
@@ -28,8 +26,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-27.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:AC21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-31.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:AG21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -44,9 +42,9 @@ data2020.S_long$deaths <- as.numeric(ifelse(data2020.S_long$deaths==".", 0, data
 data2020.S_long$date <- data2020.S_long$date+days(6)
 data2020.S_long$week <- week(data2020.S_long$date)
 
+data2020.S_long$age <- if_else(data2020.S_long$age=="Under 1 year", "0-14", data2020.S_long$age)
+data2020.S_long$age <- if_else(data2020.S_long$age=="01-14", "0-14", data2020.S_long$age)
 data2020.S_long$age <- as.factor(data2020.S_long$age)
-levels(data2020.S_long$age)[which(levels(data2020.S_long$age)=="Under 1 year")] <- "0-14"
-levels(data2020.S_long$age)[which(levels(data2020.S_long$age)=="01-14")] <- "0-14"
 
 data2020.S_long <- data2020.S_long %>%
   group_by(week, year, age) %>%
@@ -257,7 +255,7 @@ ggplot(data)+
                                                           paste0("+", round(excess[16,7]*100,0), "%"),
                                                           paste0("+", round(excess[17,7]*100,0), "%"),
                                                           paste0("+", round(excess[18,7]*100,0), "%")),
-                                                          size=3, colour="Red", hjust=0)+
+            size=3, colour="Red", hjust=0)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
         plot.subtitle =element_markdown())+
@@ -323,8 +321,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "c.r.angus@sheffield.ac.uk" 
-password <- "1574553541"
+username <- "" 
+password <- ""
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -335,7 +333,7 @@ FraPop$age <- case_when(
   FraPop$Age<65 ~ "15-64",
   FraPop$Age<75 ~ "65-74",
   FraPop$Age<85 ~ "75-84",
-  TRUE ~ "85+",
+  TRUE ~ "85+"
 )
 
 FraPop <- FraPop %>%
@@ -397,7 +395,7 @@ data.IT$age <- case_when(
   data.IT$age=="85-89" ~ "85+",
   data.IT$age=="90-94" ~ "85+",
   data.IT$age=="95-99" ~ "85+",
-TRUE ~ "85+")
+  TRUE ~ "85+")
 
 data.IT <- data.IT %>%
   group_by(age, year, week) %>%
@@ -413,7 +411,7 @@ ItaPop$age <- case_when(
   ItaPop$Age<65 ~ "15-64",
   ItaPop$Age<75 ~ "65-74",
   ItaPop$Age<85 ~ "75-84",
-  TRUE ~ "85+",
+  TRUE ~ "85+"
 )
 
 ItaPop <- ItaPop %>%
@@ -464,11 +462,14 @@ fulldata$country <- case_when(
   fulldata$country=="ISR" ~ "Israel",
   fulldata$country=="LTU" ~ "Lithuania",
   fulldata$country=="LUX" ~ "Luxembourg",
+  fulldata$country=="LVA" ~ "Latvia",
   fulldata$country=="NLD" ~ "Netherlands",
   fulldata$country=="NOR" ~ "Norway",
+  fulldata$country=="POL" ~ "Poland",
   fulldata$country=="PRT" ~ "Portugal",
   fulldata$country=="SWE" ~ "Sweden",
   fulldata$country=="SVK" ~ "Slovakia",
+  fulldata$country=="SVN" ~ "Slovenia",
   TRUE ~ fulldata$country)
 
 #Remove most recent week of data for FIN, NOR, SVK, SWE and USA which is wonky
@@ -493,11 +494,11 @@ Excessplot <- ggplot(fulldata)+
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
-tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=24, height=10, res=300)
+tiff("Outputs/ExcessEURUSxAge.tiff", units="in", width=35, height=10, res=300)
 Excessplot
 dev.off()
 
-png("Outputs/ExcessEURUSxAge.png", units="in", width=24, height=10, res=300)
+png("Outputs/ExcessEURUSxAge.png", units="in", width=35, height=10, res=300)
 Excessplot
 dev.off()
 
@@ -530,9 +531,9 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey90", times=5), "#1b9e77", rep("Grey90", times=14), 
-                               "#d95f02", "Grey90", "#7570b3", rep("Grey90", times=2), 
-                               "#e7298a"), name="Country")+
+  scale_colour_manual(values=c(rep("Grey90", times=5), "#011627", rep("Grey90", times=16), 
+                               "#2ec4b6", "Grey90", "Grey90", "#e71d36", rep("Grey90", times=2), 
+                               "#ff9f1c"), name="Country")+
   labs(title="Some of these countries are not like the others",
        subtitle="Excess mortality rates in 15-64 year-olds in 2020",
        caption="Data from mortality.org, ONS, NRS, NISRA, Insee and ISTAT\nPlot by @VictimOfMaths")
@@ -590,6 +591,24 @@ dev.off()
 #Calculate aggregate national data
 fulldata$pop <- fulldata$deaths*100000/fulldata$mortrate
 
+#Fix issue in Slovenia as some weeks have 0 deaths, so pop is undefined using this method
+#I bet there's an elegant dplyr solution to this
+fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="0-14",
+                        max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="0-14"]), 
+                        fulldata$pop)
+fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="15-64",
+                        max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="15-64"]), 
+                        fulldata$pop)
+fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="65-74",
+                        max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="65-74"]), 
+                        fulldata$pop)
+fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="75-84",
+                        max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="75-84"]), 
+                        fulldata$pop)
+fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="85+",
+                        max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="85+"]), 
+                        fulldata$pop)
+
 natdata <- fulldata %>% 
   group_by(country, week) %>% 
   summarise(mean_d=sum(mean_d), min_d=sum(min_d), max_d=sum(max_d), deaths=sum(deaths), 
@@ -617,9 +636,9 @@ ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53)
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
-    labs(title="Excess mortality rates across Europe & the US",
-         subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
-         caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+  labs(title="Excess mortality rates across Europe & the US",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
+       caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 dev.off()  
 
@@ -637,7 +656,7 @@ plotdata <- plotdata%>%
 tiff(paste0("Outputs/ExcessEURUSHeatmap", plotage, ".tiff"), units="in", width=10, height=8, res=300)
 ggplot()+
   geom_tile(data=plotdata, aes(x=week, y=country, fill=excess_r))+
-  scale_x_continuous(limits=c(0,30), breaks=c(0,5,10,15,20,25,30), name="Week")+
+  scale_x_continuous(limits=c(0,35), breaks=c(0,5,10,15,20,25,30,35), name="Week")+
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("pals::kovesi.diverging_gwr_55_95_c38", limit=c(-1,1)*max(abs(plotdata$excess_r)), 
                          name="Weekly excess deaths\nper 100,000")+
@@ -652,5 +671,3 @@ ggplot()+
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
 dev.off()
-  
-  
