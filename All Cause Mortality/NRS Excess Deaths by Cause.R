@@ -6,9 +6,9 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-31.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-endcol <- "AG"
+endcol <- "AH"
 
 
 #Historic data for all locations
