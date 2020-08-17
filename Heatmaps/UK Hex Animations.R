@@ -13,10 +13,10 @@ library(gganimate)
 temp <- tempfile()
 source <- "https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- read.csv(temp)[,c(1,2,3,4,5,8)]
+data <- read.csv(temp)[,c(1:6)]
 colnames(data) <- c("name", "code", "type", "date", "cases", "cumul_cases")
 data$date <- as.Date(data$date)
-data <- subset(data, type=="Lower tier local authority")
+data <- subset(data, type=="ltla")
 
 #Set up skeleton dataframe with dates
 LAcodes <- unique(data$code)
@@ -135,104 +135,6 @@ data_long.s$country <- "Scotland"
 #Merge into E&W data
 fulldata <- bind_rows(fulldata, data_long.s)
 
-#Grab NI data from Tom White's excellent resource
-temp <- tempfile()
-source <- "https://raw.githubusercontent.com/tomwhite/covid-19-uk-data/master/data/covid-19-cases-uk.csv"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data.ni <- subset(read.csv(temp), Country=="Northern Ireland")[,-c(2)]
-colnames(data.ni) <- c("date", "code", "name", "cumul_cases")
-data.ni$date <- as.Date(as.character(data.ni$date))
-
-#Remove missing location rows
-data.ni$code <- as.character(data.ni$code)
-data.ni <- subset(data.ni, code!="")
-
-#Set up skeleton dataframe for missing dates
-NILAs <- unique(data.ni$code)
-min <- min(data.ni$date)
-max <- max(data.ni$date)
-
-skeleton <- data.frame(code=rep(NILAs, each=(max-min+1)), 
-                       date=rep(seq.Date(from=min, to=max, by="day"), each=1, times=length(NILAs)))
-
-#Map data onto skeleton
-fulldata.ni <- merge(skeleton, data.ni[,-c(3)], by=c("code", "date"), all.x=TRUE, all.y=TRUE)
-
-#Interpolate missing dates
-fulldata.ni <- fulldata.ni %>%
-  arrange(code, date) %>%
-  group_by(code) %>%
-  mutate(cumul_cases=na.approx(cumul_cases), cases=cumul_cases-lag(cumul_cases,1))
-
-fulldata.ni$cases <- ifelse(is.na(fulldata.ni$cases), 0, fulldata.ni$cases)
-fulldata.ni$cases <- ifelse(fulldata.ni$cases<0, 0, fulldata.ni$cases)
-
-#bring back names
-fulldata.ni <- merge(fulldata.ni, data.ni[,c(2,3)], by="code")
-
-fulldata.ni$country <- "Northern Ireland"
-
-#Merge into E, W & S data
-fulldata <- bind_rows(fulldata, fulldata.ni)
-
-#Read in data by Irish counties
-temp <- tempfile()
-source <- "http://opendata-geohive.hub.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data.i <- read_csv(temp)
-
-#Strip out geographical data
-data.i <- data.i[,c(5,3,11)]
-colnames(data.i) <- c("TimeStamp", "name", "cumul_cases")
-
-#Convert timestamp to date
-data.i$date <- as.Date(substr(data.i$TimeStamp, 1, 10))
-data.i <- data.i[,-c(1)]
-
-#Calculate daily cases
-data.i <- data.i %>%
-  arrange(name, date) %>%
-  group_by(name) %>%
-  mutate(cases=cumul_cases-lag(cumul_cases,1))
-
-#For 3 counties (Leitrim, Limerick and Sligo) the case count goes *down* in early May. Ignore these for now
-data.i$cases <- ifelse(is.na(data.i$cases), 0, data.i$cases)
-data.i$cases <- ifelse(data.i$cases<0, 0, data.i$cases)
-
-data.i$country <- "Republic of Ireland"
-
-#Allocate (made up) codes to match into hex map
-data.i$code <- case_when(
-  data.i$name=="Donegal" ~ "I00000001",
-  data.i$name=="Sligo" ~ "I00000002",
-  data.i$name=="Mayo" ~ "I00000003",
-  data.i$name=="Leitrim" ~ "I00000004",
-  data.i$name=="Monaghan" ~ "I00000005",
-  data.i$name=="Galway" ~ "I00000006",
-  data.i$name=="Roscommon" ~ "I00000007",
-  data.i$name=="Cavan" ~ "I00000008",
-  data.i$name=="Meath" ~ "I00000009",
-  data.i$name=="Louth" ~ "I00000010",
-  data.i$name=="Clare" ~ "I00000011",
-  data.i$name=="Longford" ~ "I00000012",
-  data.i$name=="Westmeath" ~ "I00000013",
-  data.i$name=="Kildare" ~ "I00000014",
-  data.i$name=="Dublin" ~ "I00000015",
-  data.i$name=="Limerick" ~ "I00000016",
-  data.i$name=="Offaly" ~ "I00000017",
-  data.i$name=="Laois" ~ "I00000018",
-  data.i$name=="Wicklow" ~ "I00000019",
-  data.i$name=="Kerry" ~ "I00000020",
-  data.i$name=="Tipperary" ~ "I00000021",
-  data.i$name=="Kilkenny" ~ "I00000022",
-  data.i$name=="Carlow" ~ "I00000023",
-  data.i$name=="Wexford" ~ "I00000024",
-  data.i$name=="Cork" ~ "I00000025",
-  data.i$name=="Waterford" ~ "I00000026")
-
-#Merge into UK data
-fulldata <- bind_rows(fulldata, data.i)
-
 #tidy up
 fulldata$LTcode <- ifelse(is.na(fulldata$LTcode), fulldata$code, fulldata$LTcode)
 fulldata$LTname <- ifelse(is.na(fulldata$LTname), fulldata$name, fulldata$LTname)
@@ -241,7 +143,23 @@ fulldata$LTname <- ifelse(is.na(fulldata$LTname), fulldata$name, fulldata$LTname
 fulldata <- fulldata %>%
   arrange(LTcode, date) %>%
   group_by(LTcode) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0))
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0))
+
+#Since 15th June 2020, Pillar 2 cases are now included in the Scottish total,
+#this means that all Pillar 2 cases *prior* to this date all show up on 15th June.
+#To fix this for the time series we *could* redistribute these back across the time
+#series, but easier just to leave them out and allocate the moving average from 
+#14th June as the number of new cases on 15th.
+
+fulldata$cases <- if_else(fulldata$date=="2020-06-15" & fulldata$country=="Scotland", 
+                          lag(fulldata$casesroll_avg, 1),
+                          fulldata$cases)
+
+#Recalculate rolling averages
+fulldata <- fulldata %>%
+  arrange(LTcode, date) %>%
+  group_by(LTcode) %>%
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0))
 
 #Get number of LTLAs for each UTLA
 fulldata <-  fulldata %>%
@@ -253,10 +171,12 @@ fulldata$casesroll_avg <- fulldata$casesroll_avg/fulldata$LAcount
 
 #Bring in hexmap
 #Read in hex boundaries (adapted from from https://olihawkins.com/2018/02/1 and ODI Leeds)
-hex <- geojson_read("Data/UKIRELA.geojson", what="sp")
+hex <- geojson_read("Data/UKLA.geojson", what="sp")
 
 # Fortify into a data frame format to be shown with ggplot2
 hexes <- tidy(hex, region="id")
+
+hexes$id <- if_else(hexes$id=="E09000001", "E09000012", hexes$id)
 
 data <- left_join(hexes, fulldata, by=c("id"="LTcode"), all.y=TRUE)
 data$date <- as.Date(data$date)
@@ -269,38 +189,22 @@ data <- data %>%
   group_by(country) %>%
   mutate(min=min(date), max=max(date))
 
-completefrom <- max(data$min)
-completeto <- min(data$max)
+completefrom <- max(data$min, na.rm=TRUE)
+completeto <- min(data$max, na.rm=TRUE)
 
-HexAnim <- ggplot()+
-  geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=completeto), 
-               aes(x=long, y=lat, group=id, fill=casesroll_avg))+
-  coord_fixed()+
-  scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (5-day\nrolling avg.)")+
-  theme_classic()+
-  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
-  transition_time(date)+
-  labs(title="Visualising the spread of COVID-19 across the UK & Ireland",
-       subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
-       caption="Data from PHE, PHW, ScotGov, DoHNI/Tom White & Gov.ie\nVisualisation by @VictimOfMaths")
-
-animate(HexAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnim.gif"), 
-        end_pause=60)
 
 HexAnimUK <- ggplot()+
   geom_polygon(data=subset(data, date>as.Date("2020-03-06") & date<=completeto & country!="Republic of Ireland"), 
                aes(x=long, y=lat, group=id, fill=casesroll_avg))+
   coord_fixed()+
-  scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (5-day\nrolling avg.)", na.value="white")+
+  scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (7-day\nrolling avg.)", na.value="white")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of COVID-19 across the UK",
-       subtitle="Rolling 5-day average number of new confirmed cases.\nDate: {frame_time}",
-       caption="Data from PHE, PHW, ScotGov & DoHNI/Tom White\nVisualisation by @VictimOfMaths")
+       subtitle="Rolling 7-day average number of new confirmed cases.\nDate: {frame_time}",
+       caption="Data from PHE, PHW & ScotGov\nVisualisation by @VictimOfMaths")
 
 animate(HexAnimUK, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/HexAnimUK.gif"), 
         end_pause=60)
-
