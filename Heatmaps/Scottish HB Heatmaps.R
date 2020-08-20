@@ -32,10 +32,16 @@ data_long <- data_long %>%
 
 data_long$cases <- ifelse(is.na(data_long$cases), 0, data_long$cases)
 
+#Cases data is weirdly missing for 20th July, so assume there were 0 new cases in every HB on that day
+temp <- data.frame(Date=rep(as.Date("2020-07-20", times=14)),
+                   HB=unique(data_long$HB), cases=rep(0, times=14))
+
+data_long <- bind_rows(data_long, temp)
+
 heatmap <- data_long %>%
   arrange(HB, Date) %>%
   group_by(HB) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) 
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0)) 
 
 #Since 15th June 2020, Pillar 2 cases are now included in the Scottish total,
 #this means that all Pillar 2 cases *prior* to this date all show up on 15th June.
@@ -49,9 +55,9 @@ heatmap$cases <- if_else(heatmap$Date=="2020-06-15", lag(heatmap$casesroll_avg, 
 #Recalculate rolling average
 heatmap <-  heatmap %>%
   group_by(HB) %>% 
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>% 
+  mutate(casesroll_avg=roll_mean(cases, 7, align="right", fill=0)) %>% 
   mutate(maxcaserate=max(casesroll_avg), maxcaseday=Date[which(casesroll_avg==maxcaserate)][1],
-         totalcases=max(cumul_cases))
+         cumul_cases=cumsum(cases), totalcases=max(cumul_cases))
 
 heatmap$maxcaseprop <- heatmap$casesroll_avg/heatmap$maxcaserate
 
@@ -71,7 +77,7 @@ casetiles <- ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=max
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   coord_cartesian(clip = 'off')+
   labs(title="Timelines for COVID-19 cases in Scottish Health Boards",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData since 15th June (denoted with an asterisk) has included additional tests conducted under the UK Government testing programme (Pillar 2).\nAs a result, data for the 15th June itself is estimated. Data updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData since 15th June (denoted with an asterisk) has included additional tests conducted under the UK Government testing programme (Pillar 2).\nAs a result, data for the 15th June itself is estimated. Data updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
@@ -94,12 +100,18 @@ tiff("Outputs/COVIDScottishHBCaseRidges.tiff", units="in", width=12, height=5, r
 ggplot(heatmap, aes(x=Date, y=fct_reorder(HB, totalcases), height=casesroll_avg, fill=casesroll_avg))+
   geom_density_ridges_gradient(stat="identity", rel_min_height=0.001)+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral", name="Cases per day\n5-day rolling avg.")+
+  scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Scottish Health Boards",
        caption="Data from Scottish Government | Plot by @VictimOfMaths")
 dev.off()
+
+ggplot(heatmap)+
+  geom_col(aes(x=Date, y=cases, fill=cases))+
+  facet_wrap(~HB)+
+  scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
+  theme_classic()
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
