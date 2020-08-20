@@ -12,7 +12,7 @@ library(sf)
 #Download latest testing data from 
 # https://www.gov.uk/guidance/coronavirus-covid-19-information-for-the-public
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/909026/2020-08-12_COVID-19_UK_testing_time_series.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/910857/2020-08-20_COVID-19_UK_testing_time_series.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read.csv(temp)[,c(1,3,4,7,11,13)]
 colnames(rawdata) <- c("Date", "Nation", "Pillar", "Tests", "Cases.old", "Cases.new")
