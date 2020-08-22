@@ -5,6 +5,7 @@ library(curl)
 library(readxl)
 library(ggtext)
 library(ggridges)
+library(paletteer)
 
 #Surveillance reports taken from:
 #https://www.gov.uk/government/publications/national-covid-19-surveillance-reports
@@ -187,6 +188,7 @@ case.demog <- merge(case.demog, pop2, by.x="age", by.y="ageband2", all.x=TRUE)
 
 case.demog$cases <- case.demog$caserate*case.demog$pop/100000
 
+#Heatmaps of cases by age: rates
 tiff("Outputs/COVIDNewCasesHeatmap.tiff", units="in", width=13, height=4, res=500)
 ggplot(case.demog)+
   geom_tile(aes(x=Week, y=age, fill=caserate))+
@@ -197,6 +199,7 @@ ggplot(case.demog)+
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
+#Absolute numbers
 tiff("Outputs/COVIDNewCasesHeatmapAbs.tiff", units="in", width=13, height=4, res=500)
 ggplot(case.demog)+
   geom_tile(aes(x=Week, y=age, fill=cases))+
@@ -208,4 +211,22 @@ ggplot(case.demog)+
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
+#Streamgraph
+library(streamgraph) #devtools::install_github("hrbrmstr/streamgraph")
+library(lubridate)
+library(htmlwidgets)
 
+case.demog$date <- as.Date("2020-01-01")+weeks(case.demog$Week-1)
+
+streamgraph <- case.demog %>% 
+  mutate(cases=round(cases, 0)) %>% 
+  streamgraph("age", "cases", "date") %>% 
+  sg_fill_manual(values=palettes_d$awtools$a_palette[c(1:7)]) %>% 
+  sg_annotate(label="The changing age distribution of new COVID-19 cases in England",
+              x=as.Date("2020-01-20"), y=28000, size=16) %>% 
+  sg_annotate(label="Data from PHE | Plot by @VictimOfMaths", x=as.Date("2020-06-20"),
+              y=0) 
+
+saveWidget(streamgraph, "COVIDAgeStreamgraph.html")
+
+#This is now published here: https://victimofmaths.github.io/COVID-Streamgraph/COVIDAgeStreamgraph.html
