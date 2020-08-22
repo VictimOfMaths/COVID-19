@@ -212,6 +212,7 @@ ggplot(case.demog)+
 dev.off()
 
 #Streamgraph
+##Interactive version
 library(streamgraph) #devtools::install_github("hrbrmstr/streamgraph")
 library(lubridate)
 library(htmlwidgets)
@@ -229,4 +230,19 @@ streamgraph <- case.demog %>%
 
 saveWidget(streamgraph, "COVIDAgeStreamgraph.html")
 
-#This is now published here: https://victimofmaths.github.io/COVID-Streamgraph/COVIDAgeStreamgraph.html
+#Static version
+library(ggstream) #devtools::install_github("davidsjoberg/ggstream")
+
+tiff("Outputs/COVIDCasesStreamgraph.tiff", units="in", width=10, height=6, res=500)
+ggplot(case.demog, aes(x=date, y=cases, fill=age))+
+  geom_stream(bw=0.2)+
+  scale_fill_paletteer_d("awtools::a_palette", name="Age")+
+  scale_y_continuous(name="New cases per week", breaks=c(-15000,-10000,-5000,0,5000,10000,15000),
+                     labels=c("15,000", "10,000", "5,000", "0", "5,000", "10,000", "15,000"))+
+  scale_x_date(name="", date_breaks="1 month", date_labels="%B", 
+               limits=c(as.Date("2020-03-01"), max(case.demog$date)))+
+  theme_classic()+
+  labs(title="The rise in COVID-19 cases is restricted to the under 45s (so far)",
+       subtitle="Confirmed new cases in England by age band",
+       caption="Date from PHE | Plot by @VictimOfMaths")
+dev.off()
