@@ -81,6 +81,19 @@ ggplot(subset(rawdata, Date>as.Date("2020-04-06")),
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDPillarsPosRateRecent.tiff", units="in", width=8, height=6, res=500)
+ggplot(subset(rawdata, Date>as.Date("2020-07-01")), 
+       aes(x=Date, y=Posrate_roll, colour=Pillar))+
+  geom_line(show.legend=FALSE)+
+  scale_y_continuous(name="Proportion of tests returning a positive result",
+                     breaks=c(0,0.005,0.01,0.015), labels=c("0%", "0.5%", "1%", "1.5%"))+
+  scale_colour_paletteer_d("NineteenEightyR::malibu")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The proportion of Pillar 2 tests returning a positive has changed little in the past month",
+       subtitle="Rolling 7-day average test positivity rate for <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2</span> testing<br>(Pillar 1 data includes Welsh data on both Pillars).",
+       caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
+dev.off()
 
 #Download from Google Drive compiled by Daniel Howdon
 #https://twitter.com/danielhowdon/status/1278062684622258177?s=20
