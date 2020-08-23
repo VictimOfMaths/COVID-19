@@ -11,19 +11,21 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "31st July"
-ScotDate <- "8th August"
-NIDate <- "31st July"
+EWDate <- "7th August"
+ScotDate <- "15th August"
+NIDate <- "7th August"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek312020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek322020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx"
+Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(19%20August%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AG" #increment by one letter each week
-ScotRange <- "AH" #incrememnt by one letter each week
-NIRange <- "35" #incremement by one number each week
+EngRange <- "AH" #increment by one letter each week
+ScotRange <- "AH" #increment by one letter each week
+ScotRangev2 <- "37" #increment by one number each week
+NIRange <- "36" #increment by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -652,10 +654,23 @@ data.S$year <- year(data.S$date)
 data.S$reg <- "Scotland"
 data.S <- data.S[,-c(3)]
 
+#NRS stopped publishing detailed deaths data after week 32, 
+#so get data after that from elsewhere:
+#https://data.gov.scot/coronavirus-covid-19/data.html
+temp <- tempfile()
+temp <- curl_download(url=Scot2020v2, destfile=temp, quiet=FALSE, mode="wb")
+data.Sv2 <- read_excel(temp, sheet="2.2_excess", range=paste0("A37:C", ScotRangev2), col_names=FALSE)
+colnames(data.Sv2) <- c("weekno", "date", "deaths")
+data.Sv2$date <- data.Sv2$date+days(6)
+data.Sv2$year <- rep(2020, times=length(data.Sv2$weekno))
+data.Sv2$reg <- rep("Scotland", times=length(data.Sv2$weekno))
+
+data.S <- bind_rows(data.S, data.Sv2)
+
 #Tidy up
 rm(date, data2004.S, data2005.S, data2006.S, data2007.S, data2008.S, data2009.S, data2010.S, data2011.S, 
    data2012.S, data2013.S, data2014.S, data2015.S, data2016.S, data2017.S, data2018.S, data2019.S, 
-   data2020.S, data0415.S, data1619.S)
+   data2020.S, data0415.S, data1619.S, data.Sv2)
 
 #############################
 #Read in Northern Irish data#
@@ -1238,6 +1253,7 @@ temp18 <- as.data.frame(t(read_excel(temp, sheet=12, range="CZ9:CZ14", col_names
 temp19 <- as.data.frame(t(read_excel(temp, sheet=12, range="DF9:DF14", col_names=FALSE)))
 temp20 <- as.data.frame(t(read_excel(temp, sheet=12, range="DL9:DL14", col_names=FALSE)))
 temp21 <- as.data.frame(t(read_excel(temp, sheet=12, range="DR9:DR14", col_names=FALSE)))
+temp22 <- as.data.frame(t(read_excel(temp, sheet=12, range="DX9:DX14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1246,7 +1262,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
-                    temp21)
+                    temp21, temp22)
 
 data20$week <- c(12:EWmaxweek)
 
