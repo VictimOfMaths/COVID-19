@@ -37,8 +37,15 @@ cases <- bind_rows(case.m, case.f)
 temp <- tempfile()
 source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fpopulationandmigration%2fpopulationestimates%2fdatasets%2fpopulationestimatesforukenglandandwalesscotlandandnorthernireland%2fmid20182019laboundaries/ukmidyearestimates20182019ladcodes.xls"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-pop <- as.data.frame(t(read_excel(temp, sheet="MYE2-All", range="E9:CQ9", col_names=FALSE)))
-pop$age <- c(0:90)
+pop.m <- as.data.frame(t(read_excel(temp, sheet="MYE2 - Males", range="E9:CQ9", col_names=FALSE)))
+pop.m$age <- c(0:90)
+pop.m$sex <- "Male"
+pop.f <- as.data.frame(t(read_excel(temp, sheet="MYE2 - Females", range="E9:CQ9", col_names=FALSE)))
+pop.f$age <- c(0:90)
+pop.f$sex <- "Female"
+
+pop <- bind_rows(pop.m, pop.f)
+
 pop$ageband <- case_when(
   pop$age<5 ~ "0-4",
   pop$age<10 ~ "5-9",
@@ -53,10 +60,10 @@ pop$ageband <- case_when(
 )
 
 pop <- pop %>% 
-  group_by(ageband) %>% 
+  group_by(ageband, sex) %>% 
   summarise(pop=sum(V1))
 
-cases <- merge(cases, pop, by.x="age", by.y="ageband", all.x=TRUE)
+cases <- merge(cases, pop, by.x=c("age", "sex"), by.y=c("ageband", "sex"), all.x=TRUE)
 
 cases$cases <- if_else(cases$cases=="*", "0", cases$cases)
 cases$cases <- if_else(cases$cases=="-", "0", cases$cases)
@@ -67,9 +74,6 @@ cases$age <- factor(cases$age, levels=c("0-4", "5-9", "10-19", "20-29", "30-39",
                                         "40-49", "50-59", "60-69", "70-79", "80+"))
 
 #Heatmaps of cases by age: rates
-###############################
-#Need to split populations out by sex as there are currently wrong
-###############################
 tiff("Outputs/COVIDNewCasesHeatmap.tiff", units="in", width=13, height=4, res=500)
 ggplot(cases)+
   geom_tile(aes(x=Week, y=age, fill=caserate))+
