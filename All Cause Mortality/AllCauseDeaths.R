@@ -884,7 +884,7 @@ ggplot()+
   geom_line(data=data.sex.age.EW.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.sex.age.EW.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
-  facet_grid(age~sex)+
+  facet_grid(age~sex, scales="free_y")+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
@@ -1137,7 +1137,7 @@ RegPlot <- ggplot()+
   geom_line(data=data.reg.UK.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
   geom_line(data=data.reg.UK.new, aes(x=weekno, y=deaths), colour="Red")+
   theme_classic()+
-  facet_wrap(~reg)+
+  facet_wrap(~reg, scales="free_y")+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
@@ -1298,7 +1298,7 @@ ggplot()+
   geom_line(data=subset(data, year=="curr"), aes(x=week, y=deaths), colour="red")+
   scale_x_continuous(name="Week")+
   scale_y_continuous(name="Deaths registered")+
-  facet_wrap(~location)+
+  facet_wrap(~location, scales = "free_y")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle =element_markdown(), plot.title=element_markdown())+
