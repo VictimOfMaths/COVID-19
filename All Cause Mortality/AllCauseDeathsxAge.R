@@ -16,8 +16,8 @@ data.EW <- read.csv("Data/deaths_age_EW.csv")
 data.EW <- data.EW[,c(5,6,4,3,7)]
 colnames(data.EW) <- c("year", "week", "age", "deaths", "country")
 data.EW <- subset(data.EW, age!="Total")
-data.EW$age <- if_else(data.EW$age=="Under 1 year", "0-14", data.EW$age)
-data.EW$age <- if_else(data.EW$age=="01-14", "0-14", data.EW$age)
+data.EW$age <- if_else(data.EW$age=="Under 1 year", "0-14", as.character(data.EW$age))
+data.EW$age <- if_else(data.EW$age=="01-14", "0-14", as.character(data.EW$age))
 
 data.EW <- data.EW %>%
   group_by(age, year, week, country) %>%
@@ -26,8 +26,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-31.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:AG21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:AH21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -146,7 +146,7 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AC14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AJ14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -272,7 +272,7 @@ HMDdata <- read_delim(temp, delim=",", comment="#")
 #Keep only combined sex data and from years 2010 onwards
 HMDdata <- subset(HMDdata, Year>=2010 & Sex=="b")
 
-#Lengthen (there's probably a more elegant pivot_longer() solution)
+#Lengthen (there's probably (definitely) a more elegant pivot_longer() solution)
 HMD_long <- gather(HMDdata, age, deaths,c(5:9))[,c(1:3, 15, 16)]
 HMD_long$age <- substr(HMD_long$age, 2, 7)
 temp <- gather(HMDdata, age, mortrate, c(11:15))[,c(1:3, 15, 16)]
@@ -290,7 +290,7 @@ HMD_long$age <- case_when(
   HMD_long$age=="75_84" ~ "75-84",
   HMD_long$age=="85p" ~ "85+")
 
-#Adjust HMD mortality rates from annualised per capite to weekly rates per 100,000
+#Adjust HMD mortality rates from annualised per capita to weekly rates per 100,000
 HMD_long$mortrate <- HMD_long$mortrate*100000/52
 
 #Update UK data age groups to match HMD groups
@@ -457,6 +457,8 @@ fulldata$country <- case_when(
   fulldata$country=="ESP" ~ "Spain",
   fulldata$country=="EST" ~ "Estonia",
   fulldata$country=="FIN" ~ "Finland",
+  fulldata$country=="GRC" ~ "Greece",
+  fulldata$country=="HRV" ~ "Croatia",
   fulldata$country=="HUN" ~ "Hungary",
   fulldata$country=="ISL" ~ "Iceland",
   fulldata$country=="ISR" ~ "Israel",
@@ -467,6 +469,7 @@ fulldata$country <- case_when(
   fulldata$country=="NOR" ~ "Norway",
   fulldata$country=="POL" ~ "Poland",
   fulldata$country=="PRT" ~ "Portugal",
+  fulldata$country=="RUS" ~ "Russia",
   fulldata$country=="SWE" ~ "Sweden",
   fulldata$country=="SVK" ~ "Slovakia",
   fulldata$country=="SVN" ~ "Slovenia",
@@ -478,6 +481,10 @@ fulldata <- fulldata %>%
   mutate(last_week=max(week)) %>%
   ungroup() %>%
   filter(!(country %in% c("Finland", "USA", "Slovakia", "Norway", "Lithuania") & year==2020 & week==last_week))
+
+#Remove Russia which has no 2020 (or 2019) data and Croatia which has no 2020 data
+fulldata <- fulldata %>% 
+  filter(!country %in% c("Russia", "Croatia"))
 
 Excessplot <- ggplot(fulldata)+
   geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
@@ -531,7 +538,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey90", times=5), "#011627", rep("Grey90", times=16), 
+  scale_colour_manual(values=c(rep("Grey90", times=5), "#011627", rep("Grey90", times=17), 
                                "#2ec4b6", "Grey90", "Grey90", "#e71d36", rep("Grey90", times=2), 
                                "#ff9f1c"), name="Country")+
   labs(title="Some of these countries are not like the others",
@@ -643,7 +650,7 @@ ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53)
 dev.off()  
 
 #Plots
-plotage <- "0-14"
+plotage <- "85+"
 plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
