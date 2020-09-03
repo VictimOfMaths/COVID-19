@@ -68,16 +68,16 @@ data$age <- factor(data$age, levels=c("0", "1-4", "5-9", "10-14", "15-19", "20-2
                                       "90-94", "95-99", "100+"))
 
 #Explore missingness in the deaths data
-#This seems to be throwing a weird error at the moment?
-data <- as.data.frame(data)
-data$test <- if_else(is.na(data$deaths),1,0)
+test <- as.data.frame(data)
+test$test <- if_else(is.na(data$deaths),0,1)
 
-test <- data %>%
-  + group_by(date) %>%
-  + summarise(measure=mean(test))
+test <- test %>%
+  select(date, test) %>% 
+  group_by(date) %>%
+  summarise(measure=mean(test))
 
-#Looking at this, a clear jump in missingness after 30th April 2020, so censor the data here
-cut <- week(as.Date("2020-05-31"))-1
+#Looking at this, a clear jump in missingness after 30th June 2020, so censor the data here
+cut <- week(as.Date("2020-06-30"))-1
 
 data_prov <- data %>%
   filter(sex!="Total" & !(year==2020 & week>cut)) %>%
@@ -129,13 +129,13 @@ ggplot(subset(tempdata, week<53))+
   theme(plot.subtitle =element_markdown())+
   expand_limits(y=0)+
   labs(title="All-cause mortality in Italy during the pandemic",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 24th June 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=cut-2, y=18000, label=paste0("+", round(excess$excess, 0), 
+  annotate(geom="text", x=20, y=18000, label=paste0("+", round(excess$excess, 0), 
                                                        " more deaths in 2020 than average (+", 
                                                        round(excess$prop*100, 0),"%)"), colour="Red", hjust=0)+
-  annotate(geom="text", x=30, y=15000, label="Historic maximum", colour="Skyblue4")+
-  annotate(geom="text", x=30, y=10000, label="Historic minimum", colour="Skyblue4")+
+  annotate(geom="text", x=32, y=15000, label="Historic maximum", colour="Skyblue4")+
+  annotate(geom="text", x=32, y=10000, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=11000, label="Historic mean", colour="grey30")+
   geom_curve(aes(x=50, y=11300, xend=49, yend=12500), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")
@@ -179,7 +179,7 @@ ggplot(subset(tempdata.sex, week<53))+
         strip.text=element_text(face="bold", size=rel(1)))+
   expand_limits(y=0)+
   labs(title="Excess deaths are almost twice as high in Italian men compared to women",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 24th June 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=week, y=position), 
             label=c(paste0(round(excess.sex[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.sex[1,5]*100,0),"%)"),
@@ -214,11 +214,11 @@ excess.reg <- arrange(excess.reg, NOME_REGIONE)
 tempdata.reg$NOME_REGIONE <- factor(tempdata.reg$NOME_REGIONE, levels=levels(excess.reg$NOME_REGIONE))
 tempdata.reg <- arrange(tempdata.reg, NOME_REGIONE)
 
-labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]+1000
+labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]*1.5
 
-ann_text2 <- data.frame(week=rep(cut+0.5, times=20), NOME_REGIONE=as.factor(levels(tempdata.reg$NOME_REGIONE)), position=labpos)
+ann_text2 <- data.frame(week=rep(22, times=20), NOME_REGIONE=as.factor(levels(tempdata.reg$NOME_REGIONE)), position=labpos)
 
-tiff("Outputs/ExcessDeathsItalyxReg.tiff", units="in", width=14, height=9, res=300)
+tiff("Outputs/ExcessDeathsItalyxReg.tiff", units="in", width=16, height=9, res=300)
 ggplot(subset(tempdata.reg, week<53))+
   geom_ribbon(aes(x=week, ymin=min_d, ymax=max_d), fill="Skyblue2")+
   geom_ribbon(aes(x=week, ymin=mean_d, ymax=deaths), fill="Red", alpha=0.2)+
@@ -226,13 +226,13 @@ ggplot(subset(tempdata.reg, week<53))+
   geom_line(aes(x=week, y=deaths), colour="Red")+
   scale_x_continuous(name="Week number")+
   scale_y_continuous("Weekly deaths recorded")+
-  facet_wrap(~NOME_REGIONE)+
+  facet_wrap(~NOME_REGIONE, scales="free_y")+
   theme_classic()+
   theme(plot.subtitle =element_markdown(), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
   expand_limits(y=0)+
   labs(title="Excess deaths in Italy are very heavily concentrated in the Northern regions",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 24th June 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=week, y=position), 
             label=c(paste0(round(excess.reg[1,4],0)," excess deaths in 2020\nvs. 2010-19 mean (+", round(excess.reg[1,5]*100,0),"%)"),
