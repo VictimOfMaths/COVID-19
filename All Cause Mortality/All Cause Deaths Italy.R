@@ -10,11 +10,11 @@ library(ggtext)
 #From this web page: https://www.istat.it/it/archivio/240401
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record-2.zip"
+source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record_al30giugno.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 
-rawdata <- read.csv(file.path(temp2, "dati-mortalit…-comuni_giornalieri-al_31maggio.csv"))
+rawdata <- read.csv(file.path(temp2, "comuni_giornaliero_30giugno.csv"))
 
 #Tidy up data
 rawdata$age <- case_when(
