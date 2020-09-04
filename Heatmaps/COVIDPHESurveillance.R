@@ -15,16 +15,16 @@ library(paletteer)
 
 #As of 28th August, PHE are actually publishing a time series of case numbers by age and sex
 temp <- tempfile()
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/912965/Weekly_COVID19_report_data_w35.xlsx"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/914814/Weekly_COVID19_report_data_w36.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-case.m <- read_excel(temp, sheet="Figure 2b Cases by age and sex ", range="B12:L35", 
+case.m <- read_excel(temp, sheet="Figure 2b Cases by age and sex ", range="B12:L36", 
                      col_names=FALSE)
 colnames(case.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                           "50-59", "60-69", "70-79", "80+")
 case.m$sex <- "Male"
 case.m <- gather(case.m, age, cases, c(2:11))
 
-case.f <- read_excel(temp, sheet="Figure 2b Cases by age and sex ", range="B40:L63", 
+case.f <- read_excel(temp, sheet="Figure 2b Cases by age and sex ", range="B41:L65", 
                      col_names=FALSE)
 colnames(case.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                       "50-59", "60-69", "70-79", "80+")
