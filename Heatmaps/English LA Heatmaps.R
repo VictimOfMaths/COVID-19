@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/09/COVID-19-total-announced-deaths-6-September-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/09/COVID-19-total-announced-deaths-9-September-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:197)]
+deaths<-deaths[18:.N, c(1:200)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:197)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:200)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -146,11 +146,11 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLACasesHeatmap.tiff", units="in", width=14, height=16, res=500)
+tiff("Outputs/COVIDLACasesHeatmap.tiff", units="in", width=16, height=16, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLACasesHeatmap.png", units="in", width=14, height=16, res=500)
+png("Outputs/COVIDLACasesHeatmap.png", units="in", width=16, height=16, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -176,11 +176,11 @@ deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=totaldeaths, y=fc
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLADeathHeatmap.tiff", units="in", width=14, height=16, res=500)
+tiff("Outputs/COVIDLADeathHeatmap.tiff", units="in", width=16, height=16, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLADeathHeatmap.png", units="in", width=14, height=16, res=500)
+png("Outputs/COVIDLADeathHeatmap.png", units="in", width=16, height=16, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -222,11 +222,11 @@ abscasebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=cumul_caserate, y
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLACasesHeatmapAbs.tiff", units="in", width=14, height=16, res=500)
+tiff("Outputs/COVIDLACasesHeatmapAbs.tiff", units="in", width=16, height=16, res=500)
 plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLACasesHeatmapAbs.png", units="in", width=14, height=16, res=500)
+png("Outputs/COVIDLACasesHeatmapAbs.png", units="in", width=16, height=16, res=500)
 plot_grid(abscasetiles, abscasebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -251,11 +251,11 @@ deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=cumul_deathrate, 
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLADeathsHeatmapAbs.tiff", units="in", width=14, height=16, res=500)
+tiff("Outputs/COVIDLADeathsHeatmapAbs.tiff", units="in", width=16, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=14, height=16, res=500)
+png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=16, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -307,8 +307,8 @@ changemap <- ggplot()+
   ylim(5337,700000)+
   theme_classic()+
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.change$change)), 
-                         name="Change in case numbers\nin the past week", breaks=c(-20,-10,0,10,20),
-                         labels=c("-20", "-10", "0", "+10", "+20"),direction=-1)+
+                         name="Change in case numbers\nin the past week", breaks=c(-60,-30, 0,30,60),
+                         labels=c("-60", "-30", "0", "+30", "+60"),direction=-1)+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.subtitle=element_markdown())+
   labs(title="Recent changes in COVID-19 case numbers across England",
