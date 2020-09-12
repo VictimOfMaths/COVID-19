@@ -15,16 +15,16 @@ library(paletteer)
 
 #As of 28th August, PHE are actually publishing a time series of case numbers by age and sex
 temp1 <- tempfile()
-source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/914814/Weekly_COVID19_report_data_w36.xlsx"
+source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/916998/Weekly_COVID19_report_data_w37.xlsx"
 temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
-case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L36", 
+case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B42:L67", 
                      col_names=FALSE)
 colnames(case.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                           "50-59", "60-69", "70-79", "80+")
 case.m$sex <- "Male"
 case.m <- gather(case.m, age, cases, c(2:11))
 
-case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B41:L65", 
+case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L37", 
                      col_names=FALSE)
 colnames(case.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                       "50-59", "60-69", "70-79", "80+")
@@ -81,6 +81,20 @@ ggplot(cases)+
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDNewCasesHeatmapRecent.tiff", units="in", width=10, height=5, res=500)
+ggplot(subset(cases, Week>=26))+
+  geom_tile(aes(x=Week, y=age, fill=caserate))+
+  scale_y_discrete(name="Age")+
+  scale_fill_paletteer_c("viridis::magma", name="Cases per 100,000")+ 
+  scale_x_continuous(breaks=c(25,27,29,31,33,35))+
+  facet_wrap(~sex)+
+  theme_classic()+ 
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="Cases are concentrated in young people, but now rising in older age groups",
+    subtitle="Rates of new COVID-19 cases in England by age during the pandemic",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+
 #Absolute numbers
 tiff("Outputs/COVIDNewCasesHeatmapAbs.tiff", units="in", width=13, height=4, res=500)
 ggplot(cases)+
@@ -126,14 +140,14 @@ cases %>%
   #             limits=c(as.Date("2020-03-01"), max(cases$Date)))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The rise in COVID-19 cases is largely among 20-somethings",
+  labs(title="COVID-19 cases are rising in almost all age groups",
        subtitle="Confirmed new cases in England by age band",
        caption="Date from PHE | Plot by @VictimOfMaths")
 dev.off()
 
 #Analysis of positivity data
 #Overall by pillar
-pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F39",
+pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F40",
                           col_names=FALSE)
 colnames(pos.pillars) <- c("Week", "P1cases", "P2cases", "P1pos", "P2pos")
 
@@ -154,14 +168,14 @@ ggplot(pos.pillars, aes(x=Week, y=posrate/100, colour=Pillar))+
 dev.off()
 
 #By age and sex
-pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B78:I108",
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B80:I111",
                         col_names=FALSE)
 colnames(pos.age.m) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.m <- gather(pos.age.m, age, posrate, c(2:8))
 pos.age.m$posrate <- as.numeric(if_else(pos.age.m$posrate=="-", "NA", pos.age.m$posrate))
 pos.age.m$sex <- "Male"
 
-pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B112:I142",
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B115:I146",
                         col_names=FALSE)
 colnames(pos.age.f) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.f <- gather(pos.age.f, age, posrate, c(2:8))
@@ -183,7 +197,10 @@ ggplot(pos.age, aes(x=Week, y=posrate/100, colour=age))+
   facet_wrap(~sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The positivity rate of tests is rising in almost all age groups",
+  labs(title="The positivity rate of tests is rising in all age groups",
        subtitle="Weekly positivity rates for Pillar 2 tests in England by age group",
        caption="Date from PHE | Visualisation by @VictimOfMaths")
 dev.off()
+
+#By region
+
