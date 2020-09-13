@@ -10,15 +10,54 @@ library(ggstream)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20200909.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20200912.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
 
 data <- data %>% 
-  filter(AgeGroup!="Total") %>% 
+  filter(!AgeGroup %in% c("Total", "Unknown")) %>% 
   mutate(date=as.Date(as.character(Date), format="%Y%m%d"))
 
+#Bring in populations
+#Bring in LA populations
+temp2 <- tempfile()
+source2 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fpopulationandmigration%2fpopulationestimates%2fdatasets%2fpopulationestimatesforukenglandandwalesscotlandandnorthernireland%2fmid2019april2020localauthoritydistrictcodes/ukmidyearestimates20192020ladcodes.xls"
+temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
+pop.m <- as.data.frame(t(read_excel(temp2, sheet="MYE2 - Males", range="E387:CQ387", col_names=FALSE)))
+pop.m$age <- c(0:90)
+pop.m$Sex <- "Male"
+pop.f <- as.data.frame(t(read_excel(temp2, sheet="MYE2 - Females", range="E387:CQ387", col_names=FALSE)))
+pop.f$age <- c(0:90)
+pop.f$Sex <- "Female"
+pop <- bind_rows(pop.m, pop.f)
+
+pop$age <- c(0:90)
+pop$AgeGroup <- case_when(
+  pop$age<15 ~ "Under 15",
+  pop$age<20 ~ "15 to 19",
+  pop$age<25 ~ "20 to 24",
+  pop$age<45 ~ "25 to 44",
+  pop$age<65 ~ "45 to 64",
+  pop$age<75 ~ "65 to 74",
+  pop$age<85 ~ "75 to 84",
+  TRUE ~ "85plus"
+)
+
+pop1 <- pop %>% 
+  group_by(AgeGroup, Sex) %>% 
+  summarise(pop=sum(V1))
+
+pop2 <- pop %>% 
+  group_by(AgeGroup) %>%
+  summarise(pop=sum(V1)) %>% 
+  mutate(Sex="Total")
+
+pop <- bind_rows(pop1, pop2)
+
+data <- merge(data, pop, by=c("Sex", "AgeGroup"), all.x=TRUE)
+
+data$posrate <- data$DailyPositive*100000/data$pop
 
 tiff("Outputs/COVIDCasesStreamgraphScotlandxSex.tiff", units="in", width=10, height=6, res=500)
 ggplot(subset(data, Sex!="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
@@ -63,5 +102,19 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   theme_classic()+
   labs(title="The rise in new COVID-19 cases in Scotland hasn't affected pensioners yet",
        subtitle="Confirmed daily new cases in Scotland by age",
+       caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDCasesHeatmapScotlandRate.tiff", units="in", width=10, height=3, res=500)
+ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$date)), 
+       aes(x=date, y=AgeGroup, fill=posrate))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age group",
+                   labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
+  scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
+  theme_classic()+
+  labs(title="The rise in new COVID-19 cases in Scotland hasn't affected pensioners yet",
+       subtitle="Confirmed daily new case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
