@@ -16,6 +16,50 @@ library(gganimate)
 
 data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1,7,8,9)]
 
+#########
+#ENGLAND#
+#########
+data.e <- data %>% 
+  group_by(name) %>% 
+  filter(country=="England" & name!="England") %>% 
+  mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
+         maxcaseday=date[which(caserate_avg==maxcaserate)][1],
+         maxcaseprop=caserate_avg/maxcaserate,
+         totalcases=sum(cases))
+
+#Enter dates to plot from and to
+plotfrom <- "2020-03-01"
+plotto <- max(data.e$date)
+
+#Plot case trajectories
+casetiles <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 cases in English Local Authorities",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from Public Health England | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+casebars <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Total confirmed cases")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLACasesHeatmap.tiff", units="in", width=16, height=30, res=500)
+plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLACasesHeatmap.png", units="in", width=16, height=30, res=500)
+plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
 #######
 #WALES#
 #######
@@ -253,5 +297,101 @@ animate(HexAnimUKrate, duration=18, fps=10, width=2000, height=3000, res=300,
         renderer=gifski_renderer("Outputs/HexAnimUKrate.gif"), 
         end_pause=60)
 
+#Chloropeth map
+data.map <- data
 
+#Sort out Buckinghamshire to match hex template
+temp <- subset(data.map, code=="E06000060")
 
+data.map$code <- if_else(data.map$code=="E06000060", "E07000004", as.character(data.map$code))
+data.map$name <- if_else(data.map$name=="Buckinghamshire", "Aylesbury Vale", as.character(data.map$name))
+
+temp1 <- temp
+temp1$code <- "E07000005"
+temp1$name <- "Chiltern"
+
+temp2 <- temp
+temp2$code <- "E07000006"
+temp2$name <- "South Bucks"
+
+temp$code <- "E07000007"
+temp$name <- "Wycombe"
+
+data.map <- bind_rows(data.map, temp, temp1, temp2)
+
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/1d78d47c87df4212b79fe2323aae8e08_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
+
+names(shapefile)[names(shapefile) == "lad19cd"] <- "code"
+
+simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
+
+map.cases <- full_join(simplemap, data.map, by="code", all.y=TRUE)
+map.cases$date <- as.Date(map.cases$date)
+
+#Map of current cases
+tiff("Outputs/COVIDCaseMapUK.tiff", units="in", width=8, height=12, res=500)
+map.cases %>% 
+filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=casesroll_avg), colour=NA)+
+  scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank())+
+  labs(title="Confirmed new COVID-19 cases in the UK",
+       subtitle=paste0("Rolling 7-day average of confirmed new cases at Local Authority/Council Area level\nData up to ", completeto),
+       caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
+dev.off()
+  
+tiff("Outputs/COVIDCaserateMapUK.tiff", units="in", width=8, height=12, res=500)
+map.cases %>% 
+  filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=caserate_avg), colour=NA)+
+  scale_fill_distiller(palette="Spectral", name="Daily cases\nper 100,000\n(rolling 7-day avg.)")+
+  theme_classic()+
+    theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+          axis.title=element_blank())+
+  labs(title="Rates of confirmed new COVID-19 cases in the UK",
+       subtitle=paste0("Rolling 7-day average of confirmed new cases per 100,000 at Local Authority/Council Area level\nData up to ", completeto),
+       caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
+dev.off()
+
+#These last 2 animations require a more powerful computer/more patience than I have, so I'm
+#not 100% certain they actually work...
+
+CaseAnimAbs <- map.cases %>% 
+  filter(!name %in% c("England", "Wales", "Northern Ireland", "Scotland") & date>as.Date("2020-02-25")) %>% 
+  ggplot(aes(geometry=geometry, fill=casesroll_avg))+
+  geom_sf(colour=NA)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 7-day average number of new confirmed cases in each Local Authority/Council area\nDate: {frame_time}",
+       caption="Data from PHE, PHW, PHS & DoHNI | Visualisation by @VictimOfMaths")
+
+animate(CaseAnimAbs, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnimAbs.gif"), end_pause=60)
+
+CaseAnimRate <- ggplot(subset(map.cases, date>as.Date("2020-02-25")), aes(geometry=geometry, fill=caserate_avg))+
+  geom_sf(colour=NA)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily cases\nper 100,000\n(rolling 7-day avg.)")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 7-day average rate of new confirmed cases per 100,000 in each Local Authority/Council area\nDate: {frame_time}",
+       caption="Data from PHE, PHW, PHS & DoHNI | Visualisation by @VictimOfMaths")
+
+animate(CaseAnimRate, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnimRate.gif"), end_pause=60)
