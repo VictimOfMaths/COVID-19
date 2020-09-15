@@ -38,6 +38,13 @@ data_long$State <- case_when(
   data_long$State=="DE.ST" ~ "Schleswig-Holstein",
   data_long$State=="DE.TH" ~ "Thüringen")
 
+#There appear to be weird errors in the data for Bayern (cases) and Hamburg (cases & deaths) 
+#from 1st September so remove these data points for now
+data_long <- data_long %>% 
+  filter(!(date==as.Date("2020-09-01") & State=="Bayern" & measure=="cases")) %>% 
+  filter(!(date==as.Date("2020-09-01") & State=="Hamburg"))
+
+
 #Some dates are missing, so set up skeleton dataset with all dates
 #Set up skeleton dataframe with dates
 States <- unique(data_long$State)
