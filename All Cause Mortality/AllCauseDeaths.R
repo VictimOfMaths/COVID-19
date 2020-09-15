@@ -11,22 +11,22 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "28th August"
+EWDate <- "4th September"
 ScotDate <- "6th September"
-NIDate <- "28th August"
+NIDate <- "4th September"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek352020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek362020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(09%20September%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AK" #increment by one letter each week
+EngRange <- "AL" #increment by one letter each week
 ScotRange <- "AH" #increment by one letter each week
 ScotRangev2 <- "40" #increment by one number each week
-NIRange <- "39" #increment by one number each week
+NIRange <- "40" #increment by one number each week
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -782,7 +782,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are back above average levels.",
+  labs(title="The recent 'bump' in all-cause deaths looks to be over",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
@@ -836,7 +836,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths for both men and women are slightly above 'normal' levels",
+  labs(title="All-cause deaths for both men and women are back to 'normal' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -888,7 +888,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Almost all age-sex groups have seen a slight rise in all-cause deaths",
+  labs(title="Almost all age-sex groups saw a slight rise in all-cause deaths",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -967,7 +967,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The rise in all-cause mortality is largest in 45-64 year olds",
+  labs(title="All-cause mortality in England and Wales by age",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1072,7 +1072,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland are also above 'usual' levels",
+  labs(title="Deaths from all causes in Northern Ireland are also back to 'normal'",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
@@ -1141,7 +1141,7 @@ RegPlot <- ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Many parts of the UK have seen a slight rise in all-cause deaths",
+  labs(title="Many parts of the UK saw a slight rise in all-cause deaths",
        subtitle=subtitle,
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1233,31 +1233,32 @@ data1519_long$year <- "hist"
 #Read in 2020 figures, which are formatted in a *hideous* way, thanks ONS
 temp <- tempfile()
 temp <- curl_download(url=Eng2020, destfile=temp, quiet=FALSE, mode="wb")
-temp1 <- as.data.frame(t(read_excel(temp, sheet=14, range="A9:B14", col_names=FALSE)))
-temp2 <- as.data.frame(t(read_excel(temp, sheet=14, range="H9:H14", col_names=FALSE)))
-temp3 <- as.data.frame(t(read_excel(temp, sheet=14, range="N9:N14", col_names=FALSE)))
-temp4 <- as.data.frame(t(read_excel(temp, sheet=14, range="T9:T14", col_names=FALSE)))
-temp5 <- as.data.frame(t(read_excel(temp, sheet=14, range="Z9:Z14", col_names=FALSE)))
-temp6 <- as.data.frame(t(read_excel(temp, sheet=14, range="AF9:AF14", col_names=FALSE)))
-temp7 <- as.data.frame(t(read_excel(temp, sheet=14, range="AL9:AL14", col_names=FALSE)))
-temp8 <- as.data.frame(t(read_excel(temp, sheet=14, range="AR9:AR14", col_names=FALSE)))
-temp9 <- as.data.frame(t(read_excel(temp, sheet=14, range="AX9:AX14", col_names=FALSE)))
-temp10 <- as.data.frame(t(read_excel(temp, sheet=14, range="BD9:BD14", col_names=FALSE)))
-temp11 <- as.data.frame(t(read_excel(temp, sheet=14, range="BJ9:BJ14", col_names=FALSE)))
-temp12 <- as.data.frame(t(read_excel(temp, sheet=14, range="BP9:BP14", col_names=FALSE)))
-temp13 <- as.data.frame(t(read_excel(temp, sheet=14, range="BV9:BV14", col_names=FALSE)))
-temp14 <- as.data.frame(t(read_excel(temp, sheet=14, range="CB9:CB14", col_names=FALSE)))
-temp15 <- as.data.frame(t(read_excel(temp, sheet=14, range="CH9:CH14", col_names=FALSE)))
-temp16 <- as.data.frame(t(read_excel(temp, sheet=14, range="CN9:CN14", col_names=FALSE)))
-temp17 <- as.data.frame(t(read_excel(temp, sheet=14, range="CT9:CT14", col_names=FALSE)))
-temp18 <- as.data.frame(t(read_excel(temp, sheet=14, range="CZ9:CZ14", col_names=FALSE)))
-temp19 <- as.data.frame(t(read_excel(temp, sheet=14, range="DF9:DF14", col_names=FALSE)))
-temp20 <- as.data.frame(t(read_excel(temp, sheet=14, range="DL9:DL14", col_names=FALSE)))
-temp21 <- as.data.frame(t(read_excel(temp, sheet=14, range="DR9:DR14", col_names=FALSE)))
-temp22 <- as.data.frame(t(read_excel(temp, sheet=14, range="DX9:DX14", col_names=FALSE)))
-temp23 <- as.data.frame(t(read_excel(temp, sheet=14, range="ED9:ED14", col_names=FALSE)))
-temp24 <- as.data.frame(t(read_excel(temp, sheet=14, range="EJ9:EJ14", col_names=FALSE)))
-temp25 <- as.data.frame(t(read_excel(temp, sheet=14, range="EP9:EP14", col_names=FALSE)))
+temp1 <- as.data.frame(t(read_excel(temp, sheet=11, range="A9:B14", col_names=FALSE)))
+temp2 <- as.data.frame(t(read_excel(temp, sheet=11, range="H9:H14", col_names=FALSE)))
+temp3 <- as.data.frame(t(read_excel(temp, sheet=11, range="N9:N14", col_names=FALSE)))
+temp4 <- as.data.frame(t(read_excel(temp, sheet=11, range="T9:T14", col_names=FALSE)))
+temp5 <- as.data.frame(t(read_excel(temp, sheet=11, range="Z9:Z14", col_names=FALSE)))
+temp6 <- as.data.frame(t(read_excel(temp, sheet=11, range="AF9:AF14", col_names=FALSE)))
+temp7 <- as.data.frame(t(read_excel(temp, sheet=11, range="AL9:AL14", col_names=FALSE)))
+temp8 <- as.data.frame(t(read_excel(temp, sheet=11, range="AR9:AR14", col_names=FALSE)))
+temp9 <- as.data.frame(t(read_excel(temp, sheet=11, range="AX9:AX14", col_names=FALSE)))
+temp10 <- as.data.frame(t(read_excel(temp, sheet=11, range="BD9:BD14", col_names=FALSE)))
+temp11 <- as.data.frame(t(read_excel(temp, sheet=11, range="BJ9:BJ14", col_names=FALSE)))
+temp12 <- as.data.frame(t(read_excel(temp, sheet=11, range="BP9:BP14", col_names=FALSE)))
+temp13 <- as.data.frame(t(read_excel(temp, sheet=11, range="BV9:BV14", col_names=FALSE)))
+temp14 <- as.data.frame(t(read_excel(temp, sheet=11, range="CB9:CB14", col_names=FALSE)))
+temp15 <- as.data.frame(t(read_excel(temp, sheet=11, range="CH9:CH14", col_names=FALSE)))
+temp16 <- as.data.frame(t(read_excel(temp, sheet=11, range="CN9:CN14", col_names=FALSE)))
+temp17 <- as.data.frame(t(read_excel(temp, sheet=11, range="CT9:CT14", col_names=FALSE)))
+temp18 <- as.data.frame(t(read_excel(temp, sheet=11, range="CZ9:CZ14", col_names=FALSE)))
+temp19 <- as.data.frame(t(read_excel(temp, sheet=11, range="DF9:DF14", col_names=FALSE)))
+temp20 <- as.data.frame(t(read_excel(temp, sheet=11, range="DL9:DL14", col_names=FALSE)))
+temp21 <- as.data.frame(t(read_excel(temp, sheet=11, range="DR9:DR14", col_names=FALSE)))
+temp22 <- as.data.frame(t(read_excel(temp, sheet=11, range="DX9:DX14", col_names=FALSE)))
+temp23 <- as.data.frame(t(read_excel(temp, sheet=11, range="ED9:ED14", col_names=FALSE)))
+temp24 <- as.data.frame(t(read_excel(temp, sheet=11, range="EJ9:EJ14", col_names=FALSE)))
+temp25 <- as.data.frame(t(read_excel(temp, sheet=11, range="EP9:EP14", col_names=FALSE)))
+temp26 <- as.data.frame(t(read_excel(temp, sheet=11, range="EV9:EV14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1266,7 +1267,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
-                    temp21, temp22, temp23, temp24, temp25)
+                    temp21, temp22, temp23, temp24, temp25, temp26)
 
 data20$week <- c(12:EWmaxweek)
 
@@ -1333,7 +1334,7 @@ ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::PinaFraise", name="Cause", labels=c("COVID-19", "Other causes"))+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
-  labs(title="The rise in deaths seems to be driven by non-COVID causes",
+  labs(title="The recent 'bump' in mortality seems to have resolved",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
