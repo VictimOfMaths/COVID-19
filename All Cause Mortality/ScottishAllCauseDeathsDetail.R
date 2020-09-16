@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "8th August"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx"
-ScotRange <- "AH" #incrememnt by one letter each week
-Weekno <- 32
+ScotDate <- "13th September"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx"
+ScotRange <- "AM" #incrememnt by one letter each week
+Weekno <- 37
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -228,7 +228,7 @@ dev.off()
 #Read in age data
 temp <- tempfile()
 temp <- curl_download(url=Scot2020, destfile=temp, quiet=FALSE, mode="wb")
-data.age.2020 <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range=paste0("C15:",ScotRange, "21"), col_names=FALSE)))
+data.age.2020 <- data.frame(t(read_excel(temp, sheet=3, range=paste0("C15:",ScotRange, "21"), col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data.age.2020)), "%d/%m/%y"))
 data.age.2020 <- cbind(date, data.age.2020)
 colnames(data.age.2020) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -370,7 +370,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes are looking 'normal' at all ages",
+  labs(title="Deaths in Scotland seem to be slightly higher than usual in 45-74 year olds",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
