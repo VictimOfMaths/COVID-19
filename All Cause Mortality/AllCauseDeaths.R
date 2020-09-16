@@ -12,21 +12,26 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "4th September"
-ScotDate <- "6th September"
+ScotDate <- "13th September"
 NIDate <- "4th September"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek362020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(09%20September%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
 EngRange <- "AL" #increment by one letter each week
-ScotRange <- "AH" #increment by one letter each week
-ScotRangev2 <- "40" #increment by one number each week
+ScotRange <- "AM" #increment by one letter each week
+#These next two bookend the range for the weeks inbetween NRS's now monthly reports
+ScotRangev2.1 <- "42" #update after each new monthly report
+ScotRangev2.2 <- "42" #increment by one number each week
 NIRange <- "40" #increment by one number each week
+
+#Flag weeks with an NRS report
+NRSweek <- TRUE
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
@@ -627,7 +632,7 @@ data2019.S <- read_excel(temp, sheet="2019", range="E6:G57", col_names=FALSE)
 #Take 2020 data from dedicated COVID-19 page, which is updated more regularly
 temp <- tempfile()
 temp <- curl_download(url=Scot2020, destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range=paste0("C6:", ScotRange, "7"), col_names=FALSE))[,c(2)])
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range=paste0("C6:", ScotRange, "7"), col_names=FALSE))[,c(2)])
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "deaths")
@@ -655,23 +660,26 @@ data.S$year <- year(data.S$date)
 data.S$reg <- "Scotland"
 data.S <- data.S[,-c(3)]
 
-#NRS stopped publishing detailed deaths data after week 32, 
+if(NRSweek==FALSE){
+#NRS stopped publishing detailed weekly deaths data after week 32, 
 #so get data after that from elsewhere:
 #https://data.gov.scot/coronavirus-covid-19/data.html
 temp <- tempfile()
 temp <- curl_download(url=Scot2020v2, destfile=temp, quiet=FALSE, mode="wb")
-data.Sv2 <- read_excel(temp, sheet="2.2_excess", range=paste0("A37:C", ScotRangev2), col_names=FALSE)
+data.Sv2 <- read_excel(temp, sheet="2.2_excess", range=paste0("A", ScotRanvev2.1,":C", ScotRangev2.2), col_names=FALSE)
 colnames(data.Sv2) <- c("weekno", "date", "deaths")
 data.Sv2$date <- data.Sv2$date+days(6)
 data.Sv2$year <- rep(2020, times=length(data.Sv2$weekno))
 data.Sv2$reg <- rep("Scotland", times=length(data.Sv2$weekno))
 
 data.S <- bind_rows(data.S, data.Sv2)
+rm(data.Sv2)
+}
 
 #Tidy up
 rm(date, data2004.S, data2005.S, data2006.S, data2007.S, data2008.S, data2009.S, data2010.S, data2011.S, 
    data2012.S, data2013.S, data2014.S, data2015.S, data2016.S, data2017.S, data2018.S, data2019.S, 
-   data2020.S, data0415.S, data1619.S, data.Sv2)
+   data2020.S, data0415.S, data1619.S)
 
 #############################
 #Read in Northern Irish data#
