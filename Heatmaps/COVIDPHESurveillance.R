@@ -15,21 +15,23 @@ library(paletteer)
 
 #As of 28th August, PHE are actually publishing a time series of case numbers by age and sex
 temp1 <- tempfile()
-source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/916998/Weekly_COVID19_report_data_w37.xlsx"
+source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/919094/Weekly_COVID19_report_data_w38.xlsx"
 temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
-case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B42:L67", 
+case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B43:L69", 
                      col_names=FALSE)
 colnames(case.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                           "50-59", "60-69", "70-79", "80+")
 case.m$sex <- "Male"
 case.m <- gather(case.m, age, cases, c(2:11))
+case.m$cases <- as.character(case.m$cases)
 
-case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L37", 
+case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L38", 
                      col_names=FALSE)
 colnames(case.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                       "50-59", "60-69", "70-79", "80+")
 case.f$sex <- "Female"
 case.f <- gather(case.f, age, cases, c(2:11))
+case.f$cases <- as.character(case.f$cases)
 
 cases <- bind_rows(case.m, case.f)
 
@@ -60,6 +62,7 @@ cases <- merge(cases, pop, by.x="age", by.y="ageband", all.x=TRUE)
 
 cases$cases <- if_else(cases$cases=="*", "0", cases$cases)
 cases$cases <- if_else(cases$cases=="-", "0", cases$cases)
+cases$cases <- if_else(is.na(cases$cases), "0", cases$cases)
 cases$cases <- as.numeric(cases$cases)
 cases$caserate <- cases$cases*100000/cases$pop
 
@@ -86,7 +89,7 @@ ggplot(subset(cases, Week>=26))+
   geom_tile(aes(x=Week, y=age, fill=caserate))+
   scale_y_discrete(name="Age")+
   scale_fill_paletteer_c("viridis::magma", name="Cases per 100,000")+ 
-  scale_x_continuous(breaks=c(25,27,29,31,33,35))+
+  scale_x_continuous(breaks=c(25,27,29,31,33,35,37))+
   facet_wrap(~sex)+
   theme_classic()+ 
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
