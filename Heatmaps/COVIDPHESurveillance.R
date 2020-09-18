@@ -150,7 +150,7 @@ dev.off()
 
 #Analysis of positivity data
 #Overall by pillar
-pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F40",
+pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F41",
                           col_names=FALSE)
 colnames(pos.pillars) <- c("Week", "P1cases", "P2cases", "P1pos", "P2pos")
 
@@ -165,20 +165,20 @@ ggplot(pos.pillars, aes(x=Week, y=posrate/100, colour=Pillar))+
                      labels = scales::percent_format(accuracy = 1))+  
   theme_classic()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The positivity rate of Pillar 2 tests is rising",
+  labs(title="The positivity rate of Pillar 1 and 2 tests is rising",
        subtitle="Weekly positivity rates for <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2 </span>tests in England",
        caption="Date from PHE | Visualisation by @VictimOfMaths")
 dev.off()
 
 #By age and sex
-pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B80:I111",
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B82:I114",
                         col_names=FALSE)
 colnames(pos.age.m) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.m <- gather(pos.age.m, age, posrate, c(2:8))
 pos.age.m$posrate <- as.numeric(if_else(pos.age.m$posrate=="-", "NA", pos.age.m$posrate))
 pos.age.m$sex <- "Male"
 
-pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B115:I146",
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B118:I150",
                         col_names=FALSE)
 colnames(pos.age.f) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.f <- gather(pos.age.f, age, posrate, c(2:8))
@@ -200,7 +200,7 @@ ggplot(pos.age, aes(x=Week, y=posrate/100, colour=age))+
   facet_wrap(~sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The positivity rate of tests is rising in all age groups",
+  labs(title="The positivity rate of tests is rising in adults",
        subtitle="Weekly positivity rates for Pillar 2 tests in England by age group",
        caption="Date from PHE | Visualisation by @VictimOfMaths")
 dev.off()
