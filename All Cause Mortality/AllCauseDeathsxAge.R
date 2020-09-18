@@ -26,8 +26,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-32.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 - All deaths", range="C15:AH21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet=3, range="C15:AM21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -262,6 +262,7 @@ ggplot(data)+
   labs(title="Excess deaths in England are higher in 45-84 year-olds than elsewhere in the UK",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from ONS, NRS & NISRA | Plot by @VictimOfMaths")
+
 dev.off()
 
 #Bring in data from HMD
@@ -445,6 +446,11 @@ fulldata.IT$country <- "Italy"
 
 fulldata <- bind_rows(fulldata, fulldata.IT)
 
+#Use HMD data from Northern Ireland, rather than direct from NISRA - the 2020 data is slightly
+#less complete, but it does include 2010-19 data
+
+fulldata <- fulldata %>% filter(country!="Northern Ireland")
+
 #Tidy up names
 fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
@@ -457,6 +463,7 @@ fulldata$country <- case_when(
   fulldata$country=="ESP" ~ "Spain",
   fulldata$country=="EST" ~ "Estonia",
   fulldata$country=="FIN" ~ "Finland",
+  fulldata$country=="GBR_NIR" ~ "Northern Ireland",
   fulldata$country=="GRC" ~ "Greece",
   fulldata$country=="HRV" ~ "Croatia",
   fulldata$country=="HUN" ~ "Hungary",
@@ -475,16 +482,16 @@ fulldata$country <- case_when(
   fulldata$country=="SVN" ~ "Slovenia",
   TRUE ~ fulldata$country)
 
-#Remove most recent week of data for FIN, NOR, SVK, SWE and USA which is wonky
+#Remove most recent week of data for FIN, FRA, NOR, SVK, SWE and USA which is wonky
 fulldata <- fulldata %>%
   group_by(age, country, year) %>%
   mutate(last_week=max(week)) %>%
   ungroup() %>%
-  filter(!(country %in% c("Finland", "USA", "Slovakia", "Norway", "Lithuania") & year==2020 & week==last_week))
+  filter(!(country %in% c("Finland", "USA", "Slovakia", "Norway", "Lithuania", "France") & year==2020 & week==last_week))
 
-#Remove Russia which has no 2020 (or 2019) data and Croatia which has no 2020 data
+#Remove Russia which has no 2020 (or 2019) data
 fulldata <- fulldata %>% 
-  filter(!country %in% c("Russia", "Croatia"))
+  filter(!country %in% c("Russia"))
 
 Excessplot <- ggplot(fulldata)+
   geom_ribbon(aes(x=week, ymin=min_r, ymax=max_r), fill="Skyblue2")+
@@ -524,7 +531,7 @@ ggplot(subset(fulldata, age=="15-64"))+
         plot.subtitle =element_markdown())+
   labs(title="15-64 year olds in England, Wales and the US appear to fared poorly compared to their peers elsewhere",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
-       caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
+       caption="Data from mortality.org, Insee, ISTAT, ONS and NRS | Plot by @VictimOfMaths")
 
 dev.off()
 
@@ -538,12 +545,12 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey90", times=5), "#011627", rep("Grey90", times=17), 
+  scale_colour_manual(values=c(rep("Grey90", times=6), "#011627", rep("Grey90", times=17), 
                                "#2ec4b6", "Grey90", "Grey90", "#e71d36", rep("Grey90", times=2), 
                                "#ff9f1c"), name="Country")+
   labs(title="Some of these countries are not like the others",
        subtitle="Excess mortality rates in 15-64 year-olds in 2020",
-       caption="Data from mortality.org, ONS, NRS, NISRA, Insee and ISTAT\nPlot by @VictimOfMaths")
+       caption="Data from mortality.org, ONS, NRS, Insee and ISTAT\nPlot by @VictimOfMaths")
 dev.off()
 
 #Heatmaps of country and age-specific excess deaths
@@ -551,7 +558,7 @@ dev.off()
 fulldata$excess_d <- fulldata$deaths-fulldata$mean_d
 
 excess <- fulldata %>%
-  filter(!is.na(excess_d) & country!="Northern Ireland") %>%
+  filter(!is.na(excess_d)) %>%
   group_by(age, country) %>%
   summarise(excess=sum(excess_d), total=sum(deaths), excessprop=excess/total, maxweek=max(week))
 
@@ -600,19 +607,19 @@ fulldata$pop <- fulldata$deaths*100000/fulldata$mortrate
 
 #Fix issue in Slovenia as some weeks have 0 deaths, so pop is undefined using this method
 #I bet there's an elegant dplyr solution to this
-fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="0-14",
+fulldata$pop <- if_else(fulldata$country %in% c("Slovenia", "Northern Ireland") & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="0-14",
                         max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="0-14"]), 
                         fulldata$pop)
-fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="15-64",
+fulldata$pop <- if_else(fulldata$country %in% c("Slovenia", "Northern Ireland") & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="15-64",
                         max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="15-64"]), 
                         fulldata$pop)
-fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="65-74",
+fulldata$pop <- if_else(fulldata$country %in% c("Slovenia", "Northern Ireland") & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="65-74",
                         max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="65-74"]), 
                         fulldata$pop)
-fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="75-84",
+fulldata$pop <- if_else(fulldata$country %in% c("Slovenia", "Northern Ireland") & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="75-84",
                         max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="75-84"]), 
                         fulldata$pop)
-fulldata$pop <- if_else(fulldata$country=="Slovenia" & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="85+",
+fulldata$pop <- if_else(fulldata$country %in% c("Slovenia", "Northern Ireland") & fulldata$year=="2020" & is.na(fulldata$pop) & fulldata$age=="85+",
                         max(fulldata$pop[fulldata$country=="Slovenia" & fulldata$year=="2020" & !is.na(fulldata$pop) & fulldata$age=="85+"]), 
                         fulldata$pop)
 
@@ -632,7 +639,7 @@ natdata <- natdata %>%
          mortrate=deaths*100000/pop.y, excess_r=mortrate-mean_r)
 
 tiff("Outputs/ExcessEUROverall.tiff", units="in", width=10, height=8, res=500)
-ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53))+
+ggplot(subset(natdata, !country %in% c("Iceland") & week<53))+
   geom_ribbon(aes(x=week, ymax=max_r, ymin=min_r), fill="Skyblue2")+
   geom_line(aes(x=week, y=mortrate), colour="red")+
   geom_line(aes(x=week, y=mean_r), colour="Grey50", linetype=2)+
@@ -650,8 +657,8 @@ ggplot(subset(natdata, !country %in% c("Iceland", "Northern Ireland") & week<53)
 dev.off()  
 
 #Plots
-plotage <- "85+"
-plotdata <- subset(fulldata, age==plotage & country!="Northern Ireland" & !is.na(excess_r))
+plotage <- "0-14"
+plotdata <- subset(fulldata, age==plotage & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
 plotdata$country <- factor(plotdata$country, levels=levels(excessrank$country))
@@ -678,3 +685,27 @@ ggplot()+
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
 dev.off()
+
+#############################################
+tiff("Outputs/ExcessEURTiming.tiff", units="in", width=10, height=8, res=500)
+fulldata %>% 
+  select(age, country, week, excess_r) %>% 
+  group_by(country, age) %>% 
+  filter(!is.na(excess_r) & excess_r>0 & !age %in% c("0-14", "15-64") & 
+           country %in% c("England & Wales", "France", "Italy", "Scotland", "Spain", 
+                          "Sweden", "USA")) %>% 
+  mutate(max_excess=max(excess_r), maxprop=excess_r/max_excess) %>% 
+  ggplot()+
+  geom_line(aes(x=week, y=maxprop, colour=age))+
+  scale_x_continuous(name="Week")+
+  scale_y_continuous(name="Proportion of peak number of deaths by age group",
+                     labels = scales::percent_format(accuracy = 1))+
+  scale_colour_paletteer_d("fishualize::Acanthurus_olivaceus", name="Age")+
+  facet_wrap(~country)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="Was the mortality peak later in older age groups?",
+       subtitle="Weekly all-cause deaths by age in 2020 as a proportion of the maximum weekly count for selected countries",
+       caption="Data from ONS, Insee, ISTAT, NRS and mortality.org | Plot by @VictimOfMaths")
+dev.off()
+
