@@ -11,24 +11,24 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "4th September"
+EWDate <- "11th September"
 ScotDate <- "13th September"
-NIDate <- "4th September"
+NIDate <- "11th September"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek362020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek372020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(09%20September%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AL" #increment by one letter each week
+EngRange <- "AM" #increment by one letter each week
 ScotRange <- "AM" #increment by one letter each week
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "42" #update after each new monthly report
 ScotRangev2.2 <- "42" #increment by one number each week
-NIRange <- "40" #increment by one number each week
+NIRange <- "41" #increment by one number each week
 
 #Flag weeks with an NRS report
 NRSweek <- TRUE
@@ -790,7 +790,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The recent 'bump' in all-cause deaths looks to be over",
+  labs(title="All-cause deaths in England & Wales are up, but it's almost certainly a Bank Holiday effect",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
@@ -844,7 +844,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths for both men and women are back to 'normal' levels",
+  labs(title="All-cause deaths for both men and women are still at 'normal' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -896,7 +896,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Almost all age-sex groups saw a slight rise in all-cause deaths",
+  labs(title="We can see the Bank Holiday effect across all age-sex groups",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1080,7 +1080,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland are also back to 'normal'",
+  labs(title="Deaths from all causes in Northern Ireland are still at 'normal' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
@@ -1149,7 +1149,7 @@ RegPlot <- ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Many parts of the UK saw a slight rise in all-cause deaths",
+  labs(title="The Bank Holiday effect is evident everywhere except Scotland",
        subtitle=subtitle,
        caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1267,6 +1267,7 @@ temp23 <- as.data.frame(t(read_excel(temp, sheet=11, range="ED9:ED14", col_names
 temp24 <- as.data.frame(t(read_excel(temp, sheet=11, range="EJ9:EJ14", col_names=FALSE)))
 temp25 <- as.data.frame(t(read_excel(temp, sheet=11, range="EP9:EP14", col_names=FALSE)))
 temp26 <- as.data.frame(t(read_excel(temp, sheet=11, range="EV9:EV14", col_names=FALSE)))
+temp27 <- as.data.frame(t(read_excel(temp, sheet=11, range="FB9:FB14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1275,7 +1276,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
-                    temp21, temp22, temp23, temp24, temp25, temp26)
+                    temp21, temp22, temp23, temp24, temp25, temp26, temp27)
 
 data20$week <- c(12:EWmaxweek)
 
