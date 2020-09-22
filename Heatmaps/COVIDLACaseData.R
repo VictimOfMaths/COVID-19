@@ -16,6 +16,77 @@ library(gganimate)
 
 data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1,7,8,9)]
 
+#EVERYWHERE
+data.all <- data %>% 
+  group_by(name) %>% 
+  filter(!name %in% c("England", "Wales", "Scotland", "Northern Ireland")) %>% 
+  mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
+         maxcaseday=date[which(caserate_avg==maxcaserate)][1],
+         maxcaseprop=caserate_avg/maxcaserate,
+         totalcases=sum(cases))
+
+plotfrom <- "2020-03-01"
+plotto <- max(data.all$date)
+
+#Plot case trajectories
+casetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+casebars.all <- ggplot(subset(data.all, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Total confirmed cases")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLACasesHeatmapUK.tiff", units="in", width=16, height=30, res=500)
+plot_grid(casetiles.all, casebars.all, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLACasesHeatmapUK.png", units="in", width=16, height=30, res=500)
+plot_grid(casetiles.all, casebars.all, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+#Rate trajectories
+
+ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 case rates in Local Authorities/Council Areas across the UK",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+ratebars.all <- ggplot(subset(data.all, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLARatesHeatmapUK.tiff", units="in", width=16, height=30, res=500)
+plot_grid(ratetiles.all, ratebars.all, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLARatesHeatmapUK.png", units="in", width=16, height=30, res=500)
+plot_grid(ratetiles.all, ratebars.all, align="h", rel_widths=c(1,0.2))
+dev.off()
+
 #########
 #ENGLAND#
 #########
@@ -32,7 +103,7 @@ plotfrom <- "2020-03-01"
 plotto <- max(data.e$date)
 
 #Plot case trajectories
-casetiles <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+casetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -44,7 +115,7 @@ casetiles <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=ma
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
-casebars <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+casebars.e <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -53,11 +124,39 @@ casebars <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_reo
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDLTLACasesHeatmap.tiff", units="in", width=16, height=30, res=500)
-plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.e, casebars.e, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 png("Outputs/COVIDLTLACasesHeatmap.png", units="in", width=16, height=30, res=500)
-plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.e, casebars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 case rates in Local Authorities in England",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from PHE | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+ratebars.e <- ggplot(subset(data.e, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLARatesHeatmapEng.tiff", units="in", width=16, height=24, res=500)
+plot_grid(ratetiles.e, ratebars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLARatesHeatmapEng.png", units="in", width=16, height=24, res=500)
+plot_grid(ratetiles.e, ratebars.e, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 #######
@@ -76,7 +175,7 @@ plotfrom <- "2020-03-01"
 plotto <- max(data.w$date)
 
 #Plot case trajectories
-casetiles <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+casetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -88,7 +187,7 @@ casetiles <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=ma
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
-casebars <- ggplot(subset(data.w, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+casebars.w <- ggplot(subset(data.w, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -97,7 +196,7 @@ casebars <- ggplot(subset(data.w, date==maxcaseday), aes(x=totalcases, y=fct_reo
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDWelshLACasesHeatmap.tiff", units="in", width=12, height=6, res=500)
-plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.w, casebars.w, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 tiff("Outputs/COVIDWelshLACaseRidges.tiff", units="in", width=10, height=6, res=500)
@@ -109,6 +208,30 @@ ggplot(data.w, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Welsh Local Authorities",
        caption="Data from Public Health Wales | Plot by @VictimOfMaths")
+dev.off()
+
+ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 case rates in Local Authorities in Wales",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from PHW | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+ratebars.w <- ggplot(subset(data.w, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLARatesHeatmapWal.tiff", units="in", width=12, height=6, res=500)
+plot_grid(ratetiles.w, ratebars.w, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 ##########
@@ -127,7 +250,7 @@ plotfrom <- "2020-03-01"
 plotto <- max(data.s$date)
 
 #Plot case trajectories
-casetiles <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+casetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -139,7 +262,7 @@ casetiles <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=ma
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
-casebars <- ggplot(subset(data.s, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+casebars.s <- ggplot(subset(data.s, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -148,7 +271,7 @@ casebars <- ggplot(subset(data.s, date==maxcaseday), aes(x=totalcases, y=fct_reo
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDScottishCouncilCasesHeatmap.tiff", units="in", width=12, height=6, res=500)
-plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.s, casebars.s, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 tiff("Outputs/COVIDScottishCouncilCaseRidges.tiff", units="in", width=10, height=6, res=500)
@@ -160,6 +283,30 @@ ggplot(data.s, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Scottish Council areas",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
+dev.off()
+
+ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 case rates in Council Areas in Scotland",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from PHS | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+ratebars.s <- ggplot(subset(data.s, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLARatesHeatmapSco.tiff", units="in", width=12, height=6, res=500)
+plot_grid(ratetiles.s, ratebars.s, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 ##########
@@ -178,7 +325,7 @@ plotfrom <- "2020-03-01"
 plotto <- max(data.ni$date)
 
 #Plot case trajectories
-casetiles <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
+casetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -190,7 +337,7 @@ casetiles <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=m
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
-casebars <- ggplot(subset(data.ni, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
+casebars.ni <- ggplot(subset(data.ni, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -199,7 +346,7 @@ casebars <- ggplot(subset(data.ni, date==maxcaseday), aes(x=totalcases, y=fct_re
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
 tiff("Outputs/COVIDNILACasesHeatmap.tiff", units="in", width=12, height=6, res=500)
-plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.ni, casebars.ni, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 tiff("Outputs/COVIDNILACaseRidges.tiff", units="in", width=10, height=6, res=500)
@@ -211,6 +358,30 @@ ggplot(data.ni, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_av
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Northern Irish Local Authorities",
        caption="Data from Department of Health NI | Plot by @VictimOfMaths")
+dev.off()
+
+ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 case rates in Local Authorities in Northern Ireland",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from DoHNI | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+ratebars.ni <- ggplot(subset(data.ni, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLARatesHeatmapNI.tiff", units="in", width=12, height=4, res=500)
+plot_grid(ratetiles.ni, ratebars.ni, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 ############
