@@ -10,6 +10,7 @@ library(sf)
 library(curl)
 library(rmapshaper)
 library(gganimate)
+library(paletteer)
 
 #Read in data created by COVID_LA_Plots/UnderlyingCode.R, which lives here:
 #https://github.com/VictimOfMaths/COVID_LA_Plots/blob/master/UnderlyingCode.R
@@ -19,11 +20,11 @@ data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1,7,8,9)]
 #EVERYWHERE
 data.all <- data %>% 
   group_by(name) %>% 
-  filter(!name %in% c("England", "Wales", "Scotland", "Northern Ireland")) %>% 
+  filter(!name %in% c("England", "Wales", "Scotland", "Northern Ireland") & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
-         totalcases=sum(cases))
+         totalcases=sum(cases), recentpeak=maxcaseprop[date==as.Date("2020-09-15")])
 
 plotfrom <- "2020-03-01"
 plotto <- max(data.all$date)
@@ -59,7 +60,7 @@ dev.off()
 
 #Rate trajectories
 
-ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -92,7 +93,7 @@ dev.off()
 #########
 data.e <- data %>% 
   group_by(name) %>% 
-  filter(country=="England" & name!="England") %>% 
+  filter(country=="England" & name!="England" & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -123,15 +124,15 @@ casebars.e <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_r
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDLTLACasesHeatmap.tiff", units="in", width=16, height=30, res=500)
+tiff("Outputs/COVIDLTLACasesHeatmap.tiff", units="in", width=16, height=26, res=500)
 plot_grid(casetiles.e, casebars.e, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-png("Outputs/COVIDLTLACasesHeatmap.png", units="in", width=16, height=30, res=500)
+png("Outputs/COVIDLTLACasesHeatmap.png", units="in", width=16, height=26, res=500)
 plot_grid(casetiles.e, casebars.e, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -164,7 +165,7 @@ dev.off()
 #######
 data.w <- data %>% 
   group_by(name) %>% 
-  filter(country=="Wales" & name!="Wales") %>% 
+  filter(country=="Wales" & name!="Wales" & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -210,7 +211,7 @@ ggplot(data.w, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
        caption="Data from Public Health Wales | Plot by @VictimOfMaths")
 dev.off()
 
-ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -239,7 +240,7 @@ dev.off()
 ##########
 data.s <- data %>% 
   group_by(name) %>% 
-  filter(country=="Scotland" & name!="Scotland") %>% 
+  filter(country=="Scotland" & name!="Scotland" & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -285,7 +286,7 @@ ggplot(data.s, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
-ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -314,7 +315,7 @@ dev.off()
 ##########
 data.ni <- data %>% 
   group_by(name) %>% 
-  filter(country=="Northern Ireland" & name!="Northern Ireland") %>% 
+  filter(country=="Northern Ireland" & name!="Northern Ireland" & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -360,7 +361,7 @@ ggplot(data.ni, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_av
        caption="Data from Department of Health NI | Plot by @VictimOfMaths")
 dev.off()
 
-ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=casesroll_avg))+
+ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
@@ -428,7 +429,7 @@ data.hex <- subset(data.hex, id!="E06000053")
 #extract latest date with full UK data
 data.hex <- data.hex %>%
   group_by(country) %>%
-  filter(country!="Republic of Ireland") %>% 
+  filter(country!="Republic of Ireland" & !is.na(casesroll_avg)) %>% 
   mutate(min=min(date), max=max(date))
 
 completefrom <- max(data.hex$min, na.rm=TRUE)
