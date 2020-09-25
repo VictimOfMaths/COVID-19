@@ -15,9 +15,9 @@ library(paletteer)
 
 #As of 28th August, PHE are actually publishing a time series of case numbers by age and sex
 temp1 <- tempfile()
-source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/919094/Weekly_COVID19_report_data_w38.xlsx"
+source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/921562/Weekly_COVID19_report_data_w39.xlsx"
 temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
-case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B43:L69", 
+case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B44:L71", 
                      col_names=FALSE)
 colnames(case.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                           "50-59", "60-69", "70-79", "80+")
@@ -25,7 +25,7 @@ case.m$sex <- "Male"
 case.m <- gather(case.m, age, cases, c(2:11))
 case.m$cases <- as.character(case.m$cases)
 
-case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L38", 
+case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L39", 
                      col_names=FALSE)
 colnames(case.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                       "50-59", "60-69", "70-79", "80+")
@@ -150,7 +150,7 @@ dev.off()
 
 #Analysis of positivity data
 #Overall by pillar
-pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F41",
+pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F42",
                           col_names=FALSE)
 colnames(pos.pillars) <- c("Week", "P1cases", "P2cases", "P1pos", "P2pos")
 
@@ -171,14 +171,14 @@ ggplot(pos.pillars, aes(x=Week, y=posrate/100, colour=Pillar))+
 dev.off()
 
 #By age and sex
-pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B82:I114",
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B84:I117",
                         col_names=FALSE)
 colnames(pos.age.m) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.m <- gather(pos.age.m, age, posrate, c(2:8))
 pos.age.m$posrate <- as.numeric(if_else(pos.age.m$posrate=="-", "NA", pos.age.m$posrate))
 pos.age.m$sex <- "Male"
 
-pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B118:I150",
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B121:I154",
                         col_names=FALSE)
 colnames(pos.age.f) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.f <- gather(pos.age.f, age, posrate, c(2:8))
