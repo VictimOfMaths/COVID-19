@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/09/COVID-19-total-announced-deaths-22-September-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/09/COVID-19-total-announced-deaths-29-September-2020.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
 
-deaths<-deaths[18:.N, c(1:213)]
+deaths<-deaths[18:.N, c(1:220)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:213)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:220)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -130,6 +130,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill=m
   geom_tile(colour="White", show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
+  #scale_fill_viridis_c()+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 cases in English Local Authorities",
@@ -142,6 +143,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
+  #scale_fill_viridis_c()+
   scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000,6000,8000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
@@ -268,7 +270,7 @@ death <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill=dea
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c("2020-03-06", plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 deaths in hospital in English Local Authorities",
-       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of cases. Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text=element_text(colour="Black"))
@@ -287,6 +289,35 @@ dev.off()
 
 png("Outputs/COVIDLADeathsHeatmapAbs.png", units="in", width=16, height=16, res=500)
 plot_grid(death, deathbars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+#Plot death rate trajectories
+deathrate <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill=deathsroll_avg*100000/pop))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c("2020-03-06", plotto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 death rates in hospitals in English Local Authorities",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths per 100,000 within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text=element_text(colour="Black"))
+
+deathratebars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=pop, y=fct_reorder(name, maxdeathsday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLADeathsRateHeatmap.tiff", units="in", width=16, height=16, res=500)
+plot_grid(deathrate, deathratebars, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLADeathsRateHeatmap.png", units="in", width=16, height=16, res=500)
+plot_grid(deathrate, deathratebars, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 ##########################
@@ -462,7 +493,7 @@ DeathRateAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03")), aes(geomet
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
   labs(title="Visualising the spread of the pandemic across England",
-       subtitle="Rolling 7-day average number of new confirmed deaths per 100,000\nDate: {frame_time}",
+       subtitle="Rolling 7-day average number of new confirmed COVID-19 deaths in hospitals per 100,000\nDate: {frame_time}",
        caption="Data from NHS England | Visualisation by @VictimOfMaths")
 
 animate(DeathRateAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/DeathRateAnim.gif"), end_pause=60)
