@@ -137,14 +137,14 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxcaseday), fill=m
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(size=rel(2.3)))
 
 casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   #scale_fill_viridis_c()+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000,6000,8000))+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000,6000,8000,10000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -168,7 +168,7 @@ deathtiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fil
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of estimated deaths, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths estimated\nin each LA. Deaths are estimated as COVID-19 mortality data is only available from NHS England at hospital level. LA-level deaths are modelled using\n@Benj_Barr's approach, using the proportion of HES emergency admissions to each hospital in 2018-19 originating from each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from NHS England & Ben Barr | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text=element_text(colour="Black"))
+        axis.text=element_text(colour="Black"), plot.title=element_text(size=rel(2.3)))
 
 deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=totaldeaths, y=fct_reorder(name, maxdeathsday), fill=totaldeaths))+
   geom_col(show.legend=FALSE)+
@@ -273,7 +273,7 @@ death <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill=dea
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text=element_text(colour="Black"))
+        axis.text=element_text(colour="Black"), plot.title=element_text(size=rel(2.3)))
 
 deathbars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=cumul_deathrate, y=fct_reorder(name, maxdeathsday), fill=cumul_deathrate))+
   geom_col(show.legend=FALSE)+
@@ -302,7 +302,7 @@ deathrate <- ggplot(heatmap, aes(x=date, y=fct_reorder(name, maxdeathsday), fill
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of daily confirmed deaths per 100,000 within each Local Authority.\nLAs are ordered by the date at which they reached their peak number of deaths Bars on the right represent the cumulative number of cases per 100,000 population in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text=element_text(colour="Black"))
+        axis.text=element_text(colour="Black"), plot.title=element_text(size=rel(2.3)))
 
 deathratebars <- ggplot(subset(heatmap, date==maxdeathsday), aes(x=pop, y=fct_reorder(name, maxdeathsday), fill=pop))+
   geom_col(show.legend=FALSE)+
