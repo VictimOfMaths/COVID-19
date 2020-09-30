@@ -451,6 +451,22 @@ CaseAnimAbs <- ggplot(subset(map.data, date>as.Date("2020-02-25")), aes(geometry
 
 animate(CaseAnimAbs, duration=25, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CaseAnimAbs.gif"), end_pause=60)
 
+#Animation of death rates
+DeathRateAnim <- ggplot(subset(map.data, date>as.Date("2020-03-03")), aes(geometry=geometry, fill=deathsroll_avg*100000/pop))+
+  geom_sf(colour=NA)+
+  xlim(10000,655644)+
+  ylim(5337,700000)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", name="Daily deaths\nper 100,000")+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(),  plot.title=element_text(face="bold"))+
+  transition_time(date)+
+  labs(title="Visualising the spread of the pandemic across England",
+       subtitle="Rolling 7-day average number of new confirmed deaths per 100,000\nDate: {frame_time}",
+       caption="Data from NHS England | Visualisation by @VictimOfMaths")
+
+animate(DeathRateAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/DeathRateAnim.gif"), end_pause=60)
+
 #Quick analysis of potential COVID 'bumps'
 
 temp1 <- subset(heatmap, name %in% c("Dorset", "Cornwall and Isles of Scilly", "Devon", "Bournemouth, Christchurch and Poole",
