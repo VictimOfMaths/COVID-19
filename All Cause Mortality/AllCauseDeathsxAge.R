@@ -656,6 +656,23 @@ ggplot(subset(natdata, !country %in% c("Iceland") & week<53))+
 
 dev.off()  
 
+tiff("Outputs/ExcessUSA.tiff", units="in", width=10, height=8, res=500)
+ggplot(subset(natdata, country=="USA" & week<53))+
+  geom_ribbon(aes(x=week, ymax=max_r, ymin=min_r), fill="Skyblue2")+
+  geom_line(aes(x=week, y=mortrate), colour="red")+
+  geom_line(aes(x=week, y=mean_r), colour="Grey50", linetype=2)+
+  geom_ribbon(aes(x=week, ymax=mortrate, ymin=mean_r), fill="red", alpha=0.2)+
+  scale_x_continuous(name="Week")+
+  scale_y_continuous(name="Deaths per 100,000", limits=c(0,NA))+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle=element_markdown())+
+  labs(title="Excess mortality in the United States of America",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
+       caption="Data from mortality.org | Plot by @VictimOfMaths")
+
+dev.off()  
+
 #Plots
 plotage <- "0-14"
 plotdata <- subset(fulldata, age==plotage & !is.na(excess_r))
