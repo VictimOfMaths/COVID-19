@@ -113,8 +113,7 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDCasesHeatmapScotlandRate.tiff", units="in", width=10, height=3, res=500)
-ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$date)), 
+CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$date)), 
        aes(x=date, y=AgeGroup, fill=posrate_avg))+
   geom_tile()+
   scale_x_date(name="")+
@@ -125,6 +124,9 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   labs(title="COVID-19 cases in Scotland have exploded among teenagers, but are rising in older ages too",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
+
+tiff("Outputs/COVIDCasesHeatmapScotlandRate.tiff", units="in", width=10, height=3, res=500)
+CaseratexAge
 dev.off()
 
 #By deprivation
@@ -171,3 +173,9 @@ ggplot(data.simd, aes(x=date, y=as.factor(SIMDQuintile), fill=deaths_avg))+
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
+#Rayshader version
+library(rayshader)
+library(rayrender)
+
+plot_gg(CaseratexAge, width=10, height=3, multicore = TRUE, windowsize = c(1000, 600), 
+        zoom = 0.65, phi = 35, theta = 40, sunangle = 225, soliddepth = -100) 
