@@ -15,9 +15,9 @@ library(paletteer)
 
 #As of 28th August, PHE are actually publishing a time series of case numbers by age and sex
 temp1 <- tempfile()
-source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/921562/Weekly_COVID19_report_data_w39.xlsx"
+source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/923669/Weekly_COVID19_report_data_w40.xlsx"
 temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
-case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B44:L71", 
+case.m <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B45:L73", 
                      col_names=FALSE)
 colnames(case.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                           "50-59", "60-69", "70-79", "80+")
@@ -25,7 +25,7 @@ case.m$sex <- "Male"
 case.m <- gather(case.m, age, cases, c(2:11))
 case.m$cases <- as.character(case.m$cases)
 
-case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L39", 
+case.f <- read_excel(temp1, sheet="Figure 2b Cases by age and sex ", range="B12:L40", 
                      col_names=FALSE)
 colnames(case.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
                       "50-59", "60-69", "70-79", "80+")
@@ -89,7 +89,7 @@ ggplot(subset(cases, Week>=26))+
   geom_tile(aes(x=Week, y=age, fill=caserate))+
   scale_y_discrete(name="Age")+
   scale_fill_paletteer_c("viridis::magma", name="Cases per 100,000")+ 
-  scale_x_continuous(breaks=c(25,27,29,31,33,35,37))+
+  scale_x_continuous(breaks=c(25,27,29,31,33,35,37,39))+
   facet_wrap(~sex)+
   theme_classic()+ 
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
@@ -113,7 +113,7 @@ dev.off()
 
 library(ggstream) #devtools::install_github("davidsjoberg/ggstream")
 
-tiff("Outputs/COVIDCasesStreamgraph.tiff", units="in", width=10, height=6, res=500)
+tiff("Outputs/COVIDCasesStreamgraphxSex.tiff", units="in", width=10, height=6, res=500)
 ggplot(cases, aes(x=Week, y=cases, fill=age))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("RColorBrewer::RdYlGn", name="Age", direction=-1)+
@@ -124,13 +124,13 @@ ggplot(cases, aes(x=Week, y=cases, fill=age))+
   facet_wrap(~sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The rise in COVID-19 cases is largely among 20-somethings",
+  labs(title="The rise in COVID-19 cases is greatest in the under-40s",
        subtitle="Confirmed new cases in England by age band",
        caption="Date from PHE | Plot by @VictimOfMaths")
 dev.off()
 
 #Combined sex version
-tiff("Outputs/COVIDCasesStreamgraphxSex.tiff", units="in", width=10, height=6, res=500)
+tiff("Outputs/COVIDCasesStreamgraph.tiff", units="in", width=10, height=6, res=500)
 cases %>% 
   group_by(Week, age) %>% 
   summarise(cases=sum(cases)) %>% 
@@ -150,7 +150,7 @@ dev.off()
 
 #Analysis of positivity data
 #Overall by pillar
-pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F42",
+pos.pillars <- read_excel(temp1, sheet="Figure 1. Pillar 1+2 epicurve", range="B9:F43",
                           col_names=FALSE)
 colnames(pos.pillars) <- c("Week", "P1cases", "P2cases", "P1pos", "P2pos")
 
@@ -165,20 +165,20 @@ ggplot(pos.pillars, aes(x=Week, y=posrate/100, colour=Pillar))+
                      labels = scales::percent_format(accuracy = 1))+  
   theme_classic()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The positivity rate of Pillar 1 and 2 tests is rising",
+  labs(title="The positivity rate of Pillar 1 and 2 tests is still rising",
        subtitle="Weekly positivity rates for <span style='color:#FF4E86;'>Pillar 1</span> and <span style='color:#FF9E44;'>Pillar 2 </span>tests in England",
        caption="Date from PHE | Visualisation by @VictimOfMaths")
 dev.off()
 
 #By age and sex
-pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B84:I117",
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B86:I120",
                         col_names=FALSE)
 colnames(pos.age.m) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.m <- gather(pos.age.m, age, posrate, c(2:8))
 pos.age.m$posrate <- as.numeric(if_else(pos.age.m$posrate=="-", "NA", pos.age.m$posrate))
 pos.age.m$sex <- "Male"
 
-pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B121:I154",
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B124:I158",
                         col_names=FALSE)
 colnames(pos.age.f) <- c("Week", "0-4", "5-14", "15-44", "45-64", "65-74", "75-84", "85+")
 pos.age.f <- gather(pos.age.f, age, posrate, c(2:8))
