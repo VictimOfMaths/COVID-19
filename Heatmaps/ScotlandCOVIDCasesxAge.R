@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201001.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201005.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -131,7 +131,7 @@ dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201001.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201005.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -160,8 +160,7 @@ ggplot(subset(data.simd, date>=as.Date("2020-07-01") & date<max(data$date)),
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDDeathsHeatmapScotlandxIMD.tiff", units="in", width=10, height=3, res=500)
-ggplot(data.simd, aes(x=date, y=as.factor(SIMDQuintile), fill=deaths_avg))+
+COVIDDeathsHeatmapScotlandxIMD <- ggplot(data.simd, aes(x=date, y=as.factor(SIMDQuintile), fill=deaths_avg))+
   geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="Deprivation quintile",
@@ -171,7 +170,14 @@ ggplot(data.simd, aes(x=date, y=as.factor(SIMDQuintile), fill=deaths_avg))+
   labs(title="Deaths from confirmed COVID-19 in Scotland were concentrated in more deprived areas",
        subtitle="Rolling 7-day average of confirmed daily deaths in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
+
+tiff("Outputs/COVIDDeathsHeatmapScotlandxIMD.tiff", units="in", width=10, height=3, res=500)
+COVIDDeathsHeatmapScotlandxIMD
 dev.off()
+
+#Save jpeg for SIPHER blog
+ggsave("Outputs/JPEGs/MortIneqBlog6.jpeg", plot=COVIDDeathsHeatmapScotlandxIMD, 
+       units="in", width=10, height=3)
 
 #Rayshader version
 library(rayshader)
