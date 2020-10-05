@@ -336,13 +336,12 @@ ggplot()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)), plot.title.position="plot",
         axis.text=element_text(colour="black"), plot.subtitle=element_markdown())+
-  labs(title="Inequality in crude mortality rates in England & Wales in 2020 is similar to previous years",
-       subtitle="<span style='color:grey40;'>Deaths in England & Wales between March 1st and 31st July by deprivation decile from <span style='color:midnightblue;'>all causes in 2014-18<span style='color:grey40;'> and from <span style='color:#f89088;'>COVID-19<span style='color:grey40;'> and <span style='color:#40a0d8;'>other causes<span style='color:grey40;'> in 2020",
+  labs(title="Inequality in crude mortality rates in England in 2020 is similar to previous years",
+       subtitle="<span style='color:grey40;'>Deaths in England between March 1st and 31st July by deprivation decile from <span style='color:midnightblue;'>all causes in 2014-18<span style='color:grey40;'> and from <span style='color:#f89088;'>COVID-19<span style='color:grey40;'> and <span style='color:#40a0d8;'>other causes<span style='color:grey40;'> in 2020",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDIneqRateHist.tiff", units="in", width=12, height=8, res=500)
-ggplot()+
+COVIDIneqRateHist <- ggplot()+
   geom_col(data=subset(plotdata, year==2020 & cause %in% c("ASCOVID_deaths", "ASOther_deaths")),
            aes(x=as.factor(IMD), y=deaths, fill=cause))+
   geom_jitter(data=subset(plotdata, year!=2020 & cause=="ASdeaths"), 
@@ -357,8 +356,11 @@ ggplot()+
         strip.text=element_text(face="bold", size=rel(1)), plot.title.position="plot",
         axis.text=element_text(colour="black"), plot.subtitle=element_markdown())+
   labs(title="After age-standardising, deaths in 2020 are slightly more unequal than usual",
-       subtitle="<span style='color:grey40;'>Age-standardised deaths in England & Wales between March 1st and 31st July by deprivation decile from <span style='color:midnightblue;'>all causes in 2014-18<span style='color:grey40;'> and from <span style='color:#f89088;'>COVID-19<span style='color:grey40;'> and <span style='color:#40a0d8;'>other causes<span style='color:grey40;'> in 2020",
+       subtitle="<span style='color:grey40;'>Age-standardised deaths in England between March 1st and 31st July by deprivation decile from <span style='color:midnightblue;'>all causes in 2014-18<span style='color:grey40;'> and from <span style='color:#f89088;'>COVID-19<span style='color:grey40;'> and <span style='color:#40a0d8;'>other causes<span style='color:grey40;'> in 2020",
        caption="Data from ONS | Plot by @VictimOfMaths")
+
+tiff("Outputs/COVIDIneqRateHist.tiff", units="in", width=12, height=8, res=500)
+COVIDIneqRateHist
 dev.off()
 
 ###########################
@@ -399,8 +401,7 @@ ann_arrows1b <- data.frame(x=rep(c(2.5,7.5), times=4), xend=rep(c(1,10), times=4
                            y=c(-3000, 14000, -3000, 14000), yend=c(1100, 9900, 900, 9500),
                            Sex=rep(c("Male", "Female"), each=2), cause=rep("Other_deaths", times=4))
 
-tiff("Outputs/COVIDIneqDeath.tiff", units="in", width=12, height=8, res=500)
-plotdata %>% 
+COVIDIneqDeath <- plotdata %>% 
   filter(cause %in% c("COVID_deaths", "Other_deaths") & year==2020) %>% 
   ggplot(aes(x=as.factor(IMD), y=deaths, fill=cause))+
   geom_col()+
@@ -422,10 +423,15 @@ plotdata %>%
             arrow=arrow(length=unit(0.2, "cm"), type="closed"))+
   geom_curve(data=ann_arrows1b, aes(x=x, xend=xend, y=y, yend=yend), colour="Grey40", curvature=-0.21, 
              arrow=arrow(length=unit(0.2, "cm"), type="closed"))+
-  labs(title="Inequalities in all-cause deaths in England & Wales in 2020 are relatively small",
-       subtitle="<span style='color:grey40;'>Total deaths in England & Wales in 2020 by deprivation decile from <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes.",
+  labs(title="Inequalities in all-cause deaths in England in 2020 are fairly small",
+       subtitle="<span style='color:grey40;'>Total deaths in England in 2020 by deprivation decile from <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes.",
        caption="Data from ONS | Plot by @VictimOfMaths")
+
+tiff("Outputs/COVIDIneqDeath.tiff", units="in", width=12, height=8, res=500)
+COVIDIneqDeath
 dev.off()
+
+
 
 #######
 #Rates#
@@ -492,14 +498,10 @@ COVIDIneqRate <- plotdata %>%
   geom_curve(data=ann_arrows2b, aes(x=x, xend=xend, y=y, yend=yend), colour="Grey40", curvature=-0.21, 
              arrow=arrow(length=unit(0.2, "cm"), type="closed"))+
   labs(title="After age-standardising there are significant inequalities in deaths in 2020",
-       subtitle="<span style='color:grey40;'>Age-standardised deaths in England & Wales in 2020 by deprivation decile from <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes.",
+       subtitle="<span style='color:grey40;'>Age-standardised deaths in England in 2020 by deprivation decile from <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 
 tiff("Outputs/COVIDIneqRate.tiff", units="in", width=12, height=8, res=500)
-COVIDIneqRate
-dev.off()
-
-png("Outputs/COVIDIneqRate.png", units="in", width=12, height=8, res=500)
 COVIDIneqRate
 dev.off()
 
@@ -528,7 +530,7 @@ ggplot()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Absolute inequality in deaths has risen slightly in 2020",
-       subtitle="<span style='color:grey40;'>Slope Index of Inequality for deaths in England & Wales from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
+       subtitle="<span style='color:grey40;'>Slope Index of Inequality for deaths in England from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
        caption="Data from ONS | Plot by @VictimOfMaths")
 
 tiff("Outputs/COVIDSIIEng.tiff", units="in", width=10, height=8, res=500)
@@ -545,12 +547,11 @@ ggplot()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Absolute inequality in deaths has risen sharply in 2020",
-       subtitle="<span style='color:grey40;'>Slope Index of Inequality in age-standardised deaths in England & Wales from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
+       subtitle="<span style='color:grey40;'>Slope Index of Inequality in age-standardised deaths in England from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDRIIEng.tiff", units="in", width=10, height=8, res=500)
-ggplot()+
+COVIDRIIEng <- ggplot()+
   geom_line(data=subset(SII, cause=="ASdeaths"), aes(x=year, y=RII), colour="midnightblue")+
   geom_point(data=subset(SII, cause %in% c("ASCOVID_deaths", "ASOther_deaths") & year==2020), 
              aes(x=year, y=RII, colour=cause), show.legend=FALSE)+
@@ -563,6 +564,16 @@ ggplot()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Relative inequality in deaths is in line with recent years",
-       subtitle="<span style='color:grey40;'>Relative Index of Inequality in age-standardised deaths in England & Wales from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
+       subtitle="<span style='color:grey40;'>Relative Index of Inequality in age-standardised deaths in England from <span style='color:midnightblue;'>all causes<span style='color:grey40;'>, <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
        caption="Data from ONS | Plot by @VictimOfMaths")
+
+
+tiff("Outputs/COVIDRIIEng.tiff", units="in", width=10, height=8, res=500)
+COVIDRIIEng
 dev.off()
+
+#jpeg versions for blog
+ggsave("Outputs/JPEGs/MortIneqBlog1.jpeg", plot=COVIDIneqDeath, units="in", width=12, height=8)
+ggsave("Outputs/JPEGs/MortIneqBlog3.jpeg", plot=COVIDIneqRate, units="in", width=12, height=8)
+ggsave("Outputs/JPEGs/MortIneqBlog4.jpeg", plot=COVIDIneqRateHist, units="in", width=12, height=8)
+ggsave("Outputs/JPEGs/MortIneqBlog5.jpeg", plot=COVIDRIIEng, units="in", width=10, height=8)

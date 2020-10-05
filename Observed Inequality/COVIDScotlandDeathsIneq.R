@@ -69,8 +69,7 @@ ann_arrows1b <- data.frame(x=rep(c(2,4), times=4), xend=rep(c(1,5), times=4),
                            y=c(-700, 4200, -700, 4000), yend=c(300, 2000, 200, 2100),
                            sex=rep(c("Male", "Female"), each=2), cause=rep("Other", times=4))
 
-tiff("Outputs/COVIDScotIneqDeath.tiff", units="in", width=12, height=8, res=500)
-data_long %>% 
+COVIDScotIneqDeath <- data_long %>% 
   filter(sex!="Total" & cause!="All Cause" & metric=="Deaths") %>% 
 ggplot(aes(x=SIMD, y=deaths, fill=cause))+
   geom_col()+
@@ -92,6 +91,10 @@ ggplot(aes(x=SIMD, y=deaths, fill=cause))+
   labs(title="Deprived areas in Scotland have borne the brunt of the impact of COVID-19",
        subtitle="<span style='color:grey40;'>Higher deprivation is associated with substantially more deaths in 2020 from both <span style='color:#f89088;'>COVID-19 <span style='color:grey40;'>and <span style='color:#40a0d8;'>all other causes",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
+
+
+tiff("Outputs/COVIDScotIneqDeath.tiff", units="in", width=12, height=8, res=500)
+COVIDScotIneqDeath
 dev.off()
 
 #######
@@ -203,10 +206,9 @@ data_full <- bind_rows(data_long, hist_long)
 data_full$sex <- factor(data_full$sex, levels=c("Male", "Female", "Total"))
 data_full$cause <- factor(data_full$cause, levels=c("Other", "COVID-19", "All Cause"))
 
-tiff("Outputs/COVIDScotIneqRateHist.tiff", units="in", width=12, height=8, res=500)
-ggplot()+
+COVIDScotIneqRateHist <- ggplot()+
   geom_col(data=subset(data_full, Year==2020 & metric=="Rate" & sex!="Total" & cause!="All Cause"),
-           aes(x=SIMD, y=deaths, fill=cause), show.legend=FALSE)+
+           aes(x=SIMD, y=deaths, fill=cause))+
   geom_jitter(data=subset(data_full, Year!=2020 & sex!="Total"), 
               aes(x=SIMD, y=deaths), colour="midnightblue")+
   scale_fill_paletteer_d("palettetown::porygon", name="Cause")+
@@ -220,6 +222,10 @@ ggplot()+
   labs(title="All-cause deaths in Scotland have been slightly more unequal than usual in 2020",
        subtitle="<span style='color:grey40;'>Age-standardised mortality rates in Scotland between March 1st and August 31st by deprivation quintile from <span style='color:midnightblue;'>all causes in 2014-18<span style='color:grey40;'> and from <span style='color:#f89088;'>COVID-19<span style='color:grey40;'> and <span style='color:#40a0d8;'>other causes<span style='color:grey40;'> in 2020",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
+
+
+tiff("Outputs/COVIDScotIneqRateHist.tiff", units="in", width=12, height=8, res=500)
+COVIDScotIneqRateHist
 dev.off()
 
 #Calculate SII & RII
@@ -277,3 +283,6 @@ ggplot()+
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
+#Save jpegs for SIPHER blog
+ggsave("Outputs/JPEGs/MortIneqBlog7.jpeg", plot=COVIDScotIneqDeath, units="in", width=12, height=8)
+ggsave("Outputs/JPEGs/MortIneqBlog8.jpeg", plot=COVIDScotIneqRateHist, units="in", width=13, height=8)
