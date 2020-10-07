@@ -86,7 +86,7 @@ casebars <- ggplot(subset(heatmap, Date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000, 2000, 3000, 4000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -115,51 +115,152 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdata%2Bby%2BNHS%2BBoard%2B07%2BJuly%2B2020.xlsx"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B7%2BOctober%2B2020.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-#Need to manually increment the numbers at the end of this range: 79 = 1st June
-ICUdata <- read_excel(temp, sheet=4, range="A3:O115")
+#Historic ICU data (using a slightly different definition)
+ICUdata.hist <- read_excel(temp, sheet=6, range="A12:Q180", col_names=FALSE)
+colnames(ICUdata.hist) <- c("Date", "Ayrshire & Arran", "Borders", "Dumfries & Galloway",
+                            "Fife", "Forth Valley", "Grampian", "Greater Glasgow & Clyde",
+                            "Highland", "Lanarkshire", "Lothian", "Orkney", "Shetland",
+                            "Tayside", "Western Isles", "Golden Jubilee National Hospital",
+                            "Scotland")
+ICUdata.hist_long <- gather(ICUdata.hist, HB, cases, c(2:17))
+ICUdata.hist_long$cases <- as.numeric(ifelse(ICUdata.hist_long$cases=="*", NA, ICUdata.hist_long$cases))
+ICUdata.hist_long$Date <- as.Date(ICUdata.hist_long$Date)
 
-ICUdata_long <- gather(ICUdata, HB, cases, c(2:15))
-ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", 0, ICUdata_long$cases))
-ICUdata_long$Date <- as.Date(ICUdata_long$Date)
-ICUdata_long$HB <- substr(ICUdata_long$HB, 5, 100)
+#Recent ICU data
+#Need to manually increment the numbers at the end of this range: 79 = 1st June
+ICUdata <- read_excel(temp, sheet=4, range="A3:Q30")
+
+ICUdata_long <- gather(ICUdata, HB, cases, c(2:17))
+ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", NA, ICUdata_long$cases))
+ICUdata_long$Date <- as.Date(ICUdata_long$`Reporting date`)
+ICUdata_long$HB <- if_else(substr(ICUdata_long$HB, 1,3)=="NHS", substr(ICUdata_long$HB, 5, 100),
+                           ICUdata_long$HB)
+ICUdata_long$HB <- if_else(ICUdata_long$HB=="Scotland total", "Scotland", ICUdata_long$HB)
+
+#need to use a custom max function as some HBs are all 0s
+my.max <- function(x) ifelse( !all(is.na(x)), max(x, na.rm=T), NA)
 
 ICUheatmap <- ICUdata_long %>%
+  bind_rows(., ICUdata.hist_long) %>% 
   arrange(HB, Date) %>%
   group_by(HB) %>%
-  mutate(casesroll_avg=roll_mean(cases, 5, align="right", fill=0)) %>%
-  mutate(maxcaserate=max(casesroll_avg), maxcaseday=Date[which(casesroll_avg==maxcaserate)][1],
+  mutate(maxcases=my.max(cases), maxcaseday=Date[which(cases==maxcases)][1],
          totalcases=sum(cases))
 
-ICUheatmap$maxcaseprop <- ICUheatmap$casesroll_avg/ICUheatmap$maxcaserate
-
 #Enter dates to plot from and to
-ICUplotfrom <- "2020-03-14"
+ICUplotfrom <- "2020-03-26"
 ICUplotto <- max(ICUheatmap$Date)
 
 #Plot case trajectories
-ICUcasetiles <- ggplot(ICUheatmap, aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=maxcaseprop))+
+ICUcasetiles <- ggplot(subset(ICUheatmap, HB!="Scotland" & !is.na(maxcases)), 
+                       aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=cases))+
   geom_tile(colour="White", show.legend=FALSE)+
+  geom_vline(aes(xintercept=as.Date("2020-09-10")))+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", na.value="White")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
-  labs(title="Timelines for COVID-19 ICU patients in Scottish Health Boards",
-       subtitle=paste0("The heatmap represents the 5-day rolling average of the number of ICU inpatients with confirmed or suspected COVID-19, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of ICU cases. Bars on the right represent the absolute number of ICU cases in each Health Board.\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+  labs(title="We are starting to see more COVID-19 patients in Intensive Care Units in Scotland",
+       subtitle=paste0("The heatmap represents the number of ICU inpatients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of ICU cases. The definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
-ICUcasebars <- ggplot(subset(ICUheatmap, Date==maxcaseday), aes(x=totalcases, y=fct_reorder(HB, maxcaseday), fill=totalcases))+
-  geom_col(show.legend=FALSE)+
-  theme_classic()+
-  scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000, 2000, 3000))+
-  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDScottishLAICUHeatmap.tiff", units="in", width=12, height=5, res=500)
-plot_grid(ICUcasetiles, ICUcasebars, align="h", rel_widths=c(1,0.2))
+tiff("Outputs/COVIDScottishHBICUHeatmap.tiff", units="in", width=12, height=5, res=500)
+ICUcasetiles
 dev.off()
+
+#Repeat for all hospital patients
+Hospdata.hist <- read_excel(temp, sheet=7, range="A3:Q172")
+Hospdata.hist_long <- gather(Hospdata.hist, HB, cases, c(2:17))
+Hospdata.hist_long$cases <- as.numeric(ifelse(Hospdata.hist_long$cases=="*", NA, Hospdata.hist_long$cases))
+Hospdata.hist_long$Date <- as.Date(Hospdata.hist_long$Date)
+Hospdata.hist_long$HB <- if_else(substr(Hospdata.hist_long$HB, 1,3)=="NHS", substr(Hospdata.hist_long$HB, 5, 100),
+                                 Hospdata.hist_long$HB)
+
+#Recent ICU data
+#Need to manually increment the numbers at the end of this range: 79 = 1st June
+Hospdata <- read_excel(temp, sheet=5, range="A3:Q30")
+
+Hospdata_long <- gather(Hospdata, HB, cases, c(2:17))
+Hospdata_long$cases <- as.numeric(ifelse(Hospdata_long$cases=="*", NA, Hospdata_long$cases))
+Hospdata_long$Date <- as.Date(Hospdata_long$`Reporting date`)
+Hospdata_long$HB <- if_else(substr(Hospdata_long$HB, 1,3)=="NHS", substr(Hospdata_long$HB, 5, 100),
+                            Hospdata_long$HB)
+
+
+Hospheatmap <- Hospdata_long %>%
+  bind_rows(., Hospdata.hist_long) %>% 
+  arrange(HB, Date) %>%
+  group_by(HB) %>%
+  mutate(maxcases=my.max(cases), maxcaseday=Date[which(cases==maxcases)][1],
+         totalcases=sum(cases))
+
+#Enter dates to plot from and to
+Hospplotfrom <- "2020-03-26"
+Hospplotto <- max(Hospheatmap$Date)
+
+#Plot case trajectories
+Hospcasetiles <- ggplot(subset(Hospheatmap, HB!="Scotland" & !is.na(maxcases)), 
+                       aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=cases))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  geom_vline(aes(xintercept=as.Date("2020-09-10")))+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral", na.value="White")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
+  labs(title="We are starting to see more confirmed COVID-19 patients in hospitals in Scotland",
+       subtitle=paste0("The heatmap represents the number of hospital patients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of hospital patients. The definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       caption="Data from Scottish Government | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+
+tiff("Outputs/COVIDScottishHBHospHeatmap.tiff", units="in", width=12, height=5, res=500)
+Hospcasetiles
+dev.off()
+
+#Plot cases, admissions and ICU occupancy for the whole country
+natdata <- data_long %>% 
+  group_by(Date) %>% 
+  summarise(cases=sum(cases)) %>% 
+  merge(., subset(Hospheatmap, HB=="Scotland"), by="Date") %>% 
+  merge(., subset(ICUheatmap, HB=="Scotland"), by="Date") %>% 
+  select(Date, cases.x, cases.y, cases) %>% 
+  filter(Date>=as.Date("2020-09-11"))
+
+colnames(natdata) <- c("Date", "New cases", "Hospital patients", "ICU patients")
+
+#Remove case data from 15th June as that's when the Pillar 2 data is added
+natdata$`New cases` <- if_else(natdata$Date==as.Date("2020-06-15"), 0, natdata$`New cases`)
+
+#Calculate rolling averages
+natdata <- natdata %>% 
+  mutate(casesroll=roll_mean(`New cases`, 7, align="right", fill=NA),
+         hosproll=roll_mean(`Hospital patients`, 7, align="right", fill=NA),
+         ICUroll=roll_mean(`ICU patients`, 7, align="right", fill=NA))
+
+tiff("Outputs/COVIDScottishHospBars.tiff", units="in", width=8, height=6, res=500)
+ggplot(natdata)+
+  geom_col(aes(x=Date, y=`Hospital patients`), fill="#b8b3ff")+
+  geom_col(aes(x=Date, y=-`ICU patients`), fill="#ffddb3")+
+  geom_line(aes(x=Date, y=hosproll), colour="#0e16ff")+
+  geom_line(aes(x=Date, y=-ICUroll), colour="#f58300")+
+  geom_hline(yintercept=0)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="", limits=c(-350, 350), breaks=c(-300,-200,-100,0,100,200,300),
+                     labels=c("300", "200", "100", "0", "100", "200", "300"),
+                     position = "right")+
+  theme_classic()+
+  annotate(geom="text", x=as.Date("2020-09-21"), y=160, label="Patients in hospital")+
+  annotate(geom="text", x=as.Date("2020-09-21"), y=-60, label="Patients in Intensive Care")+
+  labs(title="The number of patients with COVID-19 in Scottish hospitals is rising",
+       subtitle="Patients with recently confirmed COVID-19 in Scottish hospitals and in Intensive Care Units",
+       caption="Data from Scottish Government | Plot by @VictimOfMaths")
+dev.off()
+
+
