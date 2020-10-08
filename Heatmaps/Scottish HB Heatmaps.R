@@ -6,6 +6,7 @@ library(forcats)
 library(readxl)
 library(RcppRoll)
 library(cowplot)
+library(ggtext)
 
 #Read in data
 temp <- tempfile()
@@ -157,10 +158,10 @@ ICUplotto <- max(ICUheatmap$Date)
 #Plot case trajectories
 ICUcasetiles <- ggplot(subset(ICUheatmap, HB!="Scotland" & !is.na(maxcases)), 
                        aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=cases))+
-  geom_tile(colour="White", show.legend=FALSE)+
+  geom_tile(colour="White")+
   geom_vline(aes(xintercept=as.Date("2020-09-10")))+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral", na.value="White")+
+  scale_fill_distiller(palette="Spectral", na.value="White", name="Total patients")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
   labs(title="We are starting to see more COVID-19 patients in Intensive Care Units in Scotland",
@@ -207,10 +208,10 @@ Hospplotto <- max(Hospheatmap$Date)
 #Plot case trajectories
 Hospcasetiles <- ggplot(subset(Hospheatmap, HB!="Scotland" & !is.na(maxcases)), 
                        aes(x=Date, y=fct_reorder(HB, maxcaseday), fill=cases))+
-  geom_tile(colour="White", show.legend=FALSE)+
+  geom_tile(colour="White")+
   geom_vline(aes(xintercept=as.Date("2020-09-10")))+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral", na.value="White")+
+  scale_fill_distiller(palette="Spectral", na.value="White", name="Total patients")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
   labs(title="We are starting to see more confirmed COVID-19 patients in hospitals in Scotland",
@@ -240,27 +241,33 @@ natdata$`New cases` <- if_else(natdata$Date==as.Date("2020-06-15"), 0, natdata$`
 
 #Calculate rolling averages
 natdata <- natdata %>% 
-  mutate(casesroll=roll_mean(`New cases`, 7, align="right", fill=NA),
-         hosproll=roll_mean(`Hospital patients`, 7, align="right", fill=NA),
-         ICUroll=roll_mean(`ICU patients`, 7, align="right", fill=NA))
+  mutate(casesroll=roll_mean(`New cases`, 7, align="center", fill=NA),
+         hosproll=roll_mean(`Hospital patients`, 7, align="center", fill=NA),
+         ICUroll=roll_mean(`ICU patients`, 7, align="center", fill=NA))
+
+limit <- abs(max(c(natdata$`New cases`, natdata$`Hospital patients`, natdata$`ICU patients`)))
 
 tiff("Outputs/COVIDScottishHospBars.tiff", units="in", width=8, height=6, res=500)
 ggplot(natdata)+
-  geom_col(aes(x=Date, y=`Hospital patients`), fill="#b8b3ff")+
-  geom_col(aes(x=Date, y=-`ICU patients`), fill="#ffddb3")+
-  geom_line(aes(x=Date, y=hosproll), colour="#0e16ff")+
-  geom_line(aes(x=Date, y=-ICUroll), colour="#f58300")+
+  geom_col(aes(x=Date, y=`New cases`), fill="#47d4ae")+
+  geom_col(aes(x=Date, y=-`Hospital patients`), fill="#ff9f55")+
+  geom_col(aes(x=Date, y=-`ICU patients`), fill="#ff1437")+
+  geom_line(aes(x=Date, y=casesroll), colour="#09614a")+
   geom_hline(yintercept=0)+
   scale_x_date(name="")+
-  scale_y_continuous(name="", limits=c(-350, 350), breaks=c(-300,-200,-100,0,100,200,300),
-                     labels=c("300", "200", "100", "0", "100", "200", "300"),
+  scale_y_continuous(name="", limits=c(-limit, limit), breaks=c(-1000,-800,-600,-400,-200,0,
+                                                                200,400,600, 800, 1000),
+                     labels=c("1000", "800", "600", "400", "200", "0", "200", "400", "600",
+                              "800", "1000"),
                      position = "right")+
   theme_classic()+
-  annotate(geom="text", x=as.Date("2020-09-21"), y=160, label="Patients in hospital")+
-  annotate(geom="text", x=as.Date("2020-09-21"), y=-60, label="Patients in Intensive Care")+
-  labs(title="The number of patients with COVID-19 in Scottish hospitals is rising",
-       subtitle="Patients with recently confirmed COVID-19 in Scottish hospitals and in Intensive Care Units",
-       caption="Data from Scottish Government | Plot by @VictimOfMaths")
+  annotate(geom="text", x=as.Date("2020-09-18"), y=500, label="New cases in the population")+
+  annotate(geom="text", x=as.Date("2020-09-19"), y=-140, label="Total patients in hospital")+
+  #annotate(geom="text", x=as.Date("2020-10-06"), y=-70, label="Patients in ICU", colour="#a80b20")+  
+  labs(title="Both cases and hospitalisations are rising in Scotland",
+       subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients with recently confirmed COVID-19<br>in <span style='color:#ff9f55;'>Scottish hospitals </span>and <span style='color:#ff1437;'>Intensive Care Units",
+       caption="Data from Scottish Government | Plot by @VictimOfMaths")+
+  theme(plot.subtitle=element_markdown())
 dev.off()
 
 
