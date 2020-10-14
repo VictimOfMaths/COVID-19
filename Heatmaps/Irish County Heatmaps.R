@@ -6,6 +6,8 @@ library(forcats)
 library(readxl)
 library(RcppRoll)
 library(cowplot)
+library(sf)
+library(paletteer)
 
 #Read in data
 temp <- tempfile()
@@ -69,7 +71,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,5000,10000))+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,5000,10000,15000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -88,4 +90,90 @@ ggplot(heatmap, aes(x=date, y=fct_reorder(county, totalcases), height=casesroll_
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Irish counties",
        caption="Data from data.gov.ie | Plot by @VictimOfMaths")
+dev.off()
+
+#Bring in populations (these seem unfathomably hard to find, the best I can manage is from 2016)
+#https://statbank.cso.ie/px/pxeirestat/Statire/SelectVarVal/Define.asp?Maintable=E2001&Planguage=0
+heatmap$pop <- case_when(
+  heatmap$county=="Carlow" ~ 56932,
+  heatmap$county=="Dublin" ~ 1347359,
+  heatmap$county=="Kildare" ~ 222504,
+  heatmap$county=="Kilkenny" ~ 99232,
+  heatmap$county=="Laois" ~ 84697,
+  heatmap$county=="Longford" ~ 40873,
+  heatmap$county=="Louth" ~ 128884,
+  heatmap$county=="Meath" ~ 195044,
+  heatmap$county=="Offaly" ~ 77961,
+  heatmap$county=="Westmeath" ~ 88770,
+  heatmap$county=="Wexford" ~ 149722,
+  heatmap$county=="Wicklow" ~ 142425,
+  heatmap$county=="Clare" ~ 118817,
+  heatmap$county=="Cork" ~ 542868,
+  heatmap$county=="Kerry" ~ 147707,
+  heatmap$county=="Limerick" ~ 194899,
+  heatmap$county=="Tipperary" ~ 159553,
+  heatmap$county=="Waterford" ~ 116176,
+  heatmap$county=="Galway" ~ 258058,
+  heatmap$county=="Leitrim" ~ 32044,
+  heatmap$county=="Mayo" ~ 130507,
+  heatmap$county=="Roscommon" ~ 64544,
+  heatmap$county=="Sligo" ~ 65535,
+  heatmap$county=="Cavan" ~ 76176,
+  heatmap$county=="Donegal" ~ 159192,
+  heatmap$county=="Monaghan" ~ 61386
+  )
+
+#Download shapefile
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/0d5984f732c54246bd087768223c92eb_0.zip?outSR=%7B%22latestWkid%22%3A2157%2C%22wkid%22%3A2157%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
+
+#Tidy up country names
+shapefile$county <- paste0(substr(shapefile$COUNTY,1,1), tolower(substr(shapefile$COUNTY,2,99)))
+
+mapdata <- heatmap %>% 
+  filter(date==as.Date(plotto)) %>% 
+  full_join(shapefile, by="county")
+
+#Bring in NI data
+NIdata <- read.csv("COVID_LA_Plots/LACases.csv")[,c(2,3,4,5,14)]
+NIdata$date <- as.Date(NIdata$date)
+NIdata <- subset(NIdata, country=="Northern Ireland" & name!="Northern Ireland" & date==as.Date(plotto))
+
+#NI shapefile
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/1d78d47c87df4212b79fe2323aae8e08_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile.NI <- st_read(file.path(temp2, name))
+
+names(shapefile.NI)[names(shapefile.NI) == "lad19cd"] <- "code"
+
+mapdata.NI <- full_join(shapefile.NI, NIdata, by="code")
+mapdata.NI <- subset(mapdata.NI, !is.na(country))
+
+#Transform to common projection (Irish Transverse Mercator)
+mapdata.NI <- st_transform(mapdata.NI, 2157)
+
+tiff("Outputs/COVIDIrelandRatesMap.tiff", units="in", width=8, height=8, res=500)
+ggplot()+
+  geom_sf(data=mapdata, aes(geometry=geometry, fill=casesroll_avg*100000/pop), colour=NA)+
+  geom_sf(data=mapdata.NI, aes(geometry=geometry, fill=caserate_avg), colour=NA)+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily cases\nper 100,000")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank())+
+  labs(title="COVID-19 cases across Ireland",
+       subtitle="Daily rates of confirmed new COVID-19 cases in the Republic of Ireland and Northern Ireland",
+       caption="Data from data.gov.ie and DoHNI | Plot by @VictimOfMaths")
 dev.off()
