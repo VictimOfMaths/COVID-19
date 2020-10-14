@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "13th September"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx"
-ScotRange <- "AM" #incrememnt by one letter each week
-Weekno <- 37
+ScotDate <- "4th October"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-41.xlsx"
+ScotRange <- "AQ" #incrememnt by one letter each week
+Weekno <- 41
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -215,7 +215,7 @@ ggplot(data.HB.old)+
                                                                    round(excess[11,4]*100, 0),"%)"),
                                                             paste0("+",round(excess[12,2],0),"  deaths (+",
                                                                    round(excess[12,4]*100, 0),"%)"),
-                                                            paste0(round(excess[13,2],0),"  deaths (",
+                                                            paste0("+",round(excess[13,2],0),"  deaths (+",
                                                                    round(excess[13,4]*100, 0),"%)"),
                                                             paste0(round(excess[14,2],0),"  deaths (",
                                                                    round(excess[14,4]*100, 0),"%)")),
@@ -370,7 +370,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in Scotland seem to be slightly higher than usual in 45-74 year olds",
+  labs(title="Deaths in Scotland seem to be slightly higher than usual in the oldest age group",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
