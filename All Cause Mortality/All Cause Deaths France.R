@@ -14,7 +14,7 @@ library(ggthemes)
 #Source: https://www.insee.fr/fr/information/4190491
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/fr/statistiques/fichier/4190491/deces-2010-2018-csv.zip"
+source <- "https://www.insee.fr/fr/statistiques/fichier/4769950/deces-2010-2018-csv.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data10 <- read.csv(file.path(temp2, "deces-2010.csv"), sep=";")
