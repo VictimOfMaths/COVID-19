@@ -165,15 +165,20 @@ mapdata.NI <- subset(mapdata.NI, !is.na(country))
 #Transform to common projection (Irish Transverse Mercator)
 mapdata.NI <- st_transform(mapdata.NI, 2157)
 
+#Get outline to show border
+outline <- mapdata.NI %>% 
+  summarise()
+
 tiff("Outputs/COVIDIrelandRatesMap.tiff", units="in", width=8, height=8, res=500)
 ggplot()+
   geom_sf(data=mapdata, aes(geometry=geometry, fill=casesroll_avg*100000/pop), colour=NA)+
   geom_sf(data=mapdata.NI, aes(geometry=geometry, fill=caserate_avg), colour=NA)+
+  geom_sf(data=outline, aes(geometry=geometry), fill=NA, colour="White")+
   scale_fill_paletteer_c("viridis::inferno", name="Daily cases\nper 100,000")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank())+
   labs(title="COVID-19 cases across Ireland",
-       subtitle="Daily rates of confirmed new COVID-19 cases in the Republic of Ireland and Northern Ireland",
+       subtitle=paste("Daily rates of confirmed new COVID-19 cases in the Republic of Ireland and Northern Ireland\nData from",plotto),
        caption="Data from data.gov.ie and DoHNI | Plot by @VictimOfMaths")
 dev.off()
