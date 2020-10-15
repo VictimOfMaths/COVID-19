@@ -108,3 +108,38 @@ ggplot(data.age, aes(x=weeklab, y=cases, fill=age))+
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
+#Analysis of positivity data
+#By age and sex
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B44:L57",
+                        col_names=FALSE)
+colnames(pos.age.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", "50-59", 
+                         "60-69", "70-79", "80+")
+pos.age.m <- gather(pos.age.m, age, posrate, c(2:11))
+pos.age.m$sex <- "Male"
+
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B61:L74",
+                        col_names=FALSE)
+colnames(pos.age.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", "50-59", 
+                         "60-69", "70-79", "80+")
+pos.age.f <- gather(pos.age.f, age, posrate, c(2:11))
+pos.age.f$sex <- "Female"
+
+pos.age <- bind_rows(pos.age.m, pos.age.f)
+
+pos.age$age <- factor(pos.age$age, levels=c("0-4", "5-9", "10-19", "20-29", "30-39", "40-49", 
+                                            "50-59", "60-69", "70-79", "80+"))
+
+tiff("Outputs/COVIDPosRatexAge.tiff", units="in", width=10, height=6, res=500)
+ggplot(pos.age, aes(x=Week, y=posrate/100, colour=age))+
+  geom_line()+
+  scale_colour_paletteer_d("RColorBrewer::RdYlGn", name="Age", direction=-1)+
+  scale_y_continuous(name="Proportion of tests which are positive", 
+                     labels = scales::percent_format(accuracy = 1))+  
+  xlim(c(26,max(pos.age$Week)+1))+
+  facet_wrap(~sex)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="The positivity rate of tests is rising in adults",
+       subtitle="Weekly positivity rates for Pillar 2 tests in England by age group",
+       caption="Date from PHE | Visualisation by @VictimOfMaths")
+dev.off()
