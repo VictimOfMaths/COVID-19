@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201013.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201016.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -121,7 +121,7 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  labs(title="The highest rates of new COVID-19 cases are still among teenagers, but rising in older ages",
+  labs(title="The explosion of cases in teenagers is tailing off, but cases are rising in older ages",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -131,7 +131,7 @@ dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201013.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201016.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
