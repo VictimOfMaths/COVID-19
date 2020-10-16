@@ -16,10 +16,10 @@ library(lubridate)
 #than the data relates to. Numbers here relate to actual weeks of data.
 
 temp1 <- tempfile()
-source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/925095/Weekly_Influenza_and_COVID19_report_data_w41.xlsx"
+source1 <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/926848/Weekly_Influenza_and_COVID19_report_data_W42.xlsx"
 temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
 
-data.age <- read_excel(temp1, sheet=5, range="B9:L23")
+data.age <- read_excel(temp1, sheet=5, range="B9:L24")
 colnames(data.age) <- c("week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", "50-59",
                         "60-69", "70-79", "80+")
 
@@ -67,7 +67,7 @@ ggplot(data.age)+
                date_labels="%d %b")+
   theme_classic()+ 
   theme(axis.text.x=element_text(angle=45, hjust=1))+
-  labs(title="Cases are concentrated in young people, but now rising in older age groups",
+  labs(title="Cases numbers have stalled in young people, but are rising elsewhere",
        subtitle="Rates of new COVID-19 cases in England by age during the pandemic",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -83,7 +83,7 @@ ggplot(data.age)+
                date_labels="%d %b")+
   theme_classic()+ 
   theme(axis.text.x=element_text(angle=45, hjust=1))+
-  labs(title="Cases are rising fastest in 10-29 year olds",
+  labs(title="Cases numbers have stalled in young people, but are rising elsewhere",
        subtitle="Rates of new COVID-19 cases in England by age during the pandemic",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -103,21 +103,21 @@ ggplot(data.age, aes(x=weeklab, y=cases, fill=age))+
                date_labels="%d %b")+
   theme_classic()+ 
   theme(axis.text.x=element_text(angle=45, hjust=1))+
-  labs(title="Cases are rising fastest in 10-29 year olds",
+  labs(title="Cases are rising across all age groups",
        subtitle="Confirmed new COVID-19 cases in England by age band",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
 #Analysis of positivity data
 #By age and sex
-pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B44:L57",
+pos.age.m <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B46:L60",
                         col_names=FALSE)
 colnames(pos.age.m) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", "50-59", 
                          "60-69", "70-79", "80+")
 pos.age.m <- gather(pos.age.m, age, posrate, c(2:11))
 pos.age.m$sex <- "Male"
 
-pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B61:L74",
+pos.age.f <- read_excel(temp1, sheet="Figure 6. Positivity by agegrp", range="B64:L78",
                         col_names=FALSE)
 colnames(pos.age.f) <- c("Week", "0-4", "5-9", "10-19", "20-29", "30-39", "40-49", "50-59", 
                          "60-69", "70-79", "80+")
@@ -139,7 +139,9 @@ ggplot(pos.age, aes(x=Week, y=posrate/100, colour=age))+
   facet_wrap(~sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The positivity rate of tests is rising in adults",
+  labs(title="The positivity rate of tests is still rising",
        subtitle="Weekly positivity rates for Pillar 2 tests in England by age group",
        caption="Date from PHE | Visualisation by @VictimOfMaths")
 dev.off()
+
+#By region
