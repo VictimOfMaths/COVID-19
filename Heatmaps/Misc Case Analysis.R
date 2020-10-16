@@ -33,14 +33,15 @@ tiers$tier <- case_when(
                       "Burnley", "Chorley", "Fylde", "Hyndburn", "Lancaster", "Pendle", "Preston",
                       "Ribble Valley", "Rossendale", "South Ribble", "West Lancashire", "Wyre",
                       "Leeds", "Bradford", "Kirklees", "Calderdale", "Wakefield", "Barnsley", 
-                      "Rotherham", "Doncaster", "Sheffield", "County Durham", "Northumberland", "Newcastle",
+                      "Rotherham", "Doncaster", "Sheffield", "County Durham", "Northumberland", 
+                      "Newcastle upon Tyne",
                       "South Tyneside", "North Tyneside", "Gateshead", "Sunderland", "Middlesbrough",
                       "Redcar and Cleveland", "Stockton-on-Tees", "Darlington", "Hartlepool",
                       "Birmingham", "Sandwell", "Solihull", "Wolverhampton", "Walsall", "Leicester",
                       "Oadby and Wigston", "Ashfield", "Bassetlaw", "Broxtowe", "Gedling", 
                       "Mansfield", "Newark and Sherwood", "Nottingham", "Rushcliffe") ~ "Tier 2",
   tiers$name=="High Peak" ~ "Partial Tier 2",
-  tiers$name %in% c("Liverpool", "Knowsley", "Wirral", "St Helens", "Sefton", "Halton") ~ "Tier 3",
+  tiers$name %in% c("Liverpool", "Knowsley", "Wirral", "St. Helens", "Sefton", "Halton") ~ "Tier 3",
   TRUE ~ "Tier 1"
 )
 
@@ -89,7 +90,7 @@ map.tiers$date <- as.Date(map.tiers$date)
 map.tiers$tier <- factor(map.tiers$tier, levels=c("Tier 1", "Partial Tier 2", "Tier 2", 
                                                   "New Tier 2", "Tier 3"))
 
-#Map of current cases
+#Map of current cases and tiers
 tiff("Outputs/COVIDTiersMap.tiff", units="in", width=8, height=9, res=500)
 map.tiers %>% 
   filter(date==as.Date(max(tiers$date)-days(4))) %>% 
@@ -105,6 +106,17 @@ map.tiers %>%
        caption="Data from DHSC & PHE | Plot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDTiersBars.tiff", units="in", width=8, height=16, res=500)
+map.tiers %>% 
+  filter(date==as.Date(max(tiers$date)-days(4))) %>% 
+  ggplot()+
+  geom_col(aes(x=caserate_avg, y=fct_reorder(name, caserate_avg), fill=tier))+
+  scale_fill_paletteer_d("LaCroixColoR::Apricot", direction=-1, name="Restriction level")+
+  scale_x_continuous(name="New COVID-19 cases per day per 100,000")+
+  scale_y_discrete(name="")+
+  theme_classic()+
+  theme(axis.text.y=element_text(size=rel(0.5)))
+dev.off()
 
 #Additional analysis of local lockdown restrictions
 daydata$flag <- case_when(
