@@ -93,10 +93,10 @@ tiff("Outputs/COVIDCasesStreamgraphRecent.tiff", units="in", width=10, height=6,
 ggplot(data.age, aes(x=weeklab, y=cases, fill=age))+
   geom_stream(bw=0.5)+
   scale_y_continuous(name="New cases per week", 
-                     breaks=c(-30000, -25000, -20000, -15000,-10000,-5000,0,5000,10000,15000,
-                              20000,25000,30000),
-                     labels=c("30,000", "25,000", "20,000", "15,000", "10,000", "5,000", "0", 
-                              "5,000", "10,000", "15,000", "20,000", "25,000", "30,000"))+
+                     breaks=c(-40000, -30000, -20000, -10000,0,10000,
+                              20000, 30000, 40000),
+                     labels=c("40,000", "30,000", "20,000", "10,000", "0", 
+                              "10,000", "20,000", "30,000", "40,000"))+
   scale_fill_paletteer_d("RColorBrewer::RdYlGn", name="Age", direction=-1)+ 
   scale_x_date(name="Week ending", breaks=seq.Date(from=as.Date("2020-07-03"), 
                                                    to=max(data.age$weeklab), by="week"),
