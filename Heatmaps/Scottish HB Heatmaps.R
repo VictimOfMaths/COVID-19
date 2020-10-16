@@ -116,7 +116,7 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B13%2BOctober%2B2020.xlsx"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B22%2BJULY%2B2020%2B-%2BONWARDS%2B-%2B1.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Historic ICU data (using a slightly different definition)
@@ -132,7 +132,7 @@ ICUdata.hist_long$Date <- as.Date(ICUdata.hist_long$Date)
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-ICUdata <- read_excel(temp, sheet=4, range="A3:Q36")
+ICUdata <- read_excel(temp, sheet=4, range="A3:Q39")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:17))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", NA, ICUdata_long$cases))
@@ -185,7 +185,7 @@ Hospdata.hist_long$HB <- if_else(substr(Hospdata.hist_long$HB, 1,3)=="NHS", subs
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-Hospdata <- read_excel(temp, sheet=5, range="A3:Q36")
+Hospdata <- read_excel(temp, sheet=5, range="A3:Q39")
 
 Hospdata_long <- gather(Hospdata, HB, cases, c(2:17))
 Hospdata_long$cases <- as.numeric(ifelse(Hospdata_long$cases=="*", NA, Hospdata_long$cases))
@@ -254,10 +254,10 @@ ggplot(subset(natdata,Date>=as.Date("2020-09-11")))+
   geom_line(aes(x=Date, y=casesroll), colour="#09614a")+
   geom_hline(yintercept=0)+
   scale_x_date(name="")+
-  scale_y_continuous(name="", limits=c(-limit, limit), breaks=c(-1200,-1000,-800,-600,-400,-200,0,
-                                                                200,400,600, 800, 1000,1200),
-                     labels=c("1200", "1000", "800", "600", "400", "200", "0", "200", "400", "600",
-                              "800", "1000", "1200"),
+  scale_y_continuous(name="", limits=c(-limit, limit), breaks=c(-1400, -1200,-1000,-800,-600,-400,-200,0,
+                                                                200,400,600, 800, 1000,1200, 1400),
+                     labels=c("1400", "1200", "1000", "800", "600", "400", "200", "0", "200", "400", "600",
+                              "800", "1000", "1200", "1400"),
                      position = "right")+
   theme_classic()+
   annotate(geom="text", x=as.Date("2020-09-18"), y=500, label="New cases in the population")+
