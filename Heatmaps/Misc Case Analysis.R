@@ -29,9 +29,7 @@ tiers$tier <- case_when(
                       "Uttlesford", "Elmbridge", "York") ~ "New Tier 2",
   tiers$name %in% c("Cheshire West and Chester", "Cheshire East", "Warrington", "Manchester",
                       "Bolton", "Bury", "Stockport", "Tameside", "Trafford", "Wigan", "Salford",
-                      "Rochdale", "Oldham", "Blackpool", "Blackburn with Darwen",
-                      "Burnley", "Chorley", "Fylde", "Hyndburn", "Lancaster", "Pendle", "Preston",
-                      "Ribble Valley", "Rossendale", "South Ribble", "West Lancashire", "Wyre",
+                      "Rochdale", "Oldham", 
                       "Leeds", "Bradford", "Kirklees", "Calderdale", "Wakefield", "Barnsley", 
                       "Rotherham", "Doncaster", "Sheffield", "County Durham", "Northumberland", 
                       "Newcastle upon Tyne",
@@ -41,6 +39,9 @@ tiers$tier <- case_when(
                       "Oadby and Wigston", "Ashfield", "Bassetlaw", "Broxtowe", "Gedling", 
                       "Mansfield", "Newark and Sherwood", "Nottingham", "Rushcliffe") ~ "Tier 2",
   tiers$name=="High Peak" ~ "Partial Tier 2",
+  tiers$name %in% c("Blackpool", "Blackburn with Darwen", "Burnley", "Chorley", "Fylde", "Hyndburn", 
+                    "Lancaster", "Pendle", "Preston", "Ribble Valley", "Rossendale", "South Ribble", 
+                    "West Lancashire", "Wyre") ~ "New Tier 3",
   tiers$name %in% c("Liverpool", "Knowsley", "Wirral", "St. Helens", "Sefton", "Halton") ~ "Tier 3",
   TRUE ~ "Tier 1"
 )
@@ -87,8 +88,8 @@ simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
 map.tiers <- full_join(simplemap, tiers, by="code", all.y=TRUE)
 map.tiers$date <- as.Date(map.tiers$date)
 
-map.tiers$tier <- factor(map.tiers$tier, levels=c("Tier 1", "Partial Tier 2", "Tier 2", 
-                                                  "New Tier 2", "Tier 3"))
+map.tiers$tier <- factor(map.tiers$tier, levels=c("Tier 1", "Partial Tier 2", "New Tier 2",  
+                                                  "Tier 2", "New Tier 3", "Tier 3"))
 
 #Map of current cases and tiers
 tiff("Outputs/COVIDTiersMap.tiff", units="in", width=8, height=9, res=500)
@@ -96,7 +97,7 @@ map.tiers %>%
   filter(date==as.Date(max(tiers$date)-days(4))) %>% 
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=caserate_avg, colour=tier))+
-  scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
+  scale_fill_distiller(palette="Spectral", name="Daily cases\nPer 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::Apricot", direction=-1, name="Restriction level")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
