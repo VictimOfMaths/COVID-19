@@ -121,7 +121,7 @@ casebars.all.recent <- ggplot(subset(data.all.recent, date==maxcaseday), aes(x=t
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases")+
+  scale_x_continuous(name="Total confirmed cases", breaks=c(0,5000,10000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
