@@ -61,7 +61,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-10-02_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-10-16_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data18 <- read.csv(file.path(temp2, "DC_2018_det.csv"), sep=";")
@@ -176,7 +176,7 @@ excess <- aggdata %>%
 excess$excess <- excess$deaths-excess$mean
 excess$prop <- excess$excess/excess$mean
 
-ann_text <- data.frame(week=rep(20, times=10), 
+ann_text <- data.frame(week=rep(18, times=10), 
                        position=c(600,300,1000,1700,1100,1400,1800,2000,4000,2500), 
                        sex=rep(c("Female", "Male"), times=5),
                        ageband=rep(c("0-14", "15-64", "65-74", "75-84", "85+"), each=2))
@@ -225,8 +225,8 @@ agedata <- fulldata %>%
 
 #Import population size
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "" 
-password <- ""
+username <- "c.r.angus@sheffield.ac.uk" 
+password <- "1574553541"
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
