@@ -11,7 +11,8 @@ library(paletteer)
 
 #Read in data
 temp <- tempfile()
-source <- "https://opendata.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv?geometry=%7B%22xmin%22%3A-23.251%2C%22ymin%22%3A51.133%2C%22xmax%22%3A6.632%2C%22ymax%22%3A55.71%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D"
+#source <- "https://opendata.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv?geometry=%7B%22xmin%22%3A-23.251%2C%22ymin%22%3A51.133%2C%22xmax%22%3A6.632%2C%22ymax%22%3A55.71%2C%22type%22%3A%22extent%22%2C%22spatialReference%22%3A%7B%22wkid%22%3A4326%7D%7D"
+source <- "https://opendata.arcgis.com/datasets/d9be85b30d7748b5b7c09450b8aede63_0.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data <- read_csv(temp)
 
@@ -92,37 +93,6 @@ ggplot(heatmap, aes(x=date, y=fct_reorder(county, totalcases), height=casesroll_
        caption="Data from data.gov.ie | Plot by @VictimOfMaths")
 dev.off()
 
-#Bring in populations (these seem unfathomably hard to find, the best I can manage is from 2016)
-#https://statbank.cso.ie/px/pxeirestat/Statire/SelectVarVal/Define.asp?Maintable=E2001&Planguage=0
-heatmap$pop <- case_when(
-  heatmap$county=="Carlow" ~ 56932,
-  heatmap$county=="Dublin" ~ 1347359,
-  heatmap$county=="Kildare" ~ 222504,
-  heatmap$county=="Kilkenny" ~ 99232,
-  heatmap$county=="Laois" ~ 84697,
-  heatmap$county=="Longford" ~ 40873,
-  heatmap$county=="Louth" ~ 128884,
-  heatmap$county=="Meath" ~ 195044,
-  heatmap$county=="Offaly" ~ 77961,
-  heatmap$county=="Westmeath" ~ 88770,
-  heatmap$county=="Wexford" ~ 149722,
-  heatmap$county=="Wicklow" ~ 142425,
-  heatmap$county=="Clare" ~ 118817,
-  heatmap$county=="Cork" ~ 542868,
-  heatmap$county=="Kerry" ~ 147707,
-  heatmap$county=="Limerick" ~ 194899,
-  heatmap$county=="Tipperary" ~ 159553,
-  heatmap$county=="Waterford" ~ 116176,
-  heatmap$county=="Galway" ~ 258058,
-  heatmap$county=="Leitrim" ~ 32044,
-  heatmap$county=="Mayo" ~ 130507,
-  heatmap$county=="Roscommon" ~ 64544,
-  heatmap$county=="Sligo" ~ 65535,
-  heatmap$county=="Cavan" ~ 76176,
-  heatmap$county=="Donegal" ~ 159192,
-  heatmap$county=="Monaghan" ~ 61386
-  )
-
 #Download shapefile
 temp <- tempfile()
 temp2 <- tempfile()
@@ -142,6 +112,9 @@ mapdata <- heatmap %>%
   full_join(shapefile, by="county")
 
 #Bring in NI data
+#Have to manually reset plotto to match NI data
+plotto <- as.Date("2020-10-15")
+
 NIdata <- read.csv("COVID_LA_Plots/LACases.csv")[,c(2,3,4,5,14)]
 NIdata$date <- as.Date(NIdata$date)
 NIdata <- subset(NIdata, country=="Northern Ireland" & name!="Northern Ireland" & date==as.Date(plotto))
@@ -165,7 +138,6 @@ mapdata.NI <- subset(mapdata.NI, !is.na(country))
 #Transform to common projection (Irish Transverse Mercator)
 mapdata.NI <- st_transform(mapdata.NI, 2157)
 
-#Get outline to show border
 outline <- mapdata.NI %>% 
   summarise()
 
