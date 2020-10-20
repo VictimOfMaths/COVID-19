@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201016.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201019.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -78,7 +78,7 @@ ggplot(subset(data, Sex!="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   facet_wrap(~Sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 cases in Scotland are now rising sharply in 45-64 year olds",
+  labs(title="The student outbreak in Scotland seems to be over",
        subtitle="Confirmed new COVID-19 cases in Scotland by sex and age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -88,12 +88,12 @@ ggplot(subset(data, Sex=="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("awtools::a_palette", name="Age",
                          labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
-  scale_y_continuous(name="New cases per day", breaks=c(-150,-100,-50,0,50,100,150),
-                     labels=c("150", "100", "50", "0", "50", "100","150"))+
+  scale_y_continuous(name="New cases per day", breaks=c(-400,-200,0,200,400),
+                     labels=c("400", "200", "0", "200", "400"))+
   scale_x_date(name="")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 cases in Scotland are now rising sharply in 45-64 year olds",
+  labs(title="COVID-19 cases in Scotland are falling, but almost exclusively in teenagers",
        subtitle="Confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -108,7 +108,7 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
-  labs(title="Scotland is seeing more new COVID-19 cases in 25-64 year olds",
+  labs(title="The fall in teenage COVID-19 cases is yet to be reflected in other age groups",
        subtitle="Rolling 7-day average of daily confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -121,7 +121,7 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  labs(title="The explosion of cases in teenagers is tailing off, but cases are rising in older ages",
+  labs(title="COVID-19 cases in young people are falling. Cases in older ages still seem to be rising",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -131,7 +131,7 @@ dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201016.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201019.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -155,7 +155,7 @@ ggplot(subset(data.simd, date>=as.Date("2020-07-01") & date<max(data$date)),
                    labels=c("1 - most deprived", "2", "3", "4", "5 - least deprived"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
-  labs(title="The most and least deprived areas in Scotland have the highest rate of new COVID-19 cases",
+  labs(title="The most deprived areas in Scotland have the highest rate of new COVID-19 cases",
        subtitle="Rolling 7-day average of confirmed daily new cases in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
