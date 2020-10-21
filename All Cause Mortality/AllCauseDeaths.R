@@ -12,14 +12,14 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "9th October"
-ScotDate <- "4th October"
+ScotDate <- "11th October"
 NIDate <- "9th October"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek412020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-41.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
-Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(12%20October%202020).xlsx"
+Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(21%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
@@ -27,11 +27,11 @@ EngRange <- "AQ" #increment by one letter each week
 ScotRange <- "AQ" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "42" #update after each new monthly report
-ScotRangev2.2 <- "45" #increment by one number each week
+ScotRangev2.2 <- "46" #increment by one number each week
 NIRange <- "45" #increment by one number each week
 
 #Flag weeks with an NRS report
-NRSweek <- TRUE
+NRSweek <- FALSE
 
 #Also need to manually add the next row of data for the deaths by location at the end.
 
