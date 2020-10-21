@@ -26,7 +26,7 @@ NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 EngRange <- "AQ" #increment by one letter each week
 ScotRange <- "AQ" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
-ScotRangev2.1 <- "42" #update after each new monthly report
+ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "46" #increment by one number each week
 NIRange <- "45" #increment by one number each week
 
