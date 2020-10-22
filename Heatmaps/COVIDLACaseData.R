@@ -647,6 +647,26 @@ map.cases %>%
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
 dev.off()
 
+#Map of admission rates
+admmaxdate <- max(map.cases$date[!is.na(map.cases$admrate_avg)])
+
+tiff("Outputs/COVIDAdmrateMapUK.tiff", units="in", width=8, height=7.5, res=500)
+map.cases %>% 
+  filter(date==admmaxdate & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=admrate_avg), colour=NA)+
+  scale_fill_distiller(palette="Spectral", name="Daily admissions\nper 100,000",
+                       na.value="transparent")+
+  xlim(-116,655644)+
+  ylim(5337,620000)+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank())+
+  labs(title="Rates of confirmed new COVID-19 admissions in England",
+       subtitle=paste0("Rolling 7-day average of confirmed new hospital admissions with COVID-19 per 100,000 at Local Authority level\nData up to ", completeto),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
 ###########################
 #UKLTLA heatmap ordered from S->N
 lat.data <- map.cases %>% 
