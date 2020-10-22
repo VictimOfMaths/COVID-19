@@ -18,7 +18,7 @@ options(scipen=999)
 #Read in data created by COVID_LA_Plots/UnderlyingCode.R, which lives here:
 #https://github.com/VictimOfMaths/COVID_LA_Plots/blob/master/UnderlyingCode.R
 
-data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1,7,8,9)]
+data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1)]
 
 #EVERYWHERE
 data.all <- data %>% 
@@ -27,7 +27,10 @@ data.all <- data %>%
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
-         totalcases=sum(cases), recentpeak=maxcaseprop[date==as.Date("2020-09-15")])
+         totalcases=sum(cases), recentpeak=maxcaseprop[date==as.Date("2020-09-15")],
+         maxadmrate=max(admrate_avg, na.rm=TRUE),
+         maxadmday=date[which(admrate_avg==maxadmrate)][1],
+         maxadmprop=admrate_avg/maxadmrate, totaladm=sum(admissions, na.rm=TRUE))
 
 plotfrom <- "2020-03-01"
 plotto <- max(data.all$date)
@@ -130,7 +133,7 @@ plot_grid(casetiles.all.recent, casebars.all.recent, align="h", rel_widths=c(1,0
 dev.off()
 
 png("Outputs/COVIDLTLACasesHeatmapUK_Recent.png", units="in", width=16, height=30, res=500)
-plot_grid(casetiles.all, casebars.all, align="h", rel_widths=c(1,0.2))
+plot_grid(casetiles.all.recent, casebars.all.recent, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 #########
@@ -142,11 +145,14 @@ data.e <- data %>%
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
-         totalcases=sum(cases))
+         totalcases=sum(cases), maxadmrate=max(admrate_avg, na.rm=TRUE),
+         maxadmday=date[which(admrate_avg==maxadmrate)][1],
+         maxadmprop=admrate_avg/maxadmrate, totaladm=sum(admissions, na.rm=TRUE))
 
 #Enter dates to plot from and to
 plotfrom <- "2020-03-01"
 plotto <- max(data.e$date)
+plotadmto <- max(data.e$date[!is.na(data.e$admrate_avg)])
 
 #Plot case trajectories
 casetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
@@ -203,6 +209,65 @@ dev.off()
 
 png("Outputs/COVIDLTLARatesHeatmapEng.png", units="in", width=16, height=24, res=500)
 plot_grid(ratetiles.e, ratebars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+admtiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=maxadmprop))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 admissions in English Local Authorities",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new admissions Bars on the right represent the absolute number of admissions in each LA.\nData updated to ", 
+                       plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
+       caption="Data from NHS England | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+admbars.e <- ggplot(subset(data.e, date==maxadmday), aes(x=totaladm, y=fct_reorder(name, maxadmday), 
+                                                         fill=totaladm))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Total confirmed admissions")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLAAdmissionsHeatmap.tiff", units="in", width=10, height=26, res=500)
+plot_grid(admtiles.e, admbars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLAAdmissionsHeatmap.png", units="in", width=10, height=26, res=500)
+plot_grid(admtiles.e, admbars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+admratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=admrate_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 admission rates in Local Authorities in England",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", 
+                       plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
+       caption="Data from NHS England | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+admratebars.e <- ggplot(subset(data.e, date==maxadmday), aes(x=pop, y=fct_reorder(name, maxadmday), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLAAdmRatesHeatmapEng.tiff", units="in", width=10, height=24, res=500)
+plot_grid(admratetiles.e, admratebars.e, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLAAdmRatesHeatmapEng.png", units="in", width=10, height=24, res=500)
+plot_grid(admratetiles.e, admratebars.e, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 #######
@@ -648,6 +713,38 @@ dev.off()
 
 png("Outputs/COVIDLTLARatesHeatmapUKOrdered.png", units="in", width=16, height=30, res=500)
 plot_grid(ratetiles.all2, ratebars.all2, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+#Order admissions map for England only
+admtiles.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg)), aes(x=date, y=fct_reorder(name, lat), 
+                                                                  fill=admrate_avg))+
+  geom_tile(colour="White", show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_y_discrete(name="", expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  labs(title="Timelines for COVID-19 admissions in Local Authorities in England",
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions per 100,000 population.\nLAs are ordered from North to South. Bars on the right represent the population of the LA.\nData updated to ", 
+                       plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
+       caption="Data from NHS England | Plot by @VictimOfMaths")+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"))
+
+admbars.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg) & date==maxadmday), 
+                     aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
+  geom_col(show.legend=FALSE)+
+  theme_classic()+
+  scale_fill_distiller(palette="Spectral")+
+  scale_x_continuous(name="Total population")+
+  theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+
+tiff("Outputs/COVIDLTLAAdmRatesHeatmapEngOrdered.tiff", units="in", width=10, height=26, res=500)
+plot_grid(admtiles.e2, admbars.e2, align="h", rel_widths=c(1,0.2))
+dev.off()
+
+png("Outputs/COVIDLTLAAdmRatesHeatmapEngOrdered.png", units="in", width=10, height=26, res=500)
+plot_grid(admtiles.e2, admbars.e2, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 #These last 2 animations require a more powerful computer/more patience than I have, so I'm
