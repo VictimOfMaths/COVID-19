@@ -47,7 +47,7 @@ IFR <- data.frame(ageband=rep(c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29"
 data <- merge(data, IFR, by=c("sex", "ageband"))
 
 ex_data <- data %>% 
-  mutate(ex_deaths=pop*IFR) %>% 
+  mutate(ex_deaths=pop*IFR/100) %>% 
   group_by(`Area Codes`) %>% 
   summarise(ex_deaths=sum(ex_deaths), pop=sum(pop)) %>% 
   ungroup() %>% 
@@ -57,10 +57,11 @@ ex_data <- data %>%
 temp <- tempfile()
 source <- "http://geoportal1-ons.opendata.arcgis.com/datasets/fe6c55f0924b4734adf1cf7104a0173e_0.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-LSOAtoLAD <- read.csv(temp)
+LSOAtoLAD <- read.csv(temp) %>% 
+  select(LSOA11CD, LAD17CD, LAD17NM) %>% 
+  unique()
 
-ex_data <- merge(ex_data, LSOAtoLAD, by.x="Area Codes", by.y="LSOA11CD", all.x=TRUE) %>% 
-  select(`Area Codes`, ex_deaths, ex_mortrate, LAD17CD, LAD17NM)
+ex_data <- merge(ex_data, LSOAtoLAD, by.x="Area Codes", by.y="LSOA11CD", all.x=TRUE) 
 
 #Save Sheffield LSOAs
 ex_data %>% 
