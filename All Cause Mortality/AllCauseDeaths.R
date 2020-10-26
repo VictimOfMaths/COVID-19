@@ -13,7 +13,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "9th October"
 ScotDate <- "11th October"
-NIDate <- "9th October"
+NIDate <- "16th October"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek412020.xlsx"
@@ -28,7 +28,7 @@ ScotRange <- "AQ" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "46" #increment by one number each week
-NIRange <- "45" #increment by one number each week
+NIRange <- "46" #increment by one number each week
 
 #Flag weeks with an NRS report
 NRSweek <- FALSE
@@ -692,7 +692,7 @@ data2020.NI <- read_excel(temp, sheet="Table 1", range=paste0("B6:C", NIRange), 
 colnames(data2020.NI) <- c("date", "deaths")
 
 temp <- tempfile()
-source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths%20-%20Historical.xls"
+source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly%20Deaths%20by%20Age%20and%20Respiratory%20Deaths%2C%202011-2019.xls"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data2019.NI <- read_excel(temp, sheet="Weekly Deaths_2019", range="C5:D56", col_names=FALSE)
 colnames(data2019.NI) <- c("date", "deaths")
@@ -721,10 +721,8 @@ colnames(data2012.NI) <- c("date", "deaths")
 data2011.NI <- read_excel(temp, sheet="Weekly Deaths_2011", range="C5:D56", col_names=FALSE)
 colnames(data2011.NI) <- c("date", "deaths")
 
-data2010.NI <- read_excel(temp, sheet="Weekly Deaths_2010", range="C5:D57", col_names=FALSE)
-colnames(data2010.NI) <- c("date", "deaths")
 
-data.NI <- bind_rows(data2010.NI, data2011.NI, data2012.NI, data2013.NI, data2014.NI, data2015.NI, data2016.NI, 
+data.NI <- bind_rows(data2011.NI, data2012.NI, data2013.NI, data2014.NI, data2015.NI, data2016.NI, 
                      data2017.NI, data2018.NI, data2019.NI, data2020.NI)
 data.NI$date <- as.Date(data.NI$date)
 
@@ -733,7 +731,7 @@ data.NI$year <- year(data.NI$date)
 data.NI$reg <- "Northern Ireland"
 
 #Tidy up
-rm(data2010.NI, data2011.NI, data2012.NI, data2013.NI, data2014.NI, data2015.NI, data2016.NI, data2017.NI,
+rm(data2011.NI, data2012.NI, data2013.NI, data2014.NI, data2015.NI, data2016.NI, data2017.NI,
    data2018.NI, data2019.NI, data2020.NI)
 
 #Stick regional data together for whole of UK
@@ -1080,8 +1078,8 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths from all causes in Northern Ireland are also slightly above 'normal'",
-       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, "."),
+  labs(title="Deaths from all causes in Northern Ireland appear to be at 'normal' levels",
+       subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2011-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
                                                                 " more deaths in 2020 than average (+", 
@@ -1203,6 +1201,7 @@ dev.off()
 #Generate cumulative death counts by year
 data.reg.UK <- data.reg.UK %>%
   group_by(reg, year) %>%
+  arrange(reg, year, weekno) %>% 
   mutate(cumul_deaths=cumsum(deaths))
 
 ann_text5 <- data.frame(weekno=EWmaxweek, 
