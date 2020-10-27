@@ -204,3 +204,18 @@ ggplot()+
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
+
+tiff("Outputs/COVIDCycleRegv2.tiff", units="in", width=10, height=7, res=500)
+ggplot(weekdata.reg)+
+  geom_path(aes(x=admrate, y=mortrate, colour=name),
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.1, "inches")))+
+  scale_x_continuous(name="Daily COVID-19 admissions per 100,000")+
+  scale_y_continuous(name="Daily COVID-19 deaths per 100,000")+
+  scale_colour_paletteer_d("awtools::ppalette")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"),
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="Breaking the cycle",
+       subtitle="COVID-19 hospital admission and death rates across England by region\nAdmissions data is published for NHS regions while deaths data is at government region level.\nThese geographies are similar but may not overlap perfectly.",
+       caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
