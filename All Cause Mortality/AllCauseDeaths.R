@@ -11,19 +11,19 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "9th October"
+EWDate <- "16th October"
 ScotDate <- "11th October"
 NIDate <- "16th October"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek412020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek422020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-41.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(21%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AQ" #increment by one letter each week
+EngRange <- "AR" #increment by one letter each week
 ScotRange <- "AQ" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
@@ -661,19 +661,19 @@ data.S$reg <- "Scotland"
 data.S <- data.S[,-c(3)]
 
 if(NRSweek==FALSE){
-#NRS stopped publishing detailed weekly deaths data after week 32, 
-#so get data after that from elsewhere:
-#https://data.gov.scot/coronavirus-covid-19/data.html
-temp <- tempfile()
-temp <- curl_download(url=Scot2020v2, destfile=temp, quiet=FALSE, mode="wb")
-data.Sv2 <- read_excel(temp, sheet="2.2_excess", range=paste0("A", ScotRangev2.1,":C", ScotRangev2.2), col_names=FALSE)
-colnames(data.Sv2) <- c("weekno", "date", "deaths")
-data.Sv2$date <- data.Sv2$date+days(6)
-data.Sv2$year <- rep(2020, times=length(data.Sv2$weekno))
-data.Sv2$reg <- rep("Scotland", times=length(data.Sv2$weekno))
-
-data.S <- bind_rows(data.S, data.Sv2)
-rm(data.Sv2)
+  #NRS stopped publishing detailed weekly deaths data after week 32, 
+  #so get data after that from elsewhere:
+  #https://data.gov.scot/coronavirus-covid-19/data.html
+  temp <- tempfile()
+  temp <- curl_download(url=Scot2020v2, destfile=temp, quiet=FALSE, mode="wb")
+  data.Sv2 <- read_excel(temp, sheet="2.2_excess", range=paste0("A", ScotRangev2.1,":C", ScotRangev2.2), col_names=FALSE)
+  colnames(data.Sv2) <- c("weekno", "date", "deaths")
+  data.Sv2$date <- data.Sv2$date+days(6)
+  data.Sv2$year <- rep(2020, times=length(data.Sv2$weekno))
+  data.Sv2$reg <- rep("Scotland", times=length(data.Sv2$weekno))
+  
+  data.S <- bind_rows(data.S, data.Sv2)
+  rm(data.Sv2)
 }
 
 #Tidy up
@@ -788,12 +788,12 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are still a little on the high side",
+  labs(title="All-cause deaths in England & Wales appear to be starting to rise",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
-                                                                " more deaths in 2020 than average (+", 
-                                                                round(EW.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
+                                                     " more deaths in 2020 than average (+", 
+                                                     round(EW.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=9, y=13600, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=9, y=9100, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=8800, label="Historic mean", colour="grey30")+
@@ -842,7 +842,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Male deaths are slightly above 'usual' levels",
+  labs(title="Deaths im both men and women are above 'usual' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -894,7 +894,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The slight rise in deaths seems greatest in 75-84 year-old men",
+  labs(title="The rise in deaths seems greatest in the over 75's",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1031,7 +1031,7 @@ ggplot()+
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0(round(S.excess$excess, 0), 
-                                                                  " more deaths in 2020 than average (+", round(S.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
+                                                     " more deaths in 2020 than average (+", round(S.excess$percexcess*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=1150, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=800, label="Historic minimum", colour="Skyblue4")+
   annotate(geom="text", x=48, y=850, label="Historic mean", colour="grey30")+
@@ -1082,8 +1082,8 @@ ggplot()+
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2011-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
-                                                                " more deaths in 2020 than average (+", 
-                                                                round(NI.excess$percexcess*100, 0),"%)"), 
+                                                     " more deaths in 2020 than average (+", 
+                                                     round(NI.excess$percexcess*100, 0),"%)"), 
            colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=320, label="Historic maximum", colour="Skyblue4")+
   annotate(geom="text", x=30, y=160, label="Historic minimum", colour="Skyblue4")+
@@ -1271,6 +1271,7 @@ temp28 <- as.data.frame(t(read_excel(temp, sheet=11, range="FH9:FH14", col_names
 temp29 <- as.data.frame(t(read_excel(temp, sheet=11, range="FN9:FN14", col_names=FALSE)))
 temp30 <- as.data.frame(t(read_excel(temp, sheet=11, range="FT9:FT14", col_names=FALSE)))
 temp31 <- as.data.frame(t(read_excel(temp, sheet=11, range="FZ9:FZ14", col_names=FALSE)))
+temp32 <- as.data.frame(t(read_excel(temp, sheet=11, range="GF9:GF14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1280,7 +1281,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
                     temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29,
-                    temp30, temp31)
+                    temp30, temp31, temp32)
 
 data20$week <- c(12:EWmaxweek)
 
