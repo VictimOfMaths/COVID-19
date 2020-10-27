@@ -211,7 +211,7 @@ ggplot(weekdata.reg)+
             arrow = arrow(type = "closed", angle = 30, length = unit(0.1, "inches")))+
   scale_x_continuous(name="Daily COVID-19 admissions per 100,000")+
   scale_y_continuous(name="Daily COVID-19 deaths per 100,000")+
-  scale_colour_paletteer_d("awtools::ppalette")+
+  scale_colour_paletteer_d("ggsci::default_locuszoom", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
