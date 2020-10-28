@@ -6,15 +6,13 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-41.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-43.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-endcol <- "AQ"
-
+endcol <- "AS"
 
 #Historic data for all locations
-all.hist <- read_excel(temp, sheet=4, range=paste0("B7:",endcol,"11"), col_names=FALSE)
+all.hist <- read_excel(temp, sheet=4, range=paste0("B7:",endcol,"12"), col_names=FALSE)
 colnames(all.hist) <- c("cause", seq(1:(ncol(all.hist)-1)))
-all.hist <- bind_rows(all.hist, data.frame(cause="COVID-19"))
 all.hist$time <- "hist"
 all.hist$loc <- "All"
 
@@ -25,53 +23,49 @@ all.2020$time <- "now"
 all.2020$loc <- "All"
 
 #Historic data for care homes
-ch.hist <- read_excel(temp, sheet=4, range=paste0("B33:",endcol,"37"), col_names=FALSE)
+ch.hist <- read_excel(temp, sheet=4, range=paste0("B31:",endcol,"36"), col_names=FALSE)
 colnames(ch.hist) <- c("cause", seq(1:(ncol(ch.hist)-1)))
-ch.hist <- bind_rows(ch.hist, data.frame(cause="COVID-19"))
 ch.hist$time <- "hist"
 ch.hist$loc <- "Care Home"
 
 #2020 data for care homes
-ch.2020 <- read_excel(temp, sheet=4, range=paste0("B41:",endcol,"46"), col_names=FALSE)
+ch.2020 <- read_excel(temp, sheet=4, range=paste0("B39:",endcol,"44"), col_names=FALSE)
 colnames(ch.2020) <- c("cause", seq(1:(ncol(ch.2020)-1)))
 ch.2020$time <- "now"
 ch.2020$loc <- "Care Home"
 
-#Historic data for hospitals
-hosp.hist <- read_excel(temp, sheet=4, range=paste0("B59:",endcol,"63"), col_names=FALSE)
-colnames(hosp.hist) <- c("cause", seq(1:(ncol(hosp.hist)-1)))
-hosp.hist <- bind_rows(hosp.hist, data.frame(cause="COVID-19"))
-hosp.hist$time <- "hist"
-hosp.hist$loc <- "Hospital"
-
-#2020 data for hospitals
-hosp.2020 <- read_excel(temp, sheet=4, range=paste0("B67:",endcol,"72"), col_names=FALSE)
-colnames(hosp.2020) <- c("cause", seq(1:(ncol(hosp.2020)-1)))
-hosp.2020$time <- "now"
-hosp.2020$loc <- "Hospital"
-
 #Historic data for homes
-home.hist <- read_excel(temp, sheet=4, range=paste0("B85:",endcol,"89"), col_names=FALSE)
-colnames(home.hist) <- c("cause", seq(1:(ncol(home.hist)-1)))
-home.hist <- bind_rows(home.hist, data.frame(cause="COVID-19"))
-home.hist$time <- "hist"
-home.hist$loc <- "Home"
+hosp.hist <- read_excel(temp, sheet=4, range=paste0("B55:",endcol,"60"), col_names=FALSE)
+colnames(hosp.hist) <- c("cause", seq(1:(ncol(hosp.hist)-1)))
+hosp.hist$time <- "hist"
+hosp.hist$loc <- "Home"
 
 #2020 data for homes
-home.2020 <- read_excel(temp, sheet=4, range=paste0("B93:",endcol,"98"), col_names=FALSE)
+hosp.2020 <- read_excel(temp, sheet=4, range=paste0("B63:",endcol,"68"), col_names=FALSE)
+colnames(hosp.2020) <- c("cause", seq(1:(ncol(hosp.2020)-1)))
+hosp.2020$time <- "now"
+hosp.2020$loc <- "Home"
+
+#Historic data for hospitals
+home.hist <- read_excel(temp, sheet=4, range=paste0("B79:",endcol,"84"), col_names=FALSE)
+colnames(home.hist) <- c("cause", seq(1:(ncol(home.hist)-1)))
+home.hist$time <- "hist"
+home.hist$loc <- "Hospital"
+
+#2020 data for hospitals
+home.2020 <- read_excel(temp, sheet=4, range=paste0("B87:",endcol,"92"), col_names=FALSE)
 colnames(home.2020) <- c("cause", seq(1:(ncol(home.2020)-1)))
 home.2020$time <- "now"
-home.2020$loc <- "Home"
+home.2020$loc <- "Hospital"
 
 #Historic data for other locations
-other.hist <- read_excel(temp, sheet=4, range=paste0("B111:",endcol,"115"), col_names=FALSE)
+other.hist <- read_excel(temp, sheet=4, range=paste0("B103:",endcol,"108"), col_names=FALSE)
 colnames(other.hist) <- c("cause", seq(1:(ncol(other.hist)-1)))
-other.hist <- bind_rows(other.hist, data.frame(cause="COVID-19"))
 other.hist$time <- "hist"
 other.hist$loc <- "Other"
 
 #2020 data for other locations
-other.2020 <- read_excel(temp, sheet=4, range=paste0("B119:",endcol,"124"), col_names=FALSE)
+other.2020 <- read_excel(temp, sheet=4, range=paste0("B111:",endcol,"116"), col_names=FALSE)
 colnames(other.2020) <- c("cause", seq(1:(ncol(other.2020)-1)))
 other.2020$time <- "now"
 other.2020$loc <- "Other"
@@ -80,9 +74,6 @@ data <- bind_rows(all.hist, all.2020, ch.hist, ch.2020, hosp.hist, hosp.2020, ho
                   other.hist, other.2020)
 
 data <- gather(data, week, deaths, c(2:(ncol(data)-2)))
-
-#Fill in 2019 COVID-19 zeros
-data$deaths <- if_else(is.na(data$deaths), 0, data$deaths)
 
 data <- spread(data, time, deaths)
 
