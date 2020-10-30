@@ -120,12 +120,18 @@ data <- data %>%
          caserateroll=roll_mean(caserate, n=7, align="center", fill=NA)) %>% 
   ungroup()
 
+#Save files for the app to use
+data %>% filter(areaType=="ltla") %>% 
+write.csv("COVID_Cases_By_Age/data.csv")
+shortdata %>% filter(areaType=="ltla") %>% 
+  write.csv("COVID_Cases_By_Age/shortdata.csv")
+
 plotfrom <- as.Date("2020-09-01")
 
 #England plot
 tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=5, res=500)
 data %>% 
-  filter(areaType=="nation" & !is.na(caserateroll)) %>% 
+  filter(areaType=="nation" & !is.na(caserateroll)) %>%
   ggplot()+
   geom_tile(aes(x=date, y=age, fill=caserateroll))+
   scale_fill_paletteer_c("viridis::magma", name="Daily cases\nper 100,000")+
@@ -181,3 +187,52 @@ data %>%
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases per 100,000 in <span style='color:#FF4E86;'>Blackpool</span> compared to <span style='color:Grey60;'>other Local Authorities in England",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
+
+#Calculate mean age of cases
+meanages <- data %>%
+  mutate(point.age=case_when(
+    age=="0-4" ~ 2.5, age=="5-9" ~ 7.5, age=="10-14" ~ 12.5, age=="15-19" ~ 17.5,
+    age=="20-24" ~ 22.5, age=="25-29" ~ 27.5, age=="30-34" ~ 32.5,
+    age=="35-39" ~ 37.5, age=="40-44" ~ 42.5, age=="45-49" ~ 47.5,
+    age=="50-54" ~ 52.5, age=="55-59" ~ 57.5, age=="60-64" ~ 62.5,
+    age=="65-69" ~ 67.5, age=="70-74" ~ 72.5, age=="75-79" ~ 77.5,
+    age=="80-84" ~ 82.5, age=="85-89" ~ 87.5, age=="90+" ~ 92.5
+  )) %>% 
+  group_by(areaType, areaCode, areaName, date) %>% 
+  summarise(mean.age=weighted.mean(point.age, casesroll), casesroll=sum(casesroll),
+            pop=sum(pop)) %>%
+  mutate(caserateroll=casesroll*100000/pop) %>% 
+  ungroup()
+
+tiff("Outputs/COVIDCasesxAgeBlackpool2.tiff", units="in", width=8, height=6, res=500)
+  ggplot()+
+  geom_line(data=meanages, aes(x=date, y=mean.age, group=areaName), 
+            colour="Grey80")+
+  geom_line(data=subset(meanages, areaName=="Blackpool"), 
+            aes(x=date, y=mean.age, group=areaName), colour="#FF4E86")+
+  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_y_continuous(name="Mean age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)), plot.subtitle=element_markdown())+
+  labs(title="Blackpool's cases are older than then average",
+       subtitle="Average age of new confirmed COVID-19 cases in <span style='color:#FF4E86;'>Blackpool</span> compared to <span style='color:Grey60;'>other Local Authorities in England",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDCasesxAgeBlackpool3.tiff", units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_point(data=subset(meanages, date==as.Date("2020-10-15")), 
+             aes(x=caserateroll, y=mean.age), 
+            colour="Grey80")+
+  geom_point(data=subset(meanages, areaName=="Blackpool" & date==as.Date("2020-10-15")), 
+            aes(x=caserateroll, y=mean.age), colour="#FF4E86")+
+  scale_x_continuous(name="Daily cases per 100,000")+
+  scale_y_continuous(name="Mean age")+
+  theme_classic()+
+  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
+  labs(title="Blackpool has more, older, COVID-19 cases",
+       subtitle="Rolling 7-day average of daily new cases per 100,000 plotted against their average age<br>for <span style='color:#FF4E86;'>**Blackpool**</span> compared to <span style='color:Grey60;'>**other Local Authorities in England**",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+  
