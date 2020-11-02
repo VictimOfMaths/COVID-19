@@ -116,7 +116,7 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B22%2BJULY%2B2020%2B-%2BONWARDS%2B-%2B1.xlsx?forceDownload=true"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B02%2BNovember%2B2020.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Historic ICU data (using a slightly different definition)
@@ -132,7 +132,7 @@ ICUdata.hist_long$Date <- as.Date(ICUdata.hist_long$Date)
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-ICUdata <- read_excel(temp, sheet=4, range="A3:Q39")
+ICUdata <- read_excel(temp, sheet=4, range="A3:Q56")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:17))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", NA, ICUdata_long$cases))
@@ -185,7 +185,7 @@ Hospdata.hist_long$HB <- if_else(substr(Hospdata.hist_long$HB, 1,3)=="NHS", subs
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-Hospdata <- read_excel(temp, sheet=5, range="A3:Q39")
+Hospdata <- read_excel(temp, sheet=5, range="A3:Q56")
 
 Hospdata_long <- gather(Hospdata, HB, cases, c(2:17))
 Hospdata_long$cases <- as.numeric(ifelse(Hospdata_long$cases=="*", NA, Hospdata_long$cases))
@@ -260,10 +260,10 @@ ggplot(subset(natdata,Date>=as.Date("2020-09-11")))+
                               "800", "1000", "1200", "1400"),
                      position = "right")+
   theme_classic()+
-  annotate(geom="text", x=as.Date("2020-09-18"), y=500, label="New cases in the population")+
+  annotate(geom="text", x=as.Date("2020-09-18"), y=800, label="New cases in the population")+
   annotate(geom="text", x=as.Date("2020-09-19"), y=-140, label="Total patients in hospital")+
   #annotate(geom="text", x=as.Date("2020-10-06"), y=-70, label="Patients in ICU", colour="#a80b20")+  
-  labs(title="Both cases and hospitalisations are rising in Scotland",
+  labs(title="New cases in Scotland are falling, but the number of patients in hospital is still going up",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients with recently confirmed COVID-19<br>in <span style='color:#ff9f55;'>Scottish hospitals </span>and <span style='color:#ff1437;'>Intensive Care Units",
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(plot.subtitle=element_markdown())
@@ -277,7 +277,8 @@ ggplot(natdata)+
   scale_y_continuous(name="Total patients in ICU")+
   scale_fill_distiller(palette="Spectral")+
   theme_classic()+
-  labs(title="The number of COVID-19 patients in Intensive Care in Scotland is rising",
+  labs(title="The number of COVID-19 patients in Intensive Care in Scotland seems to have plateaued",
        subtitle=paste0("Hospital patients in Intensive Care Units with confirmed COVID-19.\nThe definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")
   dev.off()
+  
