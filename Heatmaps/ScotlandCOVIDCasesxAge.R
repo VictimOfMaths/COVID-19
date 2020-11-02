@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201028.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201102.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -78,7 +78,7 @@ ggplot(subset(data, Sex!="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   facet_wrap(~Sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The student outbreak in Scotland seems to be over",
+  labs(title="Cases in Scotland seem to be falling",
        subtitle="Confirmed new COVID-19 cases in Scotland by sex and age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -93,7 +93,7 @@ ggplot(subset(data, Sex=="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   scale_x_date(name="")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 cases in Scotland are falling, but almost exclusively in teenagers",
+  labs(title="COVID-19 cases in Scotland are falling across all age groups",
        subtitle="Confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -108,7 +108,7 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
-  labs(title="The fall in teenage COVID-19 cases is yet to be reflected in other age groups",
+  labs(title="The number of new COVID-19 cases in 25-64 year olds is falling, but slowly",
        subtitle="Rolling 7-day average of daily confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -121,7 +121,7 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  labs(title="COVID-19 cases in young people are falling. Cases in older ages still seem to be rising",
+  labs(title="COVID-19 cases are now falling across most age groups",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
