@@ -7,6 +7,7 @@ library(arrow)
 library(readxl)
 library(paletteer)
 library(lubridate)
+library(geofacet)
 
 #Pull in national level deaths data
 deaths <- get_data(filters="areaType=nation", structure=list(date="date",
@@ -230,7 +231,7 @@ area.pred.deathsxage %>%
 dev.off()
 
 #Plot age-specific forecasts for anywhere you like
-area <- "Blackpool"
+area <- "Liverpool"
 Plotlabel <- unique(round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName==area],0))
 
 tiff(paste0("Outputs/COVIDDeathForecast",area,".tiff"), units="in", width=10, height=8, res=500)
@@ -244,7 +245,32 @@ ggplot()+
   theme_classic()+
   labs(title=paste0("Even if COVID-19 disappeared today, we'd still expect ", Plotlabel, 
                     " more COVID-19 deaths in ", area),
-       subtitle="Modelled COVID-19 deaths ibased on confirmed cases and the latest age-specific Case Fatality Rates",
+       subtitle="Modelled COVID-19 deaths based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
+dev.off()
+
+#Regional faceted plots
+mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
+                            "West Midlands", "East Midlands", "East of England",
+                            "South West", "London", "South East"),
+                     row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
+                     code=c(1:9))
+
+tiff("Outputs/COVIDDeathForecastReg.tiff", units="in", width=10, height=10, res=500)
+pred.data %>% 
+  filter(areaType=="region") %>% 
+  ggplot()+
+  geom_col(aes(x=as.Date(date), y=exp.deaths, fill=age))+
+  geom_vline(xintercept=as.Date(max.date), linetype=2)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Expected daily deaths from COVID-19")+
+  scale_fill_paletteer_d("pals::stepped", name="Age")+
+  facet_geo(~areaName, grid=mygrid)+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="The North is expected to bear the brunt of COVID-19 deaths in the next month",
+       subtitle="Modelled COVID-19 deaths in English regions based on confirmed cases and the latest age-specific Case Fatality Rates",
+       caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 dev.off()
