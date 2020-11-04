@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201102.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201104.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -127,6 +127,21 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
 
 tiff("Outputs/COVIDCasesHeatmapScotlandRate.tiff", units="in", width=10, height=3, res=500)
 CaseratexAge
+dev.off()
+
+#Line graph version
+tiff("Outputs/COVIDCasesLineScotlandRate.tiff", units="in", width=8, height=6, res=500)
+ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$date)), 
+       aes(x=date, y=posrate_avg, colour=AgeGroup))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new cases per 100,000")+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"))+
+  labs(title="COVID-19 cases are now falling, except in the most vulnerable group",
+       subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
+       caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
 #By deprivation
