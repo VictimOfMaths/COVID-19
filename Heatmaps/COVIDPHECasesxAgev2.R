@@ -144,6 +144,36 @@ data %>%
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDCasesxAgeEngLine.tiff", units="in", width=10, height=8, res=500)
+data %>% 
+  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  ggplot()+
+ geom_line(aes(x=date, y=caserateroll, colour=age))+
+  scale_colour_paletteer_d("pals::stepped", name="Age")+
+  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_y_continuous(name="Dailynew cases per 100,000")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"))+
+  labs(title="Student outbreaks are tailing off, cases are rising at older ages",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDCasesOver90.tiff", units="in", width=10, height=8, res=500)
+data %>% 
+  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  ggplot()+
+  geom_line(aes(x=date, y=caserateroll, colour=age), show.legend=FALSE)+
+  scale_colour_manual(values=c(rep("Grey80", times=18), "#FF4E86"))+
+  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_y_continuous(name="Dailynew cases per 100,000")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold"), plot.subtitle=element_markdown())+
+  labs(title="New COVID-19 cases are rising fastest in the most vulnerable group",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 in the <span style='color:#FF4E86;'>**over 90s**</span> compared to <span style='color:Grey70;'>**other ages**",
+       caption="Data from Public Health England | Plot by @VictimOfMaths")
+dev.off()
+
 #Compare regions
 mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
                                "West Midlands", "East Midlands", "East of England",
