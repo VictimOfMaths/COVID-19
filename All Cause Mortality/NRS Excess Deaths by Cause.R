@@ -6,66 +6,66 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-43.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-44.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-endcol <- "AS"
+endcol <- "AT"
 
 #Historic data for all locations
-all.hist <- read_excel(temp, sheet=4, range=paste0("B7:",endcol,"12"), col_names=FALSE)
+all.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B7:",endcol,"12"), col_names=FALSE)
 colnames(all.hist) <- c("cause", seq(1:(ncol(all.hist)-1)))
 all.hist$time <- "hist"
 all.hist$loc <- "All"
 
 #2020 data for all locations
-all.2020 <- read_excel(temp, sheet=4, range=paste0("B15:",endcol,"20"), col_names=FALSE)
+all.2020 <- read_excel(temp, sheet="Table 3 ", range=paste0("B15:",endcol,"20"), col_names=FALSE)
 colnames(all.2020) <- c("cause", seq(1:(ncol(all.2020)-1)))
 all.2020$time <- "now"
 all.2020$loc <- "All"
 
 #Historic data for care homes
-ch.hist <- read_excel(temp, sheet=4, range=paste0("B31:",endcol,"36"), col_names=FALSE)
+ch.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B31:",endcol,"36"), col_names=FALSE)
 colnames(ch.hist) <- c("cause", seq(1:(ncol(ch.hist)-1)))
 ch.hist$time <- "hist"
 ch.hist$loc <- "Care Home"
 
 #2020 data for care homes
-ch.2020 <- read_excel(temp, sheet=4, range=paste0("B39:",endcol,"44"), col_names=FALSE)
+ch.2020 <- read_excel(temp, sheet="Table 3 ", range=paste0("B39:",endcol,"44"), col_names=FALSE)
 colnames(ch.2020) <- c("cause", seq(1:(ncol(ch.2020)-1)))
 ch.2020$time <- "now"
 ch.2020$loc <- "Care Home"
 
 #Historic data for homes
-hosp.hist <- read_excel(temp, sheet=4, range=paste0("B55:",endcol,"60"), col_names=FALSE)
+hosp.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B55:",endcol,"60"), col_names=FALSE)
 colnames(hosp.hist) <- c("cause", seq(1:(ncol(hosp.hist)-1)))
 hosp.hist$time <- "hist"
 hosp.hist$loc <- "Home"
 
 #2020 data for homes
-hosp.2020 <- read_excel(temp, sheet=4, range=paste0("B63:",endcol,"68"), col_names=FALSE)
+hosp.2020 <- read_excel(temp, sheet="Table 3 ", range=paste0("B63:",endcol,"68"), col_names=FALSE)
 colnames(hosp.2020) <- c("cause", seq(1:(ncol(hosp.2020)-1)))
 hosp.2020$time <- "now"
 hosp.2020$loc <- "Home"
 
 #Historic data for hospitals
-home.hist <- read_excel(temp, sheet=4, range=paste0("B79:",endcol,"84"), col_names=FALSE)
+home.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B79:",endcol,"84"), col_names=FALSE)
 colnames(home.hist) <- c("cause", seq(1:(ncol(home.hist)-1)))
 home.hist$time <- "hist"
 home.hist$loc <- "Hospital"
 
 #2020 data for hospitals
-home.2020 <- read_excel(temp, sheet=4, range=paste0("B87:",endcol,"92"), col_names=FALSE)
+home.2020 <- read_excel(temp, sheet="Table 3 ", range=paste0("B87:",endcol,"92"), col_names=FALSE)
 colnames(home.2020) <- c("cause", seq(1:(ncol(home.2020)-1)))
 home.2020$time <- "now"
 home.2020$loc <- "Hospital"
 
 #Historic data for other locations
-other.hist <- read_excel(temp, sheet=4, range=paste0("B103:",endcol,"108"), col_names=FALSE)
+other.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B103:",endcol,"108"), col_names=FALSE)
 colnames(other.hist) <- c("cause", seq(1:(ncol(other.hist)-1)))
 other.hist$time <- "hist"
 other.hist$loc <- "Other"
 
 #2020 data for other locations
-other.2020 <- read_excel(temp, sheet=4, range=paste0("B111:",endcol,"116"), col_names=FALSE)
+other.2020 <- read_excel(temp, sheet="Table 3 ", range=paste0("B111:",endcol,"116"), col_names=FALSE)
 colnames(other.2020) <- c("cause", seq(1:(ncol(other.2020)-1)))
 other.2020$time <- "now"
 other.2020$loc <- "Other"
