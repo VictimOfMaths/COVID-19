@@ -26,8 +26,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-37.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet=3, range="C15:AM21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-44.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range="C15:AT21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -146,7 +146,7 @@ data <- bind_rows(data.S, data.EW)
 temp <- tempfile()
 temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AJ14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AN14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -456,7 +456,9 @@ fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
   fulldata$country=="BEL" ~ "Belgium",
   fulldata$country=="BGR" ~ "Bulgaria",
+  fulldata$country=="CAN" ~ "Canada",
   fulldata$country=="CHE" ~ "Switzerland",
+  fulldata$country=="CHL" ~ "Chile",
   fulldata$country=="CZE" ~ "Czechia",
   fulldata$country=="DNK" ~ "Denmark",
   fulldata$country=="DEUTNP" ~ "Germany",
@@ -469,11 +471,13 @@ fulldata$country <- case_when(
   fulldata$country=="HUN" ~ "Hungary",
   fulldata$country=="ISL" ~ "Iceland",
   fulldata$country=="ISR" ~ "Israel",
+  fulldata$country=="KOR" ~ "South Korea",
   fulldata$country=="LTU" ~ "Lithuania",
   fulldata$country=="LUX" ~ "Luxembourg",
   fulldata$country=="LVA" ~ "Latvia",
   fulldata$country=="NLD" ~ "Netherlands",
   fulldata$country=="NOR" ~ "Norway",
+  fulldata$country=="NZL_NP" ~ "New Zealand",
   fulldata$country=="POL" ~ "Poland",
   fulldata$country=="PRT" ~ "Portugal",
   fulldata$country=="RUS" ~ "Russia",
@@ -482,12 +486,13 @@ fulldata$country <- case_when(
   fulldata$country=="SVN" ~ "Slovenia",
   TRUE ~ fulldata$country)
 
-#Remove most recent week of data for FIN, FRA, NOR, SVK, SWE and USA which is wonky
+#Remove most recent week of data for FIN, FRA, KOR, NOR, SVK, SWE and USA which is wonky/underreported
 fulldata <- fulldata %>%
   group_by(age, country, year) %>%
   mutate(last_week=max(week)) %>%
   ungroup() %>%
-  filter(!(country %in% c("Finland", "USA", "Slovakia", "Norway", "Lithuania", "France") & year==2020 & week==last_week))
+  filter(!(country %in% c("Finland", "USA", "Slovakia", "Norway", "Lithuania", "France",
+                          "South Korea") & year==2020 & week==last_week))
 
 #Remove Russia which has no 2020 (or 2019) data
 fulldata <- fulldata %>% 
@@ -529,7 +534,7 @@ ggplot(subset(fulldata, age=="15-64"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
         plot.subtitle =element_markdown())+
-  labs(title="15-64 year olds in England, Wales and the US appear to fared poorly compared to their peers elsewhere",
+  labs(title="15-64 year olds in the UK, US and Chile appear to have fared poorly compared to their peers elsewhere",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS and NRS | Plot by @VictimOfMaths")
 
@@ -545,12 +550,14 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey90", times=6), "#011627", rep("Grey90", times=17), 
-                               "#2ec4b6", "Grey90", "Grey90", "#e71d36", rep("Grey90", times=2), 
-                               "#ff9f1c"), name="Country")+
+  scale_colour_manual(values=c(rep("Grey90", times=4), "#D43F3A", rep("Grey90", times=3), "#46B8DA", 
+                               rep("Grey90", times=14), "#357EBD", rep("Grey90", times=3),
+                               "#9632B8", rep("Grey90", times=3), "#EEA236", rep("Grey90", times=2), 
+                               "#5CB85C"), name="Country")+
   labs(title="Some of these countries are not like the others",
        subtitle="Excess mortality rates in 15-64 year-olds in 2020",
        caption="Data from mortality.org, ONS, NRS, Insee and ISTAT\nPlot by @VictimOfMaths")
+
 dev.off()
 
 #Heatmaps of country and age-specific excess deaths
@@ -582,10 +589,11 @@ ggplot(excessrank, aes(y=country, x=excessprop, fill=excessprop))+
                      breaks=c(-0.1,0,0.1,0.2), labels=c("-10%", "0", "+10%", "+20%"))+
   scale_y_discrete(name="")+
   theme_classic()+
-  theme(plot.title.position="plot")+
-  labs(title="England & Wales, alongside Spain, have seen the biggest rise in mortality in 2020 in Europe",
-       subtitle="All-cause deaths in 2020 vs. the average for 2010-19",
+  theme(plot.title.position="plot", plot.title=element_text(face="bold"))+
+  labs(title="Spain's 'second wave' of COVID deaths means it's now seen the biggest rise in mortality in 2020",
+       subtitle="All-cause deaths in 2020 vs. the average for 2010-19 for countries with data on mortality.org",
        caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")
+
 dev.off()
 
 tiff("Outputs/ExcessDeathsBarsAbs.tiff", units="in", width=10, height=8, res=500)
@@ -596,10 +604,11 @@ ggplot(excessrank, aes(y=fct_reorder(country, -excess), x=excess, fill=excess))+
   scale_x_continuous(name="Change in all-cause deaths in 2020 vs. average in 2010-19")+
   scale_y_discrete(name="")+
   theme_classic()+
-  theme(plot.title.position="plot")+
+  theme(plot.title.position="plot", plot.title=element_text(face="bold"))+
   labs(title="The US has seen far more deaths than anywhere in Europe during the pandemic",
        subtitle="All-cause deaths in 2020 vs. the average for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS & NRS | Plot by @VictimOfMaths")
+
 dev.off()
 
 #Calculate aggregate national data
@@ -649,8 +658,8 @@ ggplot(subset(natdata, !country %in% c("Iceland") & week<53))+
   facet_wrap(~country)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.subtitle=element_markdown())+
-  labs(title="Excess mortality rates across Europe & the US",
+        plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
+  labs(title="Excess mortality rates across Europe, USA, Chile, South Korea and New Zealand",
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
@@ -668,7 +677,7 @@ ggplot(subset(natdata, country=="USA" & week<53))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown())+
   labs(title="Excess mortality in the United States of America",
-       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19</span><br> Data for most recent weeks is likely to be undercounted.",
        caption="Data from mortality.org | Plot by @VictimOfMaths")
 
 dev.off()  
@@ -684,10 +693,9 @@ plotdata <- plotdata%>%
   group_by(country) %>%
   mutate(maxweek=max(week))
 
-tiff(paste0("Outputs/ExcessEURUSHeatmap", plotage, ".tiff"), units="in", width=10, height=8, res=300)
-ggplot()+
+tileplot <- ggplot()+
   geom_tile(data=plotdata, aes(x=week, y=country, fill=excess_r))+
-  scale_x_continuous(limits=c(0,35), breaks=c(0,5,10,15,20,25,30,35), name="Week")+
+  scale_x_continuous(limits=c(0,46), breaks=c(0,5,10,15,20,25,30,35,40,45), name="Week")+
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("pals::kovesi.diverging_gwr_55_95_c38", limit=c(-1,1)*max(abs(plotdata$excess_r)), 
                          name="Weekly excess deaths\nper 100,000")+
@@ -701,6 +709,13 @@ ggplot()+
         axis.text=element_text(colour="White"), axis.ticks=element_line(colour="White"),
         legend.background=element_rect(fill="Black"),legend.text=element_text(colour="White"),
         plot.title.position="plot")
+
+tiff(paste0("Outputs/ExcessEURUSHeatmap", plotage, ".tiff"), units="in", width=10, height=8, res=300)
+tileplot
+dev.off()
+
+png(paste0("Outputs/ExcessEURUSHeatmap", plotage, ".png"), units="in", width=10, height=8, res=300)
+tileplot
 dev.off()
 
 #############################################
@@ -725,4 +740,3 @@ fulldata %>%
        subtitle="Weekly all-cause deaths by age in 2020 as a proportion of the maximum weekly count for selected countries",
        caption="Data from ONS, Insee, ISTAT, NRS and mortality.org | Plot by @VictimOfMaths")
 dev.off()
-
