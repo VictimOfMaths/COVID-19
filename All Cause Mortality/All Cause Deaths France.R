@@ -61,7 +61,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-10-16_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-11-06_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data18 <- read.csv(file.path(temp2, "DC_2018_det.csv"), sep=";")
@@ -154,7 +154,7 @@ ggplot(subset(data.full, week<53))+
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   theme_classic()+
   theme(plot.subtitle =element_markdown())+
-  labs(title="Deaths in France are slightly above 'usual' levels",
+  labs(title="Deaths in France are also rising slowly",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
@@ -205,7 +205,7 @@ ggplot(aggdata)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
         plot.subtitle =element_markdown(), plot.title=element_markdown())+
-  labs(title="All cause deaths in France are lower than 'usual' levels in many age groups",
+  labs(title="Increasing deaths in France are mostly in the oldest age group",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
@@ -225,8 +225,8 @@ agedata <- fulldata %>%
 
 #Import population size
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "c.r.angus@sheffield.ac.uk" 
-password <- "1574553541"
+username <- "" 
+password <- ""
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
