@@ -210,6 +210,7 @@ ggplot()+
                     " more COVID-19 deaths over the coming months"),
        subtitle="Modelled COVID-19 deaths in England based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
+
 dev.off()
 
 #Plot age distribution of forecasted deaths for England
@@ -231,12 +232,12 @@ area.pred.deathsxage %>%
 dev.off()
 
 #Plot age-specific forecasts for anywhere you like
-area <- "Liverpool"
+area <- "Sheffield"
 Plotlabel <- unique(round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName==area],0))
 
 tiff(paste0("Outputs/COVIDDeathForecast",area,".tiff"), units="in", width=10, height=8, res=500)
 ggplot()+
-  geom_col(data=subset(pred.data, areaName==area),
+  geom_col(data=subset(pred.data, areaName==area & areaType=="ltla"),
            aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_vline(xintercept=as.Date(max.date), linetype=2)+
   scale_x_date(name="")+
