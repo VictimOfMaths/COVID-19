@@ -13,7 +13,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "23rd October"
 ScotDate <- "1st November"
-NIDate <- "23rd October"
+NIDate <- "30th October"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek4320202.xlsx"
@@ -28,7 +28,7 @@ ScotRange <- "AT" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "47" #increment by one number each week
-NIRange <- "47" #increment by one number each week
+NIRange <- "48" #increment by one number each week
 
 #Flag weeks with an NRS report
 NRSweek <- TRUE
