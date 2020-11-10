@@ -11,19 +11,19 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "23rd October"
+EWDate <- "30th October"
 ScotDate <- "1st November"
 NIDate <- "30th October"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek4320202.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek442020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-44.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(28%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
-EngRange <- "AS" #increment by one letter each week
+EngRange <- "AT" #increment by one letter each week
 ScotRange <- "AT" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
@@ -788,7 +788,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in England & Wales are definitely rising, but slowly",
+  labs(title="All-cause deaths in England & Wales are still rising, but slowly",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0("+", round(EW.excess$excess, 0), 
@@ -826,7 +826,7 @@ sex.EW.excess <- data.sex.EW.new %>%
 labpos <-  data.sex.EW.new %>%
   filter(weekno==EWmaxweek) %>%
   group_by(sex) %>%
-  summarise(pos=max(deaths, max+800))
+  summarise(pos=max(deaths, max+1000))
 
 
 ann_text1 <- data.frame(weekno=rep(26, times=2), deaths=labpos$pos, sex=c("Male", "Female"))
@@ -842,7 +842,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths are rising for both men and women",
+  labs(title="Deaths are rising faster among men",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1077,7 +1077,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="The Latest Northern Irish mortality data is consistent with slightly above 'normal' death rates",
+  labs(title="Deaths in Northern Ireland are probably rising, but slowly",
        subtitle=paste0("Weekly all-cause deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2011-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
@@ -1090,6 +1090,7 @@ ggplot()+
   geom_curve(aes(x=48, y=230, xend=47, yend=285), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   theme(plot.subtitle =element_markdown())
+
 dev.off()  
 
 ###############################
@@ -1127,7 +1128,7 @@ reg.UK.excess <- arrange(reg.UK.excess, reg.UK.excess$reg)
 labpos <-  data.reg.UK.new %>%
   filter(weekno==EWmaxweek) %>%
   group_by(reg) %>%
-  summarise(pos=max(mean+(deaths-mean)/1.6, max+400))
+  summarise(pos=max(mean+(deaths-mean)/1.6, max+800))
 
 #Sort out subtitle
 subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>England, Wales and Northern Ireland data to ", EWDate, ".<br>Scotland data to ", ScotDate, "."),
@@ -1195,6 +1196,63 @@ dev.off()
 
 png("Outputs/ONSNRSNISRAWeeklyDeathsxReg.png", units="in", width=12, height=9, res=300)
 RegPlot
+dev.off() 
+
+RegPlot2 <- ggplot()+
+  geom_ribbon(data=data.reg.UK.old, aes(x=weekno, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(data=data.reg.UK.new, aes(x=weekno, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_line(data=data.reg.UK.old, aes(x=weekno, y=mean), colour="Grey50", linetype=2)+
+  geom_line(data=data.reg.UK.new, aes(x=weekno, y=deaths), colour="Red")+
+  theme_classic()+
+  facet_wrap(~reg, scales="free_y")+
+  scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
+  scale_y_continuous(name="Deaths registered")+
+  expand_limits(y=0)+
+  labs(title="Regional variation in all-cause mortality in the UK",
+       subtitle=subtitle,
+       caption="Data from ONS, NRS & NISRA | Plot by @VictimOfMaths")+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.subtitle =element_markdown())+
+  geom_text(data=ann_text4, aes(x=weekno, y=deaths), label=c(paste0(round(reg.UK.excess[1,2], 0), 
+                                                                    " excess deaths in 2020\nvs. 2010-19 average (+", 
+                                                                    round(reg.UK.excess[1,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[2,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[2,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[3,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[3,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[4,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[4,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[5,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[5,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[6,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[6,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[7,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[7,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[8,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[8,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[9,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[9,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[10,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[10,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[11,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[11,4]*100, 0),"%)"),
+                                                             paste0("+", round(reg.UK.excess[12,2], 0), 
+                                                                    " deaths (+", 
+                                                                    round(reg.UK.excess[12,4]*100, 0),"%)")),
+            size=3, colour="Red", hjust=0)
+
+tiff("Outputs/ONSNRSNISRAWeeklyDeathsxReg2.tiff", units="in", width=12, height=9, res=300)
+RegPlot2
 dev.off() 
 
 #Generate cumulative death counts by year
@@ -1272,6 +1330,7 @@ temp30 <- as.data.frame(t(read_excel(temp, sheet=11, range="FT9:FT14", col_names
 temp31 <- as.data.frame(t(read_excel(temp, sheet=11, range="FZ9:FZ14", col_names=FALSE)))
 temp32 <- as.data.frame(t(read_excel(temp, sheet=11, range="GF9:GF14", col_names=FALSE)))
 temp33 <- as.data.frame(t(read_excel(temp, sheet=11, range="GL9:GL14", col_names=FALSE)))
+temp34 <- as.data.frame(t(read_excel(temp, sheet=11, range="GR9:GR14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1281,7 +1340,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
                     temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29,
-                    temp30, temp31, temp32, temp33)
+                    temp30, temp31, temp32, temp33, temp34)
 
 data20$week <- c(12:EWmaxweek)
 
