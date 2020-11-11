@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "1st November"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-44.xlsx"
-ScotRange <- "AT" #incrememnt by one letter each week
-Weekno <- 44
+ScotDate <- "8th November"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-45.xlsx"
+ScotRange <- "AU" #incrememnt by one letter each week
+Weekno <- 45
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -58,7 +58,7 @@ temp <- tempfile()
 temp <- curl_download(url=Scot2020, destfile=temp, quiet=FALSE, mode="wb")
 
 #Tidy location data
-data.loc.2020 <- data.frame(t(read_excel(temp, sheet="Table 2 ", range=c(paste0("C86:", ScotRange, "89")), col_names=FALSE)))
+data.loc.2020 <- data.frame(t(read_excel(temp, sheet="Table 2 ", range=c(paste0("C90:", ScotRange, "93")), col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data.loc.2020)), "%d/%m/%y"))
 data.loc.2020 <- cbind(date, data.loc.2020)
 colnames(data.loc.2020) <- c("date", "Care Home", "Home / Non-institution", "Hospital", "Other instutition")
@@ -86,7 +86,7 @@ data.loc <- data.loc %>%
   summarise(deaths=sum(deaths))
 
 #Tidy HB data
-data.HB.2020 <- data.frame(t(read_excel(temp, sheet="Table 2 ", range=c(paste0("C38:", ScotRange,"51")), col_names=FALSE)))
+data.HB.2020 <- data.frame(t(read_excel(temp, sheet="Table 2 ", range=c(paste0("C40:", ScotRange,"53")), col_names=FALSE)))
 data.HB.2020 <- cbind(date, data.HB.2020)
 colnames(data.HB.2020) <- c("date", HBlist)
 data.HB.2020$date <- as.Date(data.HB.2020$date, "%d/%m/%y")
@@ -188,7 +188,7 @@ ggplot(data.HB.old)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause mortality in Scotland hasn't risen across the entire country",
+  labs(title="All-cause mortality in Glasgow looks very different to the rest of Scotland",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=weekno, y=deaths), label=c(paste0(round(excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
@@ -370,7 +370,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="This week's rise in mortality appears to be greatest in the over 65s",
+  labs(title="Excess mortality is confined to the over 65s",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
