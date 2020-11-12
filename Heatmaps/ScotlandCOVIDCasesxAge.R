@@ -11,7 +11,7 @@ library(RcppRoll)
 
 #Scottish age data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201104.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20201112.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -72,13 +72,12 @@ ggplot(subset(data, Sex!="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("awtools::a_palette", name="Age",
                          labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
-  scale_y_continuous(name="New cases per day", breaks=c(-100,-50,0,50,100),
-                     labels=c("100", "50", "0", "50", "100"))+
+  scale_y_continuous(name="New cases per day", labels=abs)+
   scale_x_date(name="")+
   facet_wrap(~Sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Cases in Scotland seem to be falling",
+  labs(title="Cases in Scotland are falling",
        subtitle="Confirmed new COVID-19 cases in Scotland by sex and age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -88,8 +87,7 @@ ggplot(subset(data, Sex=="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("awtools::a_palette", name="Age",
                          labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
-  scale_y_continuous(name="New cases per day", breaks=c(-400,-200,0,200,400),
-                     labels=c("400", "200", "0", "200", "400"))+
+  scale_y_continuous(name="New cases per day", labels=abs)+
   scale_x_date(name="")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
@@ -121,7 +119,7 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
                    labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  labs(title="COVID-19 cases are now falling across most age groups",
+  labs(title="COVID-19 cases are now falling slowly across most age groups",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -139,14 +137,14 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
-  labs(title="COVID-19 cases are now falling, except in the most vulnerable group",
+  labs(title="The slow fall of COVID-19 case rates in Scotland",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201028.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20201112.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -182,7 +180,7 @@ COVIDDeathsHeatmapScotlandxIMD <- ggplot(data.simd, aes(x=date, y=as.factor(SIMD
                    labels=c("1 - most deprived", "2", "3", "4", "5 - least deprived"))+
   scale_fill_paletteer_c("viridis::magma", name="Deaths per day")+
   theme_classic()+
-  labs(title="Deaths from confirmed COVID-19 in Scotland were concentrated in more deprived areas",
+  labs(title="COVID deaths in both 'waves' have come disproportionately from the most deprived areas",
        subtitle="Rolling 7-day average of confirmed daily deaths in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -200,3 +198,4 @@ library(rayrender)
 
 plot_gg(CaseratexAge, width=10, height=3, multicore = TRUE, windowsize = c(1000, 600), 
         zoom = 0.65, phi = 35, theta = 40, sunangle = 225, soliddepth = -100) 
+
