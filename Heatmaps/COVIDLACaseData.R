@@ -302,7 +302,7 @@ casebars.w <- ggplot(subset(data.w, date==maxcaseday), aes(x=totalcases, y=fct_r
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000,2000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -377,7 +377,7 @@ casebars.s <- ggplot(subset(data.s, date==maxcaseday), aes(x=totalcases, y=fct_r
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000,2000,3000,4000,5000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -766,6 +766,44 @@ dev.off()
 png("Outputs/COVIDLTLAAdmRatesHeatmapEngOrdered.png", units="in", width=10, height=26, res=500)
 plot_grid(admtiles.e2, admbars.e2, align="h", rel_widths=c(1,0.2))
 dev.off()
+
+
+#Map of changes in case rates in the last 7 days:
+data.map2 <- data.map %>% 
+  filter(country=="England") %>% 
+  mutate(date=as.Date(date)) %>% 
+  arrange(code, date) %>% 
+  group_by(code) %>% 
+  mutate(admchange=admrate_avg-lag(admrate_avg,7)) %>% 
+  filter(date==as.Date("2020-11-05"))
+
+map.casechange <- full_join(simplemap, data.map2, by="code", all.y=TRUE)
+map.casechange$date <- as.Date(map.casechange$date)
+
+#Map of current cases
+tiff("Outputs/COVIDAdmChangeMapUK.tiff", units="in", width=8, height=8, res=500)
+map.casechange %>% 
+  filter(substr(code,1,1)=="E") %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=admchange), colour=NA)+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.casechange$admchange)), 
+                         name="Change in admissions\nper day per 100,000\nin the past week", direction=-1,
+                         na.value="transparent")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
+  labs(title="Changes in COVID-19 hospital admissions across England",
+       subtitle="Change in the rolling 7-day average rate of new admissions between 30th October and 5th November",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+
+
+
+
+
+
+
 
 #These last 2 animations require a more powerful computer/more patience than I have, so I'm
 #not 100% certain they actually work...
