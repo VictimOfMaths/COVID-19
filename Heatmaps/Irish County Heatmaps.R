@@ -72,7 +72,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,5000,10000,15000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -112,12 +112,14 @@ mapdata <- heatmap %>%
   full_join(shapefile, by="county")
 
 #Bring in NI data
-#Have to manually reset plotto to match NI data
-plotto <- as.Date("2020-10-15")
+NIdata <- read.csv("COVID_LA_Plots/LACases.csv")[,c(2,3,4,5,16)] %>% 
+  filter(country=="Northern Ireland" & name!="Northern Ireland") %>% 
+  mutate(date=as.Date(date))
 
-NIdata <- read.csv("COVID_LA_Plots/LACases.csv")[,c(2,3,4,5,14)]
-NIdata$date <- as.Date(NIdata$date)
-NIdata <- subset(NIdata, country=="Northern Ireland" & name!="Northern Ireland" & date==as.Date(plotto))
+#Align end dates
+plotto <- min(plotto, max(NIdata$date[!is.na(NIdata$caserate_avg)]))
+
+NIdata <- subset(NIdata, date==as.Date(plotto))
 
 #NI shapefile
 temp <- tempfile()
@@ -149,7 +151,7 @@ ggplot()+
   scale_fill_paletteer_c("viridis::inferno", name="Daily cases\nper 100,000")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-        axis.title=element_blank())+
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="COVID-19 cases across Ireland",
        subtitle=paste("Daily rates of confirmed new COVID-19 cases in the Republic of Ireland and Northern Ireland\nData from",plotto),
        caption="Data from data.gov.ie and DoHNI | Plot by @VictimOfMaths")
