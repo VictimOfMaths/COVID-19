@@ -198,12 +198,12 @@ ggplot()+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
   annotate("text", x=as.Date("2020-10-01"), y=120, label="Actual deaths")+
-  annotate("text", x=as.Date("2020-12-01"), y=140, label="Modelled deaths")+
+  annotate("text", x=as.Date("2020-12-15"), y=140, label="Modelled deaths")+
   geom_curve(aes(x=as.Date("2020-10-01"), y=117, 
                  xend=as.Date("2020-10-10"), yend=102), curvature=0.15, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
-  geom_curve(aes(x=as.Date("2020-12-01"), y=143, 
-                 xend=as.Date("2020-11-04"), yend=180), curvature=0.25, 
+  geom_curve(aes(x=as.Date("2020-12-15"), y=143, 
+                 xend=as.Date("2020-11-20"), yend=180), curvature=0.25, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
   theme_classic()+
   labs(title=paste0("Even if COVID-19 disappeared today, we'd still expect ", Englabel, 
@@ -257,6 +257,13 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                             "South West", "London", "South East"),
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
+pred.data <- arrange(pred.data, areaName)
+
+reglabs <- data.frame(areaName=unique(pred.data$areaName[pred.data$areaType=="region"]),
+                      total=round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaType=="region"],0))
+reglabs$label <- if_else(reglabs$areaName=="North East", paste0(reglabs$total, " Expected\nfuture deaths"), 
+                         as.character(reglabs$total))
+
 
 tiff("Outputs/COVIDDeathForecastReg.tiff", units="in", width=10, height=10, res=500)
 pred.data %>% 
@@ -264,6 +271,7 @@ pred.data %>%
   ggplot()+
   geom_col(aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_vline(xintercept=as.Date(max.date), linetype=2)+
+  geom_text(data=reglabs, aes(x=as.Date("2020-12-20"), y=40, label=label))+
   scale_x_date(name="")+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
@@ -274,4 +282,5 @@ pred.data %>%
   labs(title="The North is expected to bear the brunt of COVID-19 deaths in the next month",
        subtitle="Modelled COVID-19 deaths in English regions based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
+
 dev.off()
