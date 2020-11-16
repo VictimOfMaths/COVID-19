@@ -768,25 +768,51 @@ plot_grid(admtiles.e2, admbars.e2, align="h", rel_widths=c(1,0.2))
 dev.off()
 
 
-#Map of changes in case rates in the last 7 days:
+#Map of changes in admission and case rates in the last 7 days:
 data.map2 <- data.map %>% 
-  filter(country=="England") %>% 
   mutate(date=as.Date(date)) %>% 
   arrange(code, date) %>% 
   group_by(code) %>% 
   mutate(admchange=admrate_avg-lag(admrate_avg,7)) %>% 
-  filter(date==as.Date("2020-11-05"))
+  filter(date==plotadmto)
 
-map.casechange <- full_join(simplemap, data.map2, by="code", all.y=TRUE)
+data.map3 <- data.map %>% 
+  mutate(date=as.Date(date)) %>% 
+  arrange(code, date) %>% 
+  group_by(code) %>% 
+  mutate(casechange=caserate_avg-lag(caserate_avg,7)) %>% 
+  filter(date==plotto)
+
+map.admchange <- full_join(simplemap, data.map2, by="code", all.y=TRUE)
+map.admchange$date <- as.Date(map.admchange$date)
+
+
+map.casechange <- full_join(simplemap, data.map3, by="code", all.y=TRUE)
 map.casechange$date <- as.Date(map.casechange$date)
 
-#Map of current cases
-tiff("Outputs/COVIDAdmChangeMapUK.tiff", units="in", width=8, height=8, res=500)
+#Map of week-on-week change in cases
+tiff("Outputs/COVIDCasesChangeMapUK.tiff", units="in", width=8, height=10, res=500)
 map.casechange %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=casechange), colour=NA)+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.casechange$casechange)), 
+                         name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
+                         na.value="transparent")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
+  labs(title="Changes in COVID-19 cases across the UK",
+       subtitle=paste0("Change in the rolling 7-day average rate of new confirmed COVID-19\nbetween ", plotto-days(7) , " and ", plotto),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+#Map of week-on-week change in admissions
+tiff("Outputs/COVIDAdmChangeMap.tiff", units="in", width=8, height=8, res=500)
+map.admchange %>% 
   filter(substr(code,1,1)=="E") %>% 
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=admchange), colour=NA)+
-  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.casechange$admchange)), 
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.admchange$admchange)), 
                          name="Change in admissions\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_classic()+
