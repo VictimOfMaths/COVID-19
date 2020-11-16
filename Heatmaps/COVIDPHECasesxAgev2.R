@@ -268,3 +268,20 @@ ggplot()+
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
   
+#regional simple lines
+tiff("Outputs/COVIDCasesxAgeRegLine.tiff", units="in", width=9, height=11, res=500)
+shortdata %>% 
+  filter(areaType=="region" & date>=plotfrom) %>% 
+  ggplot()+
+  geom_line(aes(x=date, y=caserateroll, colour=ageband))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  facet_geo(~areaName, grid=mygrid)+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="New COVID-19 cases are falling in the worst-affected areas,\nbut rising everywhere else in all age groups",
+       subtitle="Rolling 7-day average of confirmed new cases by age",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
