@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "8th November"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-45.xlsx"
-ScotRange <- "AU" #incrememnt by one letter each week
-Weekno <- 45
+ScotDate <- "15th November"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-46.xlsx"
+ScotRange <- "AV" #incrememnt by one letter each week
+Weekno <- 46
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -113,7 +113,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths at home in Scotland are <i style='color:black'>still </i>well above average",
+  labs(title="Rising deaths in Scotland are coming from hospitals",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -370,7 +370,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Excess mortality is confined to the over 65s",
+  labs(title="Excess mortality is confined to the over 45s",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
