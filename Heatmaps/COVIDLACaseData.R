@@ -23,7 +23,7 @@ data <- read.csv("COVID_LA_Plots/LACases.csv")[,-c(1)]
 #EVERYWHERE
 data.all <- data %>% 
   group_by(name) %>% 
-  filter(!name %in% c("England", "Wales", "Scotland", "Northern Ireland") & !is.na(casesroll_avg)) %>% 
+  filter(!Region %in% c("Nation", "Region") & !is.na(casesroll_avg)) %>% 
   mutate(date=as.Date(date), maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -98,7 +98,7 @@ dev.off()
 data.all.recent <- data %>% 
   group_by(name) %>% 
   mutate(date=as.Date(date)) %>% 
-  filter(!name %in% c("England", "Wales", "Scotland", "Northern Ireland") & !is.na(casesroll_avg) & date>as.Date("2020-07-01")) %>% 
+  filter(!Region %in% c("Nation", "Region") & !is.na(casesroll_avg) & date>as.Date("2020-07-01")) %>% 
   mutate(maxcaserate=max(caserate_avg),
          maxcaseday=date[which(caserate_avg==maxcaserate)][1],
          maxcaseprop=caserate_avg/maxcaserate,
@@ -580,7 +580,8 @@ animate(HexAnimUKrate, duration=18, fps=10, width=2000, height=3000, res=300,
         end_pause=60)
 
 #Chloropeth map
-data.map <- subset(data, as.Date(date) %within% interval(completefrom,completeto))
+data.map <- subset(data, as.Date(date) %within% interval(completefrom,completeto)) %>% 
+  filter(!Region %in% c("Nation", "Region"))
 
 #Sort out Buckinghamshire to match hex template
 temp <- subset(data.map, code=="E06000060")
@@ -770,6 +771,7 @@ dev.off()
 
 #Map of changes in admission and case rates in the last 7 days:
 data.map2 <- data.map %>% 
+  filter(country=="England") %>% 
   mutate(date=as.Date(date)) %>% 
   arrange(code, date) %>% 
   group_by(code) %>% 
@@ -783,11 +785,13 @@ data.map3 <- data.map %>%
   mutate(casechange=caserate_avg-lag(caserate_avg,7)) %>% 
   filter(date==plotto)
 
-map.admchange <- full_join(simplemap, data.map2, by="code", all.y=TRUE)
+map.admchange <- full_join(simplemap, data.map2, by="code", all.y=TRUE) %>% 
+  filter(substr(code,1,1)=="E")
 map.admchange$date <- as.Date(map.admchange$date)
 
 
-map.casechange <- full_join(simplemap, data.map3, by="code", all.y=TRUE)
+map.casechange <- full_join(simplemap, data.map3, by="code", all.y=TRUE) %>% 
+  filter(!is.na(casechange)) 
 map.casechange$date <- as.Date(map.casechange$date)
 
 #Map of week-on-week change in cases
@@ -809,7 +813,6 @@ dev.off()
 #Map of week-on-week change in admissions
 tiff("Outputs/COVIDAdmChangeMap.tiff", units="in", width=8, height=8, res=500)
 map.admchange %>% 
-  filter(substr(code,1,1)=="E") %>% 
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=admchange), colour=NA)+
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.admchange$admchange)), 
@@ -819,14 +822,14 @@ map.admchange %>%
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in COVID-19 hospital admissions across England",
-       subtitle="Change in the rolling 7-day average rate of new admissions between 30th October and 5th November",
+       subtitle="Change in the rolling 7-day average rate of new admissions between 5th October and 12th November",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 
 
 
-
+####################################################################################################
 
 
 
