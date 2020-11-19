@@ -786,7 +786,7 @@ data.map3 <- data.map %>%
   filter(date==plotto)
 
 map.admchange <- full_join(simplemap, data.map2, by="code", all.y=TRUE) %>% 
-  filter(substr(code,1,1)=="E")
+  filter(!is.na(admchange))
 map.admchange$date <- as.Date(map.admchange$date)
 
 
