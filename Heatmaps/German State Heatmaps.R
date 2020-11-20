@@ -44,7 +44,6 @@ data_long <- data_long %>%
   filter(!(date==as.Date("2020-09-01") & State=="Bayern" & measure=="cases")) %>% 
   filter(!(date==as.Date("2020-09-01") & State=="Hamburg"))
 
-
 #Some dates are missing, so set up skeleton dataset with all dates
 #Set up skeleton dataframe with dates
 States <- unique(data_long$State)
@@ -103,7 +102,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday & measure=="cases"),
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,20000,40000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -125,11 +124,11 @@ deathtiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reord
         axis.text.y=element_text(colour="Black"))
 
 deathbars <- ggplot(subset(heatmap, date==maxcaseday & measure=="deaths"), 
-                   aes(x=totalcases, y=fct_reorder(State, maxcaseday), fill=totalcases))+
+                    aes(x=totalcases, y=fct_reorder(State, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed deaths", breaks=c(0,1000,2000))+
+  scale_x_continuous(name="Total confirmed deaths")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
