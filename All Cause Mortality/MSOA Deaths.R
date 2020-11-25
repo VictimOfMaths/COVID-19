@@ -9,9 +9,9 @@ library(sf)
 
 #Read in data
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fdeathsinvolvingcovid19bylocalareaanddeprivation%2f1march2020to30june2020/referencetablesworkbook2.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fdeathsinvolvingcovid19bylocalareaanddeprivation%2f1marchand31july2020/referencetables1.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-data <- read_excel(temp, sheet="Table 5", range="A14:U7214", col_names=FALSE)[,c(1,2,3,9,15,21)]
+data <- read_excel(temp, sheet="Table 5", range="A14:X7214", col_names=FALSE)[,c(1,2,3,10,17,24)]
 colnames(data) <- c("code", "ONSName", "Name", "CV19Deaths", "OtherDeaths", "AllDeaths")
 
 #Read in MSOA populations
@@ -99,7 +99,7 @@ dev.off()
 ##################
 #Read in data
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-extra-tables-week-28.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-extra-tables-week-32.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 data.S <- read_excel(temp, sheet="Table S8", range="A5:F1283", col_names=FALSE)
 colnames(data.S) <- c("code", "IZname", "LAname", "CV19Deaths", "pop", "CV19rate")
