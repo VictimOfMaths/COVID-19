@@ -12,19 +12,19 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "13th November"
-ScotDate <- "15th November"
+ScotDate <- "22nd November"
 NIDate <- "13th November"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek462020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-46.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(28%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLS"
 
 #Stupid Excel range controls
 EngRange <- "AV" #increment by one letter each week
-ScotRange <- "AV" #
+ScotRange <- "AW" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "47" #increment by one number each week
