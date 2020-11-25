@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "15th November"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-46.xlsx"
-ScotRange <- "AV" #incrememnt by one letter each week
-Weekno <- 46
+ScotDate <- "22nd November"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
+ScotRange <- "AW" #incrememnt by one letter each week
+Weekno <- 47
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -113,7 +113,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Rising deaths in Scotland are coming from hospitals",
+  labs(title="Deaths in care homes have exceeded 2015-19 levels for the first time since May",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -135,7 +135,7 @@ ggplot(data.loc.new, aes(x=week, y=excess))+
                                               length.out=Weekno), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
-  labs(title="Deaths in Scottish hospitals are rising again",
+  labs(title="Deaths in Scottish care homes are rising again",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -370,7 +370,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Excess mortality is confined to the over 45s",
+  labs(title="Excess mortality is still climbing sharply in the oldest age group",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
