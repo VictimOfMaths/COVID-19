@@ -9,5 +9,7 @@ I've also made a couple of apps to allow you to explore local and national COVID
 
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDLACasesHeatmap.png)
 
+![COVID Cycle England](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDCycleEng.png)
+
 Suggested citation for any of this analysis:<br>
 Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226
