@@ -822,7 +822,7 @@ map.admchange %>%
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in COVID-19 hospital admissions across England",
-       subtitle="Change in the rolling 7-day average rate of new admissions between 5th October and 12th November",
+       subtitle=paste0("Change in the rolling 7-day average rate of new admissions between ", plotadmto-days(7), " and ", plotadmto),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
