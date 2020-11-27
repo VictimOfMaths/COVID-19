@@ -826,8 +826,18 @@ map.admchange %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-
-
+#Line chart of cases by country
+tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=9, height=6, res=500)
+ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01")))+
+  geom_line(aes(x=as.Date(date), y=caserate_avg, colour=country, group=country))+
+  scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  theme_classic()+
+  labs(title="COVID-19 cases in Northern Ireland peaked earlier than the rest of the UK",
+       subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
+       caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
+dev.off()
 
 ####################################################################################################
 
