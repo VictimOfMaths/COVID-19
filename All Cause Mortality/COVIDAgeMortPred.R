@@ -5,6 +5,7 @@ library(ukcovid19) #remotes::install_github("publichealthengland/coronavirus-das
 library(curl)
 library(arrow)
 library(readxl)
+library(RcppRoll)
 library(paletteer)
 library(lubridate)
 library(geofacet)
@@ -16,7 +17,9 @@ deaths <- get_data(filters="areaType=nation", structure=list(date="date",
 
 deaths <- deaths %>% 
   mutate(date=as.Date(date)) %>% 
-  filter(date>as.Date("2020-03-19") & name=="England")
+  filter(date>as.Date("2020-03-19") & name=="England") %>% 
+  #calculate rolling average
+  mutate(deathsroll=roll_mean(deaths, 7, align="center", fill=NA_real_))
 
 #Get age-specific data
 temp <- tempfile()
@@ -191,19 +194,19 @@ ggplot()+
   geom_col(data=subset(pred.data, areaName=="England"),
            aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_line(data=subset(deaths, date>as.Date("2020-09-01") & 
-                          date<=as.Date(max.date)), 
-            aes(x=as.Date(date), y=deaths))+
+                          date<=as.Date(max.date)-days(3)), 
+            aes(x=as.Date(date), y=deathsroll))+
   geom_vline(xintercept=as.Date(max.date), linetype=2)+
   scale_x_date(name="")+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
   annotate("text", x=as.Date("2020-10-01"), y=120, label="Actual deaths")+
-  annotate("text", x=as.Date("2020-12-15"), y=140, label="Modelled deaths")+
-  geom_curve(aes(x=as.Date("2020-10-01"), y=117, 
-                 xend=as.Date("2020-10-10"), yend=102), curvature=0.15, 
+  annotate("text", x=as.Date("2020-12-29"), y=140, label="Modelled deaths")+
+  geom_curve(aes(x=as.Date("2020-10-01"), y=110, 
+                 xend=as.Date("2020-10-12"), yend=102), curvature=0.15, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
-  geom_curve(aes(x=as.Date("2020-12-15"), y=143, 
-                 xend=as.Date("2020-11-20"), yend=180), curvature=0.25, 
+  geom_curve(aes(x=as.Date("2020-12-22"), y=143, 
+                 xend=as.Date("2020-12-05"), yend=180), curvature=0.25, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
   theme_classic()+
   labs(title=paste0("Even if COVID-19 disappeared today, we'd still expect ", Englabel, 
@@ -271,7 +274,7 @@ pred.data %>%
   ggplot()+
   geom_col(aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_vline(xintercept=as.Date(max.date), linetype=2)+
-  geom_text(data=reglabs, aes(x=as.Date("2020-12-20"), y=40, label=label))+
+  geom_text(data=reglabs, aes(x=as.Date("2020-12-27"), y=40, label=label))+
   scale_x_date(name="")+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
