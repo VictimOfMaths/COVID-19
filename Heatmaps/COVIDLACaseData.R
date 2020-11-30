@@ -828,15 +828,34 @@ dev.off()
 
 #Line chart of cases by country
 tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=9, height=6, res=500)
-ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01")))+
+ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01") & as.Date(date)<as.Date("2020-11-24")))+
   geom_line(aes(x=as.Date(date), y=caserate_avg, colour=country, group=country))+
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
-  labs(title="COVID-19 cases in Northern Ireland peaked earlier than the rest of the UK",
+  labs(title="COVID-19 case rates are now highest in Wales",
        subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+#Whole UK bar chart
+tiff("Outputs/COVIDCaseNumbersUK.tiff", units="in", width=8, height=6, res=500)
+data %>% 
+  filter(Region=="Nation") %>% 
+  mutate(date=as.Date(date)) %>% 
+  group_by(date) %>% 
+  summarise(cases=sum(cases), casesroll_avg=sum(casesroll_avg)) %>% 
+  ggplot()+
+  geom_col(aes(x=date, y=cases), fill="skyblue2")+
+  geom_line(aes(x=date, y=casesroll_avg), colour="red")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new cases")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="The number of new COVID-19 cases is falling sharply",
+       subtitle="Daily confirmed new cases across the UK",
+       caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 ####################################################################################################
