@@ -10,6 +10,7 @@
 ![Excess deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/ONSNRSNISRAWeeklyDeathsxReg.png)
 ![MSOA COVID-19 deaths](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVID19MSOAUKv2.png)
 ![Excess deaths in 15-64 year olds across Europe and the USA](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/ExcessEURUSHeatmap15-64.png)
+![Expected COVID deaths in England](https://github.com/VictimOfMaths/COVID-19/blob/master/All%20Cause%20Mortality/COVIDDeathForecastEng.png)
 
 Suggested citation for any of this analysis:<br>
 Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226
