@@ -11,19 +11,19 @@ library(ggtext)
 #A gold star to anyone who can make the range updates for the 3 different Excel files for E&W, Scotland & NI automatic.
 
 #Latest date in the country-specific data
-EWDate <- "13th November"
+EWDate <- "20th November"
 ScotDate <- "22nd November"
 NIDate <- "20th November"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
-Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek462020.xlsx"
+Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek472020.xlsx"
 Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(28%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.xls"
 
 #Stupid Excel range controls
-EngRange <- "AV" #increment by one letter each week
+EngRange <- "AW" #increment by one letter each week
 ScotRange <- "AW" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
@@ -1333,6 +1333,7 @@ temp33 <- as.data.frame(t(read_excel(temp, sheet=11, range="GL9:GL14", col_names
 temp34 <- as.data.frame(t(read_excel(temp, sheet=11, range="GR9:GR14", col_names=FALSE)))
 temp35 <- as.data.frame(t(read_excel(temp, sheet=11, range="GX9:GX14", col_names=FALSE)))
 temp36 <- as.data.frame(t(read_excel(temp, sheet=11, range="HD9:HD14", col_names=FALSE)))
+temp37 <- as.data.frame(t(read_excel(temp, sheet=11, range="HJ9:HJ14", col_names=FALSE)))
 
 colnames(temp1) <- temp1 %>% slice(1) %>% unlist()
 temp1 <- temp1 %>% slice(-1)
@@ -1342,7 +1343,7 @@ temp1 <- temp1 %>% mutate_if(is.factor, as.character) %>% mutate_if(is.character
 data20 <- bind_rows(temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, 
                     temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20,
                     temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29,
-                    temp30, temp31, temp32, temp33, temp34, temp35, temp36)
+                    temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37)
 
 data20$week <- c(12:EWmaxweek)
 
