@@ -6,7 +6,7 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-48.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 endcol <- "AW"
 
@@ -108,7 +108,8 @@ ggplot(data=subset(data, loc=="All"))+
   scale_y_continuous(name="Deaths in 2020 vs. 2015-19 average")+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   theme_classic()+
-  labs(title="COVID-19 is driving rising excess mortality in Scotland",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="COVID-19 deaths in Scotland have fallen",
        subtitle="Registered deaths in 2020 compared to the previous 5-year average",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -122,6 +123,7 @@ ggplot(data=subset(data, loc!="All" & loc!="Other"))+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   facet_wrap(~loc)+
   theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Excess mortality in Scotland by cause and location",
        subtitle="Registered deaths in 2020 compared to the previous 5-year average",
@@ -137,6 +139,7 @@ ggplot(subset(data, loc!="All" & loc!="Other"))+
   scale_y_continuous(name="Deaths in 2020 vs. 2015-19 average")+
   facet_wrap(~cause)+
   theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Elevated levels of home mortality may, to some extent, be displaced cancer deaths",
        subtitle="Excess mortality in Scotland in 2020 by cause and location",
