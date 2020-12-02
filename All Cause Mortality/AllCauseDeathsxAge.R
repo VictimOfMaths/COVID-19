@@ -9,6 +9,8 @@ library(forcats)
 library(ggtext)
 library(HMDHFDplus)
 
+options(scipen=9999)
+
 #Read in data for England & Wales (created by AllCauseMortality.R)
 data.EW <- read.csv("Data/deaths_age_EW.csv")
 
@@ -26,8 +28,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-44.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range="C15:AT21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range="C15:AW21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -144,9 +146,9 @@ data <- bind_rows(data.S, data.EW)
 
 #Read in NI data (for 2020 only)
 temp <- tempfile()
-temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
+temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AN14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AW14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -322,8 +324,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "" 
-password <- ""
+username <- "c.r.angus@sheffield.ac.uk" 
+password <- "1574553541"
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
@@ -454,6 +456,7 @@ fulldata <- fulldata %>% filter(country!="Northern Ireland")
 #Tidy up names
 fulldata$country <- case_when(
   fulldata$country=="AUT" ~ "Austria",
+  fulldata$country=="AUS2" ~ "Australia",
   fulldata$country=="BEL" ~ "Belgium",
   fulldata$country=="BGR" ~ "Bulgaria",
   fulldata$country=="CAN" ~ "Canada",
@@ -484,6 +487,7 @@ fulldata$country <- case_when(
   fulldata$country=="SWE" ~ "Sweden",
   fulldata$country=="SVK" ~ "Slovakia",
   fulldata$country=="SVN" ~ "Slovenia",
+  fulldata$country=="TWN" ~ "Taiwan",
   TRUE ~ fulldata$country)
 
 #Remove most recent week of data for FIN, FRA, KOR, NOR, SVK, SWE and USA which is wonky/underreported
@@ -550,9 +554,9 @@ ggplot(subset(fulldata, age=="15-64"))+
   scale_x_continuous(name="Week number", breaks=c(0,10,20), limits=c(0,29))+
   scale_y_continuous("Excess weekly deaths per 100,000 vs. 2010-19 average")+
   theme_classic()+
-  scale_colour_manual(values=c(rep("Grey90", times=4), "#D43F3A", rep("Grey90", times=3), "#46B8DA", 
+  scale_colour_manual(values=c(rep("Grey90", times=5), "#D43F3A", rep("Grey90", times=3), "#46B8DA", 
                                rep("Grey90", times=14), "#357EBD", rep("Grey90", times=3),
-                               "#9632B8", rep("Grey90", times=3), "#EEA236", rep("Grey90", times=2), 
+                               "#9632B8", rep("Grey90", times=3), "#EEA236", rep("Grey90", times=3), 
                                "#5CB85C"), name="Country")+
   labs(title="Some of these countries are not like the others",
        subtitle="Excess mortality rates in 15-64 year-olds in 2020",
@@ -659,7 +663,7 @@ ggplot(subset(natdata, !country %in% c("Iceland") & week<53))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
-  labs(title="Excess mortality rates across Europe, USA, Chile, South Korea and New Zealand",
+  labs(title="Excess mortality rates around the world",
        subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
@@ -695,7 +699,7 @@ plotdata <- plotdata%>%
 
 tileplot <- ggplot()+
   geom_tile(data=plotdata, aes(x=week, y=country, fill=excess_r))+
-  scale_x_continuous(limits=c(0,46), breaks=c(0,5,10,15,20,25,30,35,40,45), name="Week")+
+  scale_x_continuous(limits=c(0,50), breaks=c(0,5,10,15,20,25,30,35,40,45,50), name="Week")+
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("pals::kovesi.diverging_gwr_55_95_c38", limit=c(-1,1)*max(abs(plotdata$excess_r)), 
                          name="Weekly excess deaths\nper 100,000")+
