@@ -324,8 +324,8 @@ fulldata <- merge(hist.mergeddata, subset(mergeddata, year==2020), all.x=TRUE, a
 data.FR <- read.csv("Data/deaths_age_France.csv")[,-c(1)]
 
 #Bring in French population from HMD (need to register and put your details in here)
-username <- "c.r.angus@sheffield.ac.uk" 
-password <- "1574553541"
+username <- "" 
+password <- ""
 
 FraPop <- readHMDweb(CNTRY="FRATNP", "Exposures_1x1", username, password)
 
