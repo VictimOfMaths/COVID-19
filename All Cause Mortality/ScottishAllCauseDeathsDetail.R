@@ -8,10 +8,10 @@ library(readxl)
 library(ggtext)
 
 #Controls
-ScotDate <- "22nd November"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
-ScotRange <- "AW" #incrememnt by one letter each week
-Weekno <- 47
+ScotDate <- "29th November"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-48.xlsx"
+ScotRange <- "AX" #incrememnt by one letter each week
+Weekno <- 48
 
 #Read in 2015-2019 location data
 temp <- tempfile()
@@ -113,11 +113,12 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in care homes have exceeded 2015-19 levels for the first time since May",
+  labs(title="Deaths in Scotland have fallen across all settings",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.subtitle =element_markdown(), plot.title =element_markdown())
+        plot.subtitle =element_markdown(), plot.title =element_text(face="bold", size=rel(1.2)))
+
 dev.off()
 
 #Calculate excess deaths vs. average
@@ -135,10 +136,10 @@ ggplot(data.loc.new, aes(x=week, y=excess))+
                                               length.out=Weekno), "%d/%m/%y")))+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
-  labs(title="Deaths in Scottish care homes are rising again",
+  labs(title="Deaths are above 'normal' levels in all settings",
        subtitle="Weekly deaths in 2020 compared to the average in 2015-19",
        caption="Data from NRS | Plot by @VictimOfMaths")+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
 #Plot HB data
@@ -188,7 +189,7 @@ ggplot(data.HB.old)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause mortality in Glasgow looks very different to the rest of Scotland",
+  labs(title="All-cause mortality is falling across most of the country, but not everywhere",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text, aes(x=weekno, y=deaths), label=c(paste0(round(excess[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (+",
@@ -221,7 +222,7 @@ ggplot(data.HB.old)+
                                                                    round(excess[14,4]*100, 0),"%)")),
             size=3, colour=rep("red", times=14), hjust=0)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.subtitle =element_markdown())
+        plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))
 
 dev.off()
 
@@ -370,7 +371,7 @@ ggplot(data.age)+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Excess mortality is still climbing sharply in the oldest age group",
+  labs(title="Excess mortality has fallen most sharply in the oldest age group",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
