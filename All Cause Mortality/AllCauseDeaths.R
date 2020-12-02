@@ -12,19 +12,19 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "20th November"
-ScotDate <- "22nd November"
+ScotDate <- "29th November"
 NIDate <- "20th November"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek472020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-48.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(28%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.xls"
 
 #Stupid Excel range controls
 EngRange <- "AW" #increment by one letter each week
-ScotRange <- "AW" #
+ScotRange <- "AX" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "47" #increment by one number each week
@@ -973,7 +973,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause mortality is rising across all age groups over 45",
+  labs(title="All-cause mortality appears to have levelled off in the under 75s",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, "."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -1026,7 +1026,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in Scotland are rising (slowly) again",
+  labs(title="All-cause deaths in Scotland have started to fall again",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0(round(S.excess$excess, 0), 
@@ -1036,7 +1036,7 @@ ggplot()+
   annotate(geom="text", x=48, y=850, label="Historic mean", colour="grey30")+
   geom_curve(aes(x=48, y=900, xend=47, yend=1050), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
-  theme(plot.subtitle =element_markdown())
+  theme(plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))
 
 dev.off()  
 
