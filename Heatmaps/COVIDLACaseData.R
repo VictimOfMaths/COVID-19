@@ -679,9 +679,9 @@ map.cases %>%
   ylim(5337,620000)+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-        axis.title=element_blank())+
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Rates of confirmed new COVID-19 admissions in England",
-       subtitle=paste0("Rolling 7-day average of confirmed new hospital admissions with COVID-19 per 100,000 at Local Authority level\nData up to ", completeto),
+       subtitle=paste0("Rolling 7-day average of confirmed new hospital admissions with COVID-19 per 100,000 at Local Authority level\nData up to ", admmaxdate),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
@@ -847,7 +847,7 @@ map.admchange %>%
 dev.off()
 
 #Line chart of cases by country
-tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=9, height=6, res=500)
+tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=10, height=6, res=500)
 ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01") & as.Date(date)<plotto-days(1)))+
   geom_line(aes(x=as.Date(date), y=caserate_avg, colour=country, group=country))+
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
@@ -879,6 +879,76 @@ tiff("Outputs/COVIDCaseNumbersUK.tiff", units="in", width=8, height=6, res=500)
   labs(title="The decline in new COVID-19 cases may be slowing down",
        subtitle="Daily confirmed new cases across the UK",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+#Map of COVID deaths rates and changes in COVID death rates
+#Read in mortality data
+mortdata <- read.csv("COVID_LA_Plots/LAExcess.csv")
+
+maxweek <- 47
+
+#Collapse to LA level
+mortdata <- mortdata %>% 
+  group_by(week, name, code) %>% 
+  filter(measure=="Registrations") %>% 
+  summarise(deaths=sum(COVID.20), pop=unique(pop)) %>% 
+  group_by(name, code) %>% 
+  mutate(mortrate=deaths*100000/pop,
+         mortratechange=mortrate-lag(mortrate, 1, order_by=week)) %>% 
+  ungroup() %>% 
+  filter(week==maxweek)
+
+#Sort out Buckinghamshire to match map template
+temp <- subset(mortdata, code=="E06000060")
+
+mortdata$code <- if_else(mortdata$code=="E06000060", "E07000004", as.character(mortdata$code))
+mortdata$name <- if_else(mortdata$name=="Buckinghamshire", "Aylesbury Vale", as.character(mortdata$name))
+
+temp1 <- temp
+temp1$code <- "E07000005"
+temp1$name <- "Chiltern"
+
+temp2 <- temp
+temp2$code <- "E07000006"
+temp2$name <- "South Bucks"
+
+temp$code <- "E07000007"
+temp$name <- "Wycombe"
+
+mortdata <- bind_rows(mortdata, temp, temp1, temp2)
+
+mortmap.data <- full_join(simplemap, mortdata, by="code", all.y=TRUE)
+
+#Map of death rates
+tiff("Outputs/COVIDMortrateMapUK.tiff", units="in", width=8, height=7.5, res=500)
+mortmap.data %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=mortrate), colour=NA)+
+  scale_fill_distiller(palette="Spectral", name="COVID-19 deaths\nper 100,000",
+                       na.value="transparent")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Rates of confirmed COVID-19 deaths in Great Britain",
+       subtitle=paste0("Weekly rates of deaths recorded as due to COVID-19 on the death certificate\nData up to ", as.Date("2020-01-03")+weeks(maxweek)),
+       caption="Data from ONS & NRS | Plot by @VictimOfMaths")
+
+dev.off()
+
+#Map of week-on-week change in death rates
+tiff("Outputs/COVIDMortChangeMap.tiff", units="in", width=8, height=8, res=500)
+mortmap.data %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=mortratechange), colour=NA)+
+  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(mortmap.data$mortratechange)), 
+                         name="Change in deaths\nper week per 100,000\nvs. the previous week", direction=-1,
+                         na.value="transparent")+
+  theme_classic()+
+  theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
+  labs(title="Changes in confirmed COVID-19 deaths in Great Britain",
+       subtitle=paste0("Change in the rates of deaths recorded as due to COVID-19 between weeks ", maxweek, " & ",maxweek-1,"\nData up to ", as.Date("2020-01-03")+weeks(maxweek)),
+       caption="Data from ONS & NRS | Plot by @VictimOfMaths")
 dev.off()
 
 ####################################################################################################
