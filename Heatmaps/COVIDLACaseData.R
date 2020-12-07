@@ -7,6 +7,7 @@ library(ggridges)
 library(geojsonio)
 library(broom)
 library(sf)
+library(scales)
 library(curl)
 library(rmapshaper)
 library(gganimate)
@@ -41,7 +42,8 @@ casetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), f
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
@@ -71,7 +73,8 @@ ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), f
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 case rates in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
@@ -113,7 +116,8 @@ casetiles.all.recent <- ggplot(data.all.recent, aes(x=date, y=fct_reorder(name, 
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
@@ -160,7 +164,8 @@ casetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in English Local Authorities",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health England | Plot by @VictimOfMaths")+
@@ -188,7 +193,8 @@ ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 case rates in Local Authorities in England",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE | Plot by @VictimOfMaths")+
@@ -216,7 +222,8 @@ admtiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=ma
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotadmto)%/% months(1)))+
   labs(title="Timelines for COVID-19 admissions in English Local Authorities",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new admissions Bars on the right represent the absolute number of admissions in each LA.\nData updated to ", 
                        plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
@@ -246,7 +253,8 @@ admratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fil
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotadmto)%/% months(1)))+
   labs(title="Timelines for COVID-19 admission rates in Local Authorities in England",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", 
                        plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
@@ -291,7 +299,8 @@ casetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Welsh Local Authorities",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Wales | Plot by @VictimOfMaths")+
@@ -315,7 +324,8 @@ ggplot(data.w, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
   geom_density_ridges_gradient(stat="identity")+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Welsh Local Authorities",
        caption="Data from Public Health Wales | Plot by @VictimOfMaths")
@@ -326,7 +336,8 @@ ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 case rates in Local Authorities in Wales",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHW | Plot by @VictimOfMaths")+
@@ -366,7 +377,8 @@ casetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Scottish Coucils",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Council area.\nCouncils are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Council area.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")+
@@ -390,7 +402,8 @@ ggplot(data.s, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg
   geom_density_ridges_gradient(stat="identity")+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Scottish Council areas",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
@@ -401,7 +414,8 @@ ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 case rates in Council Areas in Scotland",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHS | Plot by @VictimOfMaths")+
@@ -441,7 +455,8 @@ casetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fil
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Northern Irish Local Authoritiess",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nAuthorities are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Local Authority.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Department of Health NI | Plot by @VictimOfMaths")+
@@ -465,7 +480,8 @@ ggplot(data.ni, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_av
   geom_density_ridges_gradient(stat="identity")+
   theme_classic()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Northern Irish Local Authorities",
        caption="Data from Department of Health NI | Plot by @VictimOfMaths")
@@ -476,7 +492,8 @@ ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fil
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 case rates in Local Authorities in Northern Ireland",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000 population.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of the LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from DoHNI | Plot by @VictimOfMaths")+
@@ -628,7 +645,7 @@ filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "
   scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
   theme_classic()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-        axis.title=element_blank())+
+        axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Confirmed new COVID-19 cases in the UK",
        subtitle=paste0("Rolling 7-day average of confirmed new cases at Local Authority/Council Area level\nData up to ", completeto),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
@@ -642,7 +659,7 @@ map.cases %>%
   scale_fill_distiller(palette="Spectral", name="Daily cases\nper 100,000\n(rolling 7-day avg.)")+
   theme_classic()+
     theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
-          axis.title=element_blank())+
+          axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Rates of confirmed new COVID-19 cases in the UK",
        subtitle=paste0("Rolling 7-day average of confirmed new cases per 100,000 at Local Authority/Council Area level\nData up to ", completeto),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
@@ -685,7 +702,8 @@ casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=m
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered from North to South. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
@@ -713,12 +731,13 @@ ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=c
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases per 100,000.\nLAs are ordered from North to South. Bars on the right represent the population each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
 
 ratebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
   geom_col(show.legend=FALSE)+
@@ -743,13 +762,14 @@ admtiles.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg)), aes(x=date, y=fct_
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
-  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0))+
+  scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotadmto)%/% months(1)))+
   labs(title="Timelines for COVID-19 admissions in Local Authorities in England",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed hospital admissions per 100,000 population.\nLAs are ordered from North to South. Bars on the right represent the population of the LA.\nData updated to ", 
                        plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed.\nAdmissions are defined as patients admitted with a positive COVID-19 diagnosis, or those diagnosed in hospital"),
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
 
 admbars.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg) & date==maxadmday), 
                      aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
@@ -828,32 +848,35 @@ dev.off()
 
 #Line chart of cases by country
 tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=9, height=6, res=500)
-ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01") & as.Date(date)<as.Date("2020-11-24")))+
+ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01") & as.Date(date)<plotto-days(1)))+
   geom_line(aes(x=as.Date(date), y=caserate_avg, colour=country, group=country))+
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="COVID-19 case rates are now highest in Wales",
        subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 #Whole UK bar chart
-tiff("Outputs/COVIDCaseNumbersUK.tiff", units="in", width=8, height=6, res=500)
-data %>% 
+bardata <- data %>% 
   filter(Region=="Nation") %>% 
   mutate(date=as.Date(date)) %>% 
   group_by(date) %>% 
-  summarise(cases=sum(cases), casesroll_avg=sum(casesroll_avg)) %>% 
+  summarise(cases=sum(cases), casesroll_avg=sum(casesroll_avg))
+
+tiff("Outputs/COVIDCaseNumbersUK.tiff", units="in", width=8, height=6, res=500)
   ggplot()+
-  geom_col(aes(x=date, y=cases), fill="skyblue2")+
-  geom_line(aes(x=date, y=casesroll_avg), colour="red")+
-  scale_x_date(name="")+
+  geom_col(data=subset(bardata, date<=plotto),aes(x=date, y=cases), fill="skyblue2")+
+  geom_line(data=subset(bardata, date<=plotto-days(3)), aes(x=date, y=casesroll_avg), colour="red")+
+  scale_x_date(name="", 
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_continuous(name="Daily new cases")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of new COVID-19 cases is falling sharply",
+  labs(title="The decline in new COVID-19 cases may be slowing down",
        subtitle="Daily confirmed new cases across the UK",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
