@@ -6,9 +6,9 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-48.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-49.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-endcol <- "AX"
+endcol <- "AY"
 
 #Historic data for all locations
 all.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B7:",endcol,"12"), col_names=FALSE)
@@ -109,7 +109,7 @@ ggplot(data=subset(data, loc=="All"))+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 deaths in Scotland have fallen",
+  labs(title="COVID-19 deaths in Scotland have fallen, but only slightly",
        subtitle="Registered deaths in 2020 compared to the previous 5-year average",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
 dev.off()
