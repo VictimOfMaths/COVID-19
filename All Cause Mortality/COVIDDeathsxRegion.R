@@ -5,6 +5,7 @@ library(ukcovid19) #remotes::install_github("publichealthengland/coronavirus-das
 library(paletteer)
 library(RcppRoll)
 library(lubridate)
+library(scales)
 
 #Get daily regional death data
 deaths.reg <- get_data(filters="areaType=region", structure=list(date="date",
@@ -36,12 +37,13 @@ deaths.reg %>%
 ggplot()+
   geom_line(aes(x=date, y=mortrateroll, colour=name))+
   theme_classic()+
-  scale_x_date(name="")+
+  scale_x_date(name="", breaks=breaks_pretty(n=interval(min(deaths.reg$date, na.rm=TRUE), maxdate-days(3))%/% months(1)))+
   scale_y_continuous(name="Daily COVID-19 deaths per 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="Region")+
   labs(title="The 'second wave' is more geographically unequal",
        subtitle="Daily deaths per 100,000 within 28 days of a positive COVID-19 test",
-       caption="Data from PHE | Plot by @VictimOfMaths")
+       caption="Data from PHE | Plot by @VictimOfMaths")+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
 #Pull out peak Spring and Autumn deaths for each region
@@ -61,6 +63,7 @@ ggplot(peaks)+
   scale_y_continuous(limits=c(0,2.5), name="Peak Autumn mortality rate\n7-day rolling average")+
   labs(title="Correlation between the Spring and Autumn peaks is fairly weak",
        subtitle="Deaths per 100,000 within 28 days of a positive COVID-19 test",
-       caption="Date from PHE | Plot by @VictimOfMaths")
+       caption="Date from PHE | Plot by @VictimOfMaths")+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
