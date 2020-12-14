@@ -25,8 +25,8 @@ data_long$date <- as.Date(substr(data_long$time_iso8601, 1, 10))
 data_long$State <- case_when(
   data_long$State=="DE.BW" ~ "Baden-Württemberg",
   data_long$State=="DE.BY" ~ "Bayern",
-  data_long$State=="DE.BE" ~ "Brandenburg",
-  data_long$State=="DE.BB" ~ "Berlin",
+  data_long$State=="DE.BB" ~ "Brandenburg",
+  data_long$State=="DE.BE" ~ "Berlin",
   data_long$State=="DE.HB" ~ "Bremen",
   data_long$State=="DE.HH" ~ "Hamburg",
   data_long$State=="DE.HE" ~ "Hessen",
@@ -35,9 +35,9 @@ data_long$State <- case_when(
   data_long$State=="DE.NW" ~ "Nordrhein-Westfalen",
   data_long$State=="DE.RP" ~ "Rheinland-Pfalz",
   data_long$State=="DE.SL" ~ "Saarland",
-  data_long$State=="DE.SN" ~ "Sachsen-Anhalt",
-  data_long$State=="DE.SH" ~ "Sachsen",
-  data_long$State=="DE.ST" ~ "Schleswig-Holstein",
+  data_long$State=="DE.ST" ~ "Sachsen-Anhalt",
+  data_long$State=="DE.SN" ~ "Sachsen",
+  data_long$State=="DE.SH" ~ "Schleswig-Holstein",
   data_long$State=="DE.TH" ~ "Thüringen")
 
 
@@ -135,9 +135,9 @@ dev.off()
 
 #Plot case rate version
 caseratetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reorder(State, maxcaseday), fill=caserate_avg))+
-  geom_tile(colour="White", show.legend=FALSE)+
+  geom_tile(colour="White")+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral")+
+  scale_fill_distiller(palette="Spectral", name="Daily Cases\nper 100,000")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 case rates in German Bundesländer",
@@ -145,6 +145,10 @@ caseratetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reo
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
+
+caselegend <- get_legend(
+  caseratetiles + theme(legend.box.margin = margin(0, 0, 0, 12))
+)
 
 caseratebars <- ggplot(subset(heatmap, date==maxcaseday & measure=="cases"), 
                    aes(x=pop/1000000, y=fct_reorder(State, maxcaseday), fill=pop))+
@@ -155,8 +159,9 @@ caseratebars <- ggplot(subset(heatmap, date==maxcaseday & measure=="cases"),
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
-tiff("Outputs/COVIDGermanStateCaseRateHeatmap.tiff", units="in", width=11, height=6, res=500)
-plot_grid(caseratetiles, caseratebars, align="h", rel_widths=c(1,0.2))
+tiff("Outputs/COVIDGermanStateCaseRateHeatmap.tiff", units="in", width=13, height=6, res=500)
+plot <- plot_grid(caseratetiles+theme(legend.position="none"), caseratebars, align="h", rel_widths=c(1,0.2))
+plot_grid(plot, caselegend, rel_widths=c(1,0.1))
 dev.off()
 
 #Plot death trajectories
@@ -187,9 +192,9 @@ dev.off()
 
 #Death rates
 deatratetiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reorder(State, maxcaseday), fill=caserate_avg))+
-  geom_tile(colour="White", show.legend=FALSE)+
+  geom_tile(colour="White")+
   theme_classic()+
-  scale_fill_distiller(palette="Spectral")+
+  scale_fill_distiller(palette="Spectral", name="Daily deaths\nper 100,000")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   labs(title="Timelines for COVID-19 death rates in German Bundesländer",
@@ -198,8 +203,13 @@ deatratetiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_re
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"))
 
+deathlegend <- get_legend(
+  deatratetiles + theme(legend.box.margin = margin(0, 0, 0, 12))
+)
+
 tiff("Outputs/COVIDGermanStateDeathRateHeatmap.tiff", units="in", width=11, height=6, res=500)
-plot_grid(deatratetiles, caseratebars, align="h", rel_widths=c(1,0.2))
+plot <- plot_grid(deatratetiles+theme(legend.position="none"), caseratebars, align="h", rel_widths=c(1,0.2))
+plot_grid(plot, deathlegend, rel_widths=c(1,0.1))
 dev.off()
 
 #Try them as ridgeplots
