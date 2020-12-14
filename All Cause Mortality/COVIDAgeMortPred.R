@@ -74,22 +74,40 @@ pred.data <- data %>%
   #Bring in latest CFR estimates from Daniel Howden
   #https://twitter.com/danc00ks0n/status/1323057097815240706
   mutate(CFR=case_when(
-    age %in% c("0-4", "5-9", "10-14", "15-19") ~ 0,
-    age=="20-24" ~ 0.004,
-    age=="25-29" ~ 0.006,
-    age=="30-34" ~ 0.029,
-    age=="35-39" ~ 0.034,
-    age=="40-44" ~ 0.115,
-    age=="45-49" ~ 0.142,
-    age=="50-54" ~ 0.256,
-    age=="55-59" ~ 0.463,
-    age=="60-64" ~ 1.289,
-    age=="65-69" ~ 3.358,
-    age=="70-74" ~ 7.736,
-    age=="75-79" ~ 14.509,
-    age=="80-84" ~ 21.438,
-    age=="85-89" ~ 25.081,
-    age=="90+" ~ 27.516),
+    #age %in% c("0-4", "5-9", "10-14", "15-19") ~ 0,
+    #age=="20-24" ~ 0.004,
+    #age=="25-29" ~ 0.006,
+    #age=="30-34" ~ 0.029,
+    #age=="35-39" ~ 0.034,
+    #age=="40-44" ~ 0.115,
+    #age=="45-49" ~ 0.142,
+    #age=="50-54" ~ 0.256,
+    #age=="55-59" ~ 0.463,
+    #age=="60-64" ~ 1.289,
+    #age=="65-69" ~ 3.358,
+    #age=="70-74" ~ 7.736,
+    #age=="75-79" ~ 14.509,
+    #age=="80-84" ~ 21.438,
+    #age=="85-89" ~ 25.081,
+    #age=="90+" ~ 27.516),
+    #New CFRs from Dan
+    age %in% c("0-4", "5-9", "10-14") ~ 0,
+    age=="15-19" ~ 0.00119,
+    age=="20-24" ~ 0.00642,
+    age=="25-29" ~ 0.01134,
+    age=="30-34" ~ 0.023,
+    age=="35-39" ~ 0.03959,
+    age=="40-44" ~ 0.08905,
+    age=="45-49" ~ 0.17096,
+    age=="50-54" ~ 0.29612,
+    age=="55-59" ~ 0.58639,
+    age=="60-64" ~ 1.3149,
+    age=="65-69" ~ 3.47515,
+    age=="70-74" ~ 7.43305,
+    age=="75-79" ~ 14.41538,
+    age=="80-84" ~ 22.23822,
+    age=="85-89" ~ 27.71822,
+    age=="90+" ~ 32.62156),
     tot.deaths=cases*CFR/100) %>% 
   #Calculate 7-day rolling average of cases
   group_by(areaCode, areaName, areaType, age) %>% 
@@ -189,8 +207,7 @@ area.pred.deaths.total <- pred.data %>%
 #Plot age-specific forecasts for England
 Englabel <- round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName=="England"],0)
 
-tiff("Outputs/COVIDDeathForecastEng.tiff", units="in", width=10, height=8, res=500)
-ggplot()+
+EngPlot <- ggplot()+
   geom_col(data=subset(pred.data, areaName=="England"),
            aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_line(data=subset(deaths, date>as.Date("2020-09-01") & 
@@ -201,12 +218,12 @@ ggplot()+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
   annotate("text", x=as.Date("2020-10-01"), y=120, label="Actual deaths")+
-  annotate("text", x=as.Date("2020-12-29"), y=140, label="Modelled deaths")+
+  annotate("text", x=as.Date("2021-01-15"), y=140, label="Modelled deaths")+
   geom_curve(aes(x=as.Date("2020-10-01"), y=110, 
                  xend=as.Date("2020-10-12"), yend=102), curvature=0.15, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
-  geom_curve(aes(x=as.Date("2020-12-22"), y=143, 
-                 xend=as.Date("2020-12-05"), yend=180), curvature=0.25, 
+  geom_curve(aes(x=as.Date("2021-01-09"), y=143, 
+                 xend=as.Date("2020-12-20"), yend=180), curvature=0.25, 
              arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
   theme_classic()+
   labs(title=paste0("Even if COVID-19 disappeared today, we'd still expect ", Englabel, 
@@ -214,11 +231,17 @@ ggplot()+
        subtitle="Modelled COVID-19 deaths in England based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
+tiff("Outputs/COVIDDeathForecastEng.tiff", units="in", width=10, height=8, res=500)
+EngPlot
+dev.off()
+
+png("Outputs/COVIDDeathForecastEng.png", units="in", width=10, height=8, res=500)
+EngPlot
 dev.off()
 
 #Plot age distribution of forecasted deaths for England
 
-tiff("Outputs/COVIDDeathForecastEngxAge.tiff", units="in", width=8, height=6, res=500)
+tiff("Outputs/COVIDDeathForecastEngxAge.tiff", units="in", width=10, height=6, res=500)
 area.pred.deathsxage %>% 
   filter(areaName=="England") %>% 
   ggplot()+
@@ -235,7 +258,7 @@ area.pred.deathsxage %>%
 dev.off()
 
 #Plot age-specific forecasts for anywhere you like
-area <- "Sheffield"
+area <- "Liverpool"
 Plotlabel <- unique(round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName==area],0))
 
 tiff(paste0("Outputs/COVIDDeathForecast",area,".tiff"), units="in", width=10, height=8, res=500)
@@ -274,7 +297,7 @@ pred.data %>%
   ggplot()+
   geom_col(aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_vline(xintercept=as.Date(max.date), linetype=2)+
-  geom_text(data=reglabs, aes(x=as.Date("2020-12-27"), y=40, label=label))+
+  geom_text(data=reglabs, aes(x=as.Date("2021-01-12"), y=40, label=label))+
   scale_x_date(name="")+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
@@ -282,7 +305,7 @@ pred.data %>%
   theme_classic()+
   theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The North is expected to bear the brunt of COVID-19 deaths in the next month",
+  labs(title="The North has passed its peak, the South East's is yet to come",
        subtitle="Modelled COVID-19 deaths in English regions based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
