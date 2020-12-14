@@ -860,6 +860,20 @@ ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2020-08-01") & as.
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+#Line chart of cases by region
+tiff("Outputs/COVIDCaseRateReg.tiff", units="in", width=12, height=6, res=500)
+ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2020-08-01") & as.Date(date)<plotto-days(1)))+
+  geom_line(aes(x=as.Date(date), y=caserate_avg, colour=name, group=name))+
+  scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="COVID-19 case rates are highest and rising in and around London",
+       subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
+       caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
 #Whole UK bar chart
 bardata <- data %>% 
   filter(Region=="Nation") %>% 
