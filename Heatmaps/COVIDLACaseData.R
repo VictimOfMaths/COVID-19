@@ -639,7 +639,7 @@ map.cases$date <- as.Date(map.cases$date)
 #Map of current cases
 tiff("Outputs/COVIDCaseMapUK.tiff", units="in", width=8, height=12, res=500)
 map.cases %>% 
-filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
+filter(date==completeto-days(3) & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=casesroll_avg), colour=NA)+
   scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
@@ -647,13 +647,13 @@ filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Confirmed new COVID-19 cases in the UK",
-       subtitle=paste0("Rolling 7-day average of confirmed new cases at Local Authority/Council Area level\nData up to ", completeto),
+       subtitle=paste0("Rolling 7-day average of confirmed new cases at Local Authority/Council Area level\nData up to ", completeto-days(3)),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
 dev.off()
   
 tiff("Outputs/COVIDCaserateMapUK.tiff", units="in", width=8, height=12, res=500)
 map.cases %>% 
-  filter(date==completeto & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
+  filter(date==completeto-days(3) & !name %in% c("England", "Wales", "Northern Ireland", "Scotland")) %>% 
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=caserate_avg), colour=NA)+
   scale_fill_distiller(palette="Spectral", name="Daily cases\nper 100,000\n(rolling 7-day avg.)")+
@@ -661,7 +661,7 @@ map.cases %>%
     theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
           axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Rates of confirmed new COVID-19 cases in the UK",
-       subtitle=paste0("Rolling 7-day average of confirmed new cases per 100,000 at Local Authority/Council Area level\nData up to ", completeto),
+       subtitle=paste0("Rolling 7-day average of confirmed new cases per 100,000 at Local Authority/Council Area level\nData up to ", completeto-days(3)),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")
 dev.off()
 
@@ -803,7 +803,7 @@ data.map3 <- data.map %>%
   arrange(code, date) %>% 
   group_by(code) %>% 
   mutate(casechange=caserate_avg-lag(caserate_avg,7)) %>% 
-  filter(date==plotto)
+  filter(date==plotto-days(3))
 
 map.admchange <- full_join(simplemap, data.map2, by="code", all.y=TRUE) %>% 
   filter(!is.na(admchange))
@@ -826,7 +826,7 @@ map.casechange %>%
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in COVID-19 cases across the UK",
-       subtitle=paste0("Change in the rolling 7-day average rate of new confirmed COVID-19\nbetween ", plotto-days(7) , " and ", plotto),
+       subtitle=paste0("Change in the rolling 7-day average rate of new confirmed COVID-19\nbetween ", plotto-days(10) , " and ", plotto-days(3)),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
@@ -874,6 +874,7 @@ ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2020-08-01") & as.
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+
 #Whole UK bar chart
 bardata <- data %>% 
   filter(Region=="Nation") %>% 
@@ -899,7 +900,7 @@ dev.off()
 #Read in mortality data
 mortdata <- read.csv("COVID_LA_Plots/LAExcess.csv")
 
-maxweek <- 47
+maxweek <- 49
 
 #Collapse to LA level
 mortdata <- mortdata %>% 
