@@ -72,42 +72,42 @@ pred.data <- data %>%
   filter(date>as.Date("2020-09-01")-days(75)) %>% 
   bind_rows(future) %>% 
   #Bring in latest CFR estimates from Daniel Howden
-  #https://twitter.com/danc00ks0n/status/1323057097815240706
+  #https://twitter.com/danielhowdon/status/1321369114615664642
   mutate(CFR=case_when(
-    #age %in% c("0-4", "5-9", "10-14", "15-19") ~ 0,
-    #age=="20-24" ~ 0.004,
-    #age=="25-29" ~ 0.006,
-    #age=="30-34" ~ 0.029,
-    #age=="35-39" ~ 0.034,
-    #age=="40-44" ~ 0.115,
-    #age=="45-49" ~ 0.142,
-    #age=="50-54" ~ 0.256,
-    #age=="55-59" ~ 0.463,
-    #age=="60-64" ~ 1.289,
-    #age=="65-69" ~ 3.358,
-    #age=="70-74" ~ 7.736,
-    #age=="75-79" ~ 14.509,
-    #age=="80-84" ~ 21.438,
-    #age=="85-89" ~ 25.081,
-    #age=="90+" ~ 27.516),
+    age %in% c("0-4", "5-9", "10-14", "15-19") ~ 0,
+    age=="20-24" ~ 0.004,
+    age=="25-29" ~ 0.006,
+    age=="30-34" ~ 0.029,
+    age=="35-39" ~ 0.034,
+    age=="40-44" ~ 0.115,
+    age=="45-49" ~ 0.142,
+    age=="50-54" ~ 0.256,
+    age=="55-59" ~ 0.463,
+    age=="60-64" ~ 1.289,
+    age=="65-69" ~ 3.358,
+    age=="70-74" ~ 7.736,
+    age=="75-79" ~ 14.509,
+    age=="80-84" ~ 21.438,
+    age=="85-89" ~ 25.081,
+    age=="90+" ~ 27.516),
     #New CFRs from Dan
-    age %in% c("0-4", "5-9", "10-14") ~ 0,
-    age=="15-19" ~ 0.00119,
-    age=="20-24" ~ 0.00642,
-    age=="25-29" ~ 0.01134,
-    age=="30-34" ~ 0.023,
-    age=="35-39" ~ 0.03959,
-    age=="40-44" ~ 0.08905,
-    age=="45-49" ~ 0.17096,
-    age=="50-54" ~ 0.29612,
-    age=="55-59" ~ 0.58639,
-    age=="60-64" ~ 1.3149,
-    age=="65-69" ~ 3.47515,
-    age=="70-74" ~ 7.43305,
-    age=="75-79" ~ 14.41538,
-    age=="80-84" ~ 22.23822,
-    age=="85-89" ~ 27.71822,
-    age=="90+" ~ 32.62156),
+    #age %in% c("0-4", "5-9", "10-14") ~ 0,
+    #age=="15-19" ~ 0.00119,
+    #age=="20-24" ~ 0.00642,
+    #age=="25-29" ~ 0.01134,
+    #age=="30-34" ~ 0.023,
+    #age=="35-39" ~ 0.03959,
+    #age=="40-44" ~ 0.08905,
+    #age=="45-49" ~ 0.17096,
+    #age=="50-54" ~ 0.29612,
+    #age=="55-59" ~ 0.58639,
+    #age=="60-64" ~ 1.3149,
+    #age=="65-69" ~ 3.47515,
+    #age=="70-74" ~ 7.43305,
+    #age=="75-79" ~ 14.41538,
+    #age=="80-84" ~ 22.23822,
+    #age=="85-89" ~ 27.71822,
+    #age=="90+" ~ 32.62156),
     tot.deaths=cases*CFR/100) %>% 
   #Calculate 7-day rolling average of cases
   group_by(areaCode, areaName, areaType, age) %>% 
@@ -203,6 +203,32 @@ area.pred.deaths.total <- pred.data %>%
   filter(date>max.date) %>% 
   group_by(areaName, areaType, areaCode) %>% 
   summarise(exp.deaths=sum(exp.deaths))
+
+#################
+#Compare CFR estimation period with subsequent observed data
+ggplot()+
+  geom_rect(aes(xmin=as.Date("2020-09-05"), xmax=as.Date("2020-10-16"), ymin=0, ymax=500), fill="Grey80")+
+  geom_col(data=subset(pred.data, areaName=="England" & date<=as.Date("2020-12-13")),
+         aes(x=as.Date(date), y=exp.deaths), fill="Skyblue")+
+  geom_line(data=subset(deaths, date>as.Date("2020-09-01") & 
+                          date<=as.Date(max.date)-days(3)), 
+            aes(x=as.Date(date), y=deathsroll), colour="Red")+
+  scale_fill_paletteer_d("pals::stepped", name="Age")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Expected daily deaths from COVID-19")+
+  theme_classic()+
+  annotate("text", x=as.Date("2020-09-25"), y=450, label="CFRs estimated\nusing this data")+
+  annotate("text", x=as.Date("2020-11-25"), y=450, label="Deaths modelled\nfrom estimated CFRs")+
+  annotate("text", x=as.Date("2020-10-25"), y=320, label="Actual deaths")+
+  geom_curve(aes(x=as.Date("2020-11-26"), y=430, 
+                 xend=as.Date("2020-11-30"), yend=300), curvature=-0.30, 
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  geom_curve(aes(x=as.Date("2020-10-25"), y=300, 
+                 xend=as.Date("2020-10-28"), yend=250), curvature=0.25, 
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  labs(title="Case Fatality Rates estimated in October have stood up pretty well",
+       subtitle="Actual vs modelled deaths based on age-specific CFRs fitted to data from 05/09 - 16/10",
+       caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
 #Plot age-specific forecasts for England
 Englabel <- round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName=="England"],0)
