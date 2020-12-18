@@ -13,7 +13,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "4th December"
 ScotDate <- "13th December"
-NIDate <- "4th December"
+NIDate <- "11th December"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek492020.xlsx"
@@ -28,7 +28,7 @@ ScotRange <- "AZ" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "47" #increment by one number each week
-NIRange <- "53" #increment by one number each week
+NIRange <- "54" #increment by one number each week
 
 #Flag weeks with an NRS report
 NRSweek <- TRUE
@@ -1077,7 +1077,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="Deaths in Northern Ireland are back above 'normal' levels",
+  labs(title="Deaths in Northern Ireland are just within 'normal' levels",
        subtitle=paste0("Weekly all-cause deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2011-19</span>. Data up to ", NIDate, "."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=23, y=labpos, label=paste0(round(NI.excess$excess, 0), 
