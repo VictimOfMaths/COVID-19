@@ -6,9 +6,9 @@ library(readxl)
 library(paletteer)
 
 temp <- tempfile()
-source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-50.xlsx"
+source <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-51.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-endcol <- "AZ"
+endcol <- "BA"
 
 #Historic data for all locations
 all.hist <- read_excel(temp, sheet="Table 3 ", range=paste0("B7:",endcol,"12"), col_names=FALSE)
@@ -145,3 +145,4 @@ ggplot(subset(data, loc!="All" & loc!="Other"))+
        subtitle="Excess mortality in Scotland in 2020 by cause and location",
        caption="Data from National Records of Scotland | Plot by @VictimOfMaths")
 dev.off()
+
