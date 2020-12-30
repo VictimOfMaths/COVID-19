@@ -61,7 +61,7 @@ data$sex <- if_else(data$sex==1, "Male", "Female")
 #Bring in deaths data for 2020 from https://www.insee.fr/en/statistiques/4493808?sommaire=4493845 (updated on Fridays)
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-11-06_detail.zip"
+source <- "https://www.insee.fr/en/statistiques/fichier/4493808/2020-12-18_detail.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 data18 <- read.csv(file.path(temp2, "DC_2018_det.csv"), sep=";")
@@ -144,7 +144,7 @@ ggplot(subset(data.full, week<53))+
   geom_line(aes(x=week, y=deaths), colour="Red")+
   scale_x_continuous(name="Week number")+
   scale_y_continuous("Weekly deaths recorded")+
-  annotate(geom="text", x=19, y=15000, label=paste0("+", round(excess.full$excess, 0), 
+  annotate(geom="text", x=19, y=17000, label=paste0("+", round(excess.full$excess, 0), 
                                                              " more deaths in 2020 than average (+", 
                                                              round(excess.full$prop*100, 0),"%)"), colour="Red", hjust=0)+
   annotate(geom="text", x=30, y=12000, label="Historic maximum", colour="Skyblue4")+
@@ -153,8 +153,8 @@ ggplot(subset(data.full, week<53))+
   geom_curve(aes(x=48, y=9400, xend=47, yend=11200), colour="grey30", curvature=0.15,
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   theme_classic()+
-  theme(plot.subtitle =element_markdown())+
-  labs(title="Deaths in France are also rising slowly",
+  theme(plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="France's 'second wave' has been as deadly as the first",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
@@ -177,7 +177,7 @@ excess$excess <- excess$deaths-excess$mean
 excess$prop <- excess$excess/excess$mean
 
 ann_text <- data.frame(week=rep(18, times=10), 
-                       position=c(600,300,1000,1700,1100,1400,1800,2000,4000,2500), 
+                       position=c(600,300,1000,1700,1100,1600,1800,2000,5000,3300), 
                        sex=rep(c("Female", "Male"), times=5),
                        ageband=rep(c("0-14", "15-64", "65-74", "75-84", "85+"), each=2))
 
@@ -198,14 +198,14 @@ ggplot(aggdata)+
     paste0("+",round(excess[5,5],0)," deaths (+", round(excess[5,6]*100,0),"%)"),
     paste0("+",round(excess[6,5],0)," deaths (+", round(excess[6,6]*100,0),"%)"),
     paste0(round(excess[7,5],0)," deaths (", round(excess[7,6]*100,0),"%)"),
-    paste0(round(excess[8,5],0)," deaths (", round(excess[8,6]*100,0),"%)"),
+    paste0("+",round(excess[8,5],0)," deaths (+", round(excess[8,6]*100,0),"%)"),
     paste0("+",round(excess[9,5],0)," deaths (+", round(excess[9,6]*100,0),"%)"),
     paste0("+",round(excess[10,5],0)," deaths (+", round(excess[10,6]*100,0),"%)")),
     size=3.5, colour="Red", hjust=0)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"), 
-        plot.subtitle =element_markdown(), plot.title=element_markdown())+
-  labs(title="Increasing deaths in France are mostly in the oldest age group",
+        plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Both 'waves' in France high the oldest age groups hardest",
        subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.",
        caption="Date from Insee | Plot by @VictimOfMaths")
 dev.off()
