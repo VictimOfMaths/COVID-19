@@ -28,8 +28,8 @@ data.EW <- data.EW %>%
 #Read in Scottish data
 #Weekly age-specific data is published by NRS
 temp <- tempfile()
-temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-47.xlsx", destfile=temp, quiet=FALSE, mode="wb")
-data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range="C15:AW21", col_names=FALSE)))
+temp <- curl_download(url="https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-51.xlsx", destfile=temp, quiet=FALSE, mode="wb")
+data2020.S <- data.frame(t(read_excel(temp, sheet="Table 2 ", range="C15:BA21", col_names=FALSE)))
 date <- data.frame(date=format(seq.Date(from=as.Date("2019-12-30"), by="7 days", length.out=nrow(data2020.S)), "%d/%m/%y"))
 data2020.S <- cbind(date, data2020.S)
 colnames(data2020.S) <- c("date", "Under 1 year", "01-14", "15-44", "45-64", "65-74", "75-84", "85+")
@@ -146,9 +146,9 @@ data <- bind_rows(data.S, data.EW)
 
 #Read in NI data (for 2020 only)
 temp <- tempfile()
-temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.xls", 
+temp <- curl_download(url="https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls", 
                       destfile=temp, quiet=FALSE, mode="wb")
-data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:AW14", col_names=FALSE)
+data2020.NI <- read_excel(temp, sheet="Table 2", range="D7:BA14", col_names=FALSE)
 colnames(data2020.NI) <- c(1:ncol(data2020.NI))
 
 data2020.NI$year <- 2020
@@ -537,8 +537,8 @@ ggplot(subset(fulldata, age=="15-64"))+
   facet_wrap(~country)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(size=rel(1), face="bold"),
-        plot.subtitle =element_markdown())+
-  labs(title="15-64 year olds in the UK, US and Chile appear to have fared poorly compared to their peers elsewhere",
+        plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Bulgaria has seen far more excess deaths among people of working age than other countries",
        subtitle="Registered weekly death rates among 15-64 year-olds in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
        caption="Data from mortality.org, Insee, ISTAT, ONS and NRS | Plot by @VictimOfMaths")
 
@@ -664,7 +664,7 @@ ggplot(subset(natdata, !country %in% c("Iceland") & week<53))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
   labs(title="Excess mortality rates around the world",
-       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19",
+       subtitle="Registered weekly death rates in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range for 2010-19</span>.<br>Note that due to differences in reporting delays, some countries are missing or undercounted in recent weeks",
        caption="Data from mortality.org, Insee, ISTAT, ONS, NRS and NISRA | Plot by @VictimOfMaths")
 
 dev.off()  
@@ -687,7 +687,7 @@ ggplot(subset(natdata, country=="USA" & week<53))+
 dev.off()  
 
 #Plots
-plotage <- "0-14"
+plotage <- "85+"
 plotdata <- subset(fulldata, age==plotage & !is.na(excess_r))
 plotexcess <- subset(excess, age==plotage)
 
