@@ -10,11 +10,11 @@ library(ggtext)
 #From this web page: https://www.istat.it/it/archivio/240401
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri-e-tracciato-record_al30giugno.zip"
+source <- "https://www.istat.it/it/files//2020/03/Dataset-decessi-comunali-giornalieri_dati_mortalita_fino_31Ottobre2020.zip"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 
-rawdata <- read.csv(file.path(temp2, "comuni_giornaliero_30giugno.csv"))
+rawdata <- read.csv(file.path(temp2, "Dataset decessi comunali giornalieri e tracciato record/comuni_giornaliero_31ottobre.csv"))
 
 #Tidy up data
 rawdata$age <- case_when(
@@ -76,8 +76,8 @@ test <- test %>%
   group_by(date) %>%
   summarise(measure=mean(test))
 
-#Looking at this, a clear jump in missingness after 30th June 2020, so censor the data here
-cut <- week(as.Date("2020-06-30"))-1
+#Looking at this, a clear jump in missingness after 31st October 2020, so censor the data here
+cut <- week(as.Date("2020-11-01"))-1
 
 data_prov <- data %>%
   filter(sex!="Total" & !(year==2020 & week>cut)) %>%
@@ -126,10 +126,10 @@ ggplot(subset(tempdata, week<53))+
   scale_x_continuous(name="Week number")+
   scale_y_continuous("Weekly deaths recorded")+
   theme_classic()+
-  theme(plot.subtitle =element_markdown())+
+  theme(plot.subtitle =element_markdown(), plot.title=element_text(face="bold", size=rel(1.2)))+
   expand_limits(y=0)+
   labs(title="All-cause mortality in Italy during the pandemic",
-       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 24th June 2020.",
+       subtitle="Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st August 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
   annotate(geom="text", x=20, y=18000, label=paste0("+", round(excess$excess, 0), 
                                                        " more deaths in 2020 than average (+", 
@@ -163,7 +163,7 @@ excess.sex <- tempdata.sex %>%
 excess.sex$excess <- excess.sex$deaths-excess.sex$mean
 excess.sex$prop <- excess.sex$excess/excess.sex$mean
 
-ann_text <- data.frame(week=rep(cut-0.5, times=2), sex=as.factor(c("Male", "Female")), position=c(9000,9000))
+ann_text <- data.frame(week=rep(cut-20.5, times=2), sex=as.factor(c("Male", "Female")), position=c(9000,9000))
 
 tiff("Outputs/ExcessDeathsItalyxSex.tiff", units="in", width=10, height=8, res=300)
 ggplot(subset(tempdata.sex, week<53))+
@@ -214,7 +214,8 @@ excess.reg <- arrange(excess.reg, NOME_REGIONE)
 tempdata.reg$NOME_REGIONE <- factor(tempdata.reg$NOME_REGIONE, levels=levels(excess.reg$NOME_REGIONE))
 tempdata.reg <- arrange(tempdata.reg, NOME_REGIONE)
 
-labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]*1.5
+#labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]*1.5
+labpos <- tempdata.reg$mean_d[tempdata.reg$week==cut]*1.5+400
 
 ann_text2 <- data.frame(week=rep(22, times=20), NOME_REGIONE=as.factor(levels(tempdata.reg$NOME_REGIONE)), position=labpos)
 
@@ -226,7 +227,8 @@ ggplot(subset(tempdata.reg, week<53))+
   geom_line(aes(x=week, y=deaths), colour="Red")+
   scale_x_continuous(name="Week number")+
   scale_y_continuous("Weekly deaths recorded")+
-  facet_wrap(~NOME_REGIONE, scales="free_y")+
+  #facet_wrap(~NOME_REGIONE, scales="free_y")+
+  facet_wrap(~NOME_REGIONE)+
   theme_classic()+
   theme(plot.subtitle =element_markdown(), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
@@ -274,7 +276,7 @@ ggplot(subset(tempdata.reg, week<53 & NOME_REGIONE=="Lazio"))+
   labs(title="All-cause deaths in the Italian capital are <i style='color:black'>lower</i> than in previous years",
        subtitle="Weekly deaths in the Lazio region in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>Data up to 31st May 2020.",
        caption="Date from ISTAT | Plot by @VictimOfMaths")+
-  annotate(geom="text", x=cut+0.5, y=850, label=paste0(abs(round(excess.reg[7,4], 0)), 
+  annotate(geom="text", x=cut-10, y=850, label=paste0(abs(round(excess.reg[7,4], 0)), 
                                                        " fewer deaths in 2020 than average (", 
                                                        round(excess.reg[7,5]*100, 0),"%)"), colour="Red", hjust=0)
 
