@@ -8,14 +8,14 @@ library(paletteer)
 library(scales)
 
 #Increment by 7 each week
-MaxRange <- "IF"
+MaxRange <- "IZ"
 #Increment by 1 each week
-MaxRange2 <- "AI"
+MaxRange2 <- "AL"
 
 #Read in data on deaths in care home residents notified to CQC
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/cqcdata.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20201229officialsensitivecoviddeathnotificationv2.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Deaths from COVID
@@ -69,7 +69,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown())+
-  labs(title="Care home deaths in England are falling gradually",
+  labs(title="COVID-19 deaths in care homes in England are rising gradually",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -84,6 +84,7 @@ data.COVID.2 <- read_excel(temp, sheet="Table 4", range=paste0("A6:", MaxRange2,
            `...1` %in% c("Elsewhere", "Not Stated") ~ "Other/Unknown",
            TRUE ~ `...1`)) %>% 
   group_by(week, location) %>% 
+  mutate(AllCause=as.numeric(AllCause)) %>% 
   summarise(AllCause=sum(AllCause)) %>% 
   ungroup()
 
@@ -96,6 +97,7 @@ data.all.2 <- read_excel(temp, sheet="Table 4", range=paste0("A12:", MaxRange2, 
            `...1` %in% c("Elsewhere", "Not Stated") ~ "Other/Unknown",
            TRUE ~ `...1`)) %>% 
   group_by(week, location) %>% 
+  mutate(COVID=as.numeric(COVID)) %>% 
   summarise(COVID=sum(COVID)) %>% 
   ungroup() %>% 
   #Merge
@@ -116,7 +118,7 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Most COVID-19 deaths of care home residents are happening in care homes",
-       subtitle="Deaths notified to the Care Quality Commission of care home residents\nby cause, location and week of notification",
+       subtitle="Deaths notified to the Care Quality Commission of care home residents\nby cause, location and week of notification.\nLatest week includes only 6 days' data due to Christmas",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
@@ -126,4 +128,7 @@ data %>%
   ggplot()+
   geom_tile(aes(x=date, y=fct_reorder(name, maxpropday), fill=COVIDproproll))+
   theme_classic()+
-  scale_fill_paletteer_c("pals::ocean.haline")
+  scale_fill_paletteer_c("pals::ocean.haline", name="Proportion of deaths\ninvolving COVID",
+                         labels=scales::percent)+
+  scale_y_discrete(name="")+
+  scale_x_date(name="")
