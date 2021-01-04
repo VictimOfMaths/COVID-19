@@ -122,9 +122,9 @@ data <- data %>%
   ungroup()
 
 #Save files for the app to use
-data %>% filter(areaType=="ltla") %>% 
-write.csv("COVID_Cases_By_Age/data.csv")
-shortdata %>% filter(areaType=="ltla") %>% 
+data %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
+  write.csv("COVID_Cases_By_Age/data.csv")
+shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/shortdata.csv")
 
 plotfrom <- as.Date("2020-09-01")
@@ -140,7 +140,7 @@ data %>%
   scale_y_discrete(name="Age")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
-  labs(title="Student outbreaks are tailing off, cases are rising at older ages",
+  labs(title="Case rates are highest in people of working age",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -149,7 +149,7 @@ tiff("Outputs/COVIDCasesxAgeEngLine.tiff", units="in", width=10, height=8, res=5
 data %>% 
   filter(areaType=="nation" & !is.na(caserateroll)) %>%
   ggplot()+
- geom_line(aes(x=date, y=caserateroll, colour=age))+
+  geom_line(aes(x=date, y=caserateroll, colour=age))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   scale_x_date(name="", limits=c(plotfrom, NA))+
   scale_y_continuous(name="Dailynew cases per 100,000")+
@@ -177,8 +177,8 @@ dev.off()
 
 #Compare regions
 mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
-                               "West Midlands", "East Midlands", "East of England",
-                               "South West", "London", "South East"),
+                            "West Midlands", "East Midlands", "East of England",
+                            "South West", "London", "South East"),
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
@@ -236,7 +236,7 @@ meanages <- data %>%
   ungroup()
 
 tiff("Outputs/COVIDCasesxAgeBlackpool2.tiff", units="in", width=8, height=6, res=500)
-  ggplot()+
+ggplot()+
   geom_line(data=meanages, aes(x=date, y=mean.age, group=areaName), 
             colour="Grey80")+
   geom_line(data=subset(meanages, areaName=="Blackpool"), 
@@ -255,7 +255,7 @@ tiff("Outputs/COVIDCasesxMeanAge.tiff", units="in", width=8, height=6, res=500)
 meanages %>% 
   filter(date==as.Date("2020-10-31") & areaType=="ltla") %>% 
   mutate(flag=caserateroll+mean.age) %>% 
-ggplot()+
+  ggplot()+
   geom_point(aes(x=caserateroll, y=mean.age), colour="#FF4E86")+
   gghighlight(flag>105, caserateroll>68, mean.age>42)+
   scale_x_continuous(name="Daily cases per 100,000")+
@@ -267,7 +267,7 @@ ggplot()+
        subtitle="Rolling 7-day average of daily new cases per 100,000 plotted against their average age*",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
-  
+
 #regional simple lines
 tiff("Outputs/COVIDCasesxAgeRegLine.tiff", units="in", width=9, height=11, res=500)
 shortdata %>% 
@@ -279,9 +279,9 @@ shortdata %>%
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   facet_geo(~areaName, grid=mygrid)+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.5)), strip.background=element_blank(),
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="New COVID-19 cases are falling in the worst-affected areas,\nbut rising everywhere else in all age groups",
+  labs(title="COVID-19 cases are rising in the most vulnerable age group across the South East,\nbut increases in other regions are driven by younger ages, so far.",
        subtitle="Rolling 7-day average of confirmed new cases by age",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
