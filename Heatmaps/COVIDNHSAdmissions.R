@@ -2,14 +2,24 @@ rm(list=ls())
 
 library(tidyverse)
 library(curl)
+library(readxl)
+library(lubridate)
 library(paletteer)
 library(RcppRoll)
+library(geofacet)
+library(ggtext)
+library(snakecase)
+library(forcats)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-#First look at longer time series of regional data updated daily
+#Longer time series of regional data updated daily
 dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210104.xlsx"
+#Shorter time series of trust-level data updated weekly on a Thursday afternoon
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/12/Weekly-covid-admissions-and-beds-publication-201231.xlsx"
 #Increment by one each day
 dailyrange <- "FA"
+#Increment by seven each week
+weeklyrange <- "AU"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -65,5 +75,236 @@ ggplot(dailydata)+
         plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="The rise in COVID-19 hospital numbers in London and East/South East England is shocking",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Now look at trust-level weekly data
+weeklydata <- tempfile()
+weeklydata <- curl_download(url=weeklyurl, destfile=weeklydata, quiet=FALSE, mode="wb")
+
+weeklyCOVID <- read_excel(weeklydata, sheet="Adult G&A Beds Occupied COVID", 
+                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="COVID",
+         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyOther <- read_excel(weeklydata, sheet="Adult G&A Bed Occupied NonCOVID", 
+                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="non-COVID",
+         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyEmpty <- read_excel(weeklydata, sheet="Adult G&A Beds Unoccupied", 
+                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="Unoccupied",
+         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklydata <- bind_rows(weeklyCOVID, weeklyOther, weeklyEmpty) %>% 
+  mutate(region=case_when(
+    trust=="ENGLAND" ~ "Nation", 
+    trust %in% c("East of England", "London", "Midlands", "North East and Yorkshire",
+                 "North West", "South East", "South West") ~ "Region",
+    TRUE ~ region)) %>% 
+  group_by(trust, date) %>% 
+  mutate(capacity=sum(count)) %>% 
+  ungroup() %>% 
+  mutate(proportion=count/capacity)
+
+#Extract max date
+maxweeklydate=max(weeklydata$date)
+
+#Carve out into separate regional/national and trust-level datasets
+natdata <- weeklydata %>% filter(region %in% c("Nation", "Region"))
+trustdata <- weeklydata %>% 
+  filter(!region %in% c("Nation", "Region") & capacity>=100) %>% 
+  mutate(trust=str_replace(trust, " NHS TRUST", ""),
+         trust=str_replace(trust, "NHS FOUNDATION TRUST", ""),
+         trust=to_any_case(trust, case="title")) %>% 
+  group_by(trust) %>% 
+  mutate(maxcap=max(count[type=="COVID"])) %>% 
+  ungroup() %>% 
+  mutate(trust=fct_reorder(trust, -maxcap))
+
+#Convert national/region data to rates
+natdata <- natdata %>% 
+  mutate(pop=case_when(
+    trust=="East of England" ~ 6236072,
+    trust=="London" ~ 8961989,
+    trust=="Midlands" ~ 5934037+4835928,
+    trust=="North East and Yorkshire" ~ 2669941+5502967,
+    trust=="North West" ~ 7341196,
+    trust=="South East" ~ 9180135,
+    trust=="South West" ~ 5624696,
+    trust=="ENGLAND" ~ 56286961),
+    rate=count*100000/pop)
+
+#Single national plot
+tiff("Outputs/COVIDNHSBedOccupancy.tiff", units="in", width=8, height=6, res=500)
+ggplot(subset(natdata, trust=="ENGLAND"))+
+  geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Beds per 100,000 population")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="The number of people in hospital with a positive COVID-19 test is rising",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate in England for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Set up geofacet grid of NHS regions
+mygrid <- data.frame(name=c("North West", "North East and Yorkshire", 
+                            "Midlands","East of England",
+                            "South West", "London", "South East"),
+                     row=c(1,1,2,2,3,3,3), col=c(2,3,2,3,1,2,3),
+                     code=c(1:7))
+
+#Faceted regional plot
+tiff("Outputs/COVIDNHSBedOccupancyxReg.tiff", units="in", width=8, height=8, res=500)
+ggplot(subset(natdata, trust!="ENGLAND"))+
+  geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Beds per 100,000 population")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                         labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_geo(~trust, grid=mygrid)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="The North of England still has a lot of patients with COVID-19 in hospital",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Get into trust-level data
+tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="London") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="The number of patients with COVID-19 has risen across almost all London hospitals",
+     subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+     caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="South East") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="COVID-19 patients are filling a large proportion of hospital beds across the South East",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="South West") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="Across the South West, COVID-19 bed occupancy has been generally stable",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="Midlands") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="The number of patients with COVID-19 has remained fairly constant in the Midlands",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="East of England") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="The number of COVID-19 patients is rising in hospitals the East of England",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="North West") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="In the North West, numbers of COVID-19 patients in hospitals has been stable or falling",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=7, res=500)
+trustdata %>% 
+  filter(region=="North East and Yorkshire") %>% 
+  ggplot()+
+  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of beds")+
+  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
+                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+  facet_wrap(~trust)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
+        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
+  labs(title="COVID-19 patient numbers have fallen slightly in the North East and Yorkshire",
+       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
