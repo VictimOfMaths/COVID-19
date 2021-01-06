@@ -123,7 +123,13 @@ trustdata <- weeklydata %>%
   filter(!region %in% c("Nation", "Region") & capacity>=100) %>% 
   mutate(trust=str_replace(trust, " NHS TRUST", ""),
          trust=str_replace(trust, "NHS FOUNDATION TRUST", ""),
-         trust=to_any_case(trust, case="title")) %>% 
+         trust=to_any_case(trust, case="title"),
+         trust=str_replace(trust, "King s", "King's"),
+         trust=str_replace(trust, "Guy s", "Guy's"),
+         trust=str_replace(trust, "George s", "George's"),
+         trust=str_replace(trust, "Women s", "Women's"),
+         trust=str_replace(trust, "Children s", "Children's"),
+         trust=str_replace(trust, "Peter s", "Peter's")) %>% 
   group_by(trust) %>% 
   mutate(maxcap=max(count[type=="COVID"])) %>% 
   ungroup() %>% 
@@ -183,7 +189,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
 dev.off()
 
 #Get into trust-level data
-tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="London") %>% 
   ggplot()+
@@ -201,7 +207,7 @@ trustdata %>%
      caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="South East") %>% 
   ggplot()+
@@ -214,12 +220,12 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="COVID-19 patients are filling a large proportion of hospital beds across the South East",
+  labs(title="COVID-19 patients are filling a large and rising proportion of hospital beds across the South East",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=10, height=6, res=500)
 trustdata %>% 
   filter(region=="South West") %>% 
   ggplot()+
@@ -237,7 +243,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=14, height=9, res=500)
 trustdata %>% 
   filter(region=="Midlands") %>% 
   ggplot()+
@@ -250,12 +256,12 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="The number of patients with COVID-19 has remained fairly constant in the Midlands",
+  labs(title="The number of hospital patients with COVID-19 has remained fairly constant in the Midlands",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=10, height=6, res=500)
 trustdata %>% 
   filter(region=="East of England") %>% 
   ggplot()+
@@ -273,7 +279,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="North West") %>% 
   ggplot()+
@@ -291,7 +297,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=7, res=500)
+tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="North East and Yorkshire") %>% 
   ggplot()+
