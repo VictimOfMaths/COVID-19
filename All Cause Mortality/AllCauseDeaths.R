@@ -12,19 +12,19 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "25th December"
-ScotDate <- "20th December"
+ScotDate <- "3rd January"
 NIDate <- "18th December"
 
 #Locations for latest data. Links for historical data don't move, so keep them further down
 Eng2020 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2020/publishedweek522020.xlsx"
-Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-51.xlsx"
+Scot2020 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-data-week-53.xlsx"
 #https://data.gov.scot/coronavirus-covid-19/data.html
 Scot2020v2 <- "https://data.gov.scot/coronavirus-covid-19/download/Scottish%20Government%20COVID-19%20data%20(28%20October%202020).xlsx"
 NI2020 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.xls"
 
 #Stupid Excel range controls
 EngRange <- "BB" #increment by one letter each week
-ScotRange <- "BA" #
+ScotRange <- "BC" #
 #These next two bookend the range for the weeks inbetween NRS's now monthly reports
 ScotRangev2.1 <- "46" #update after each new monthly report
 ScotRangev2.2 <- "47" #increment by one number each week
@@ -737,10 +737,28 @@ rm(data2011.NI, data2012.NI, data2013.NI, data2014.NI, data2015.NI, data2016.NI,
 #Stick regional data together for whole of UK
 data.reg.UK <- bind_rows(data.reg.EW, data.S, data.NI)
 
+#Temporary hack until I work out a propoer solution for the 2020-201 bridge
+data.reg.UK <- data.reg.UK %>% 
+  mutate(weekno=if_else(year==2021 & weekno==1, 53, weekno),
+         year=if_else(year==2021, 2020, year))
+
+data.reg.EW <- data.reg.EW %>% 
+  mutate(weekno=if_else(year==2021 & weekno==1, 53, weekno),
+         year=if_else(year==2021, 2020, year))
+
+data.S <- data.S %>% 
+  mutate(weekno=if_else(year==2021 & weekno==1, 53, weekno),
+         year=if_else(year==2021, 2020, year))
+
+data.NI <- data.NI %>% 
+  mutate(weekno=if_else(year==2021 & weekno==1, 53, weekno),
+         year=if_else(year==2021, 2020, year))
+
 #Pull out latest week numbers for label placement
 EWmaxweek <- max(subset(data.reg.UK, reg=="London" & year==2020)$weekno)
 Scotmaxweek <- max(subset(data.reg.UK, reg=="Scotland" & year==2020)$weekno)
 NImaxweek <- max(subset(data.reg.UK, reg=="Northern Ireland" & year==2020)$weekno)
+
 
 ###########
 #Save data#
@@ -1000,7 +1018,7 @@ dev.off()
 
 #Extract max/min values
 #split off 2020 data
-data.S.new <- subset(data.S, year==2020)
+data.S.new <- subset(data.S, year>=2020)
 data.S.old <- subset(data.S, year<2020 & year>=2010)
 
 data.S.old <- data.S.old %>%
@@ -1027,7 +1045,7 @@ ggplot()+
   scale_x_continuous(name="Week number", breaks=c(0,10,20,30,40,50))+
   scale_y_continuous(name="Deaths registered")+
   expand_limits(y=0)+
-  labs(title="All-cause deaths in Scotland are back within 'normal' levels. Just",
+  labs(title="All-cause deaths in Scotland have stayed within 'normal' levels",
        subtitle=paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, "."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=22, y=labpos, label=paste0(round(S.excess$excess, 0), 
