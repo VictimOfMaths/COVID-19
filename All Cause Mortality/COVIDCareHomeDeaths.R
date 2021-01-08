@@ -8,14 +8,14 @@ library(paletteer)
 library(scales)
 
 #Increment by 7 each week
-MaxRange <- "IZ"
+MaxRange <- "JG"
 #Increment by 1 each week
-MaxRange2 <- "AL"
+MaxRange2 <- "AM"
 
 #Read in data on deaths in care home residents notified to CQC
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20201229officialsensitivecoviddeathnotificationv2.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20210104officialsensitivecoviddeathnotification.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Deaths from COVID
@@ -118,11 +118,12 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Most COVID-19 deaths of care home residents are happening in care homes",
-       subtitle="Deaths notified to the Care Quality Commission of care home residents\nby cause, location and week of notification.\nLatest week includes only 6 days' data due to Christmas",
+       subtitle="Deaths notified to the Care Quality Commission of care home residents\nby cause, location and week of notification.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
 #WIP heatmap
+tiff("Outputs/ONSCQCDeathsHeatmap.tiff", units="in", width=13, height=14, res=500)
 data %>% 
   filter(name!="England" & cause=="AllCause" & !is.na(COVIDproproll)) %>% 
   ggplot()+
@@ -131,4 +132,9 @@ data %>%
   scale_fill_paletteer_c("pals::ocean.haline", name="Proportion of deaths\ninvolving COVID",
                          labels=scales::percent)+
   scale_y_discrete(name="")+
-  scale_x_date(name="")
+  scale_x_date(name="")+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="The majority of recent deaths in care homes in Kent, East Sussex and Stoke have been from COVID-19",
+       subtitle="Proportion of deaths in care homes notified to CQC recorded as involving COVID-19 by Local Authority in England.\nAuthorities are ordered by the date on which the highest proportion of deaths involved COVID-19.",
+       caption="Data from ONS | Plot by @VictimOfMaths")
+dev.off()
