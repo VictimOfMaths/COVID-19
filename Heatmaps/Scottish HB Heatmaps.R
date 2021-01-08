@@ -258,8 +258,8 @@ ggplot(subset(natdata,Date>=as.Date("2020-09-11")))+
   scale_y_continuous(name="", limits=c(-limit, limit), labels=abs,
                      position = "right")+
   theme_classic()+
-  annotate(geom="text", x=as.Date("2020-09-18"), y=1000, label="New cases in the population")+
-  annotate(geom="text", x=as.Date("2020-09-19"), y=-240, label="Total patients in hospital")+
+  annotate(geom="text", x=as.Date("2020-09-12"), y=1600, label="New cases in the population", hjust=0)+
+  annotate(geom="text", x=as.Date("2020-09-12"), y=-700, label="Total patients in hospital", hjust=0)+
   #annotate(geom="text", x=as.Date("2020-10-06"), y=-70, label="Patients in ICU", colour="#a80b20")+  
   labs(title="Hospitals in Scotland are starting to see the impact of the recent rise in cases",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients with recently confirmed COVID-19<br>in <span style='color:#ff9f55;'>Scottish hospitals </span>and <span style='color:#ff1437;'>Intensive Care Units",
