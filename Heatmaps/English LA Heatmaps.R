@@ -56,14 +56,14 @@ fulldata <- fulldata %>%
 #and extend the final number value in rows 78 & 80 by 1 to capture additional days (67=1st May announcement date)
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2020/11/COVID-19-total-announced-deaths-20-November-2020.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-total-announced-deaths-8-January-2021-1.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-deaths<-as.data.table(read_excel(temp, sheet=6, col_names = F))
+deaths<-as.data.table(read_excel(temp, sheet=9, col_names = F))
 
-deaths<-deaths[18:.N, c(1:270)]
+deaths<-deaths[18:.N, c(1:318)]
 
-deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:270)
+deaths<- melt.data.table(deaths, id=1:4, measure.vars = 5:318)
 
 deaths[, 2:=NULL]
 names(deaths)<-c("region", "procode3","trust","variable","deaths")
@@ -144,7 +144,7 @@ casebars <- ggplot(subset(heatmap, date==maxcaseday), aes(x=totalcases, y=fct_re
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   #scale_fill_viridis_c()+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,2000,4000,6000,8000,10000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
