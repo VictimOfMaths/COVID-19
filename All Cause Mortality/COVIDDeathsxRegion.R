@@ -40,7 +40,7 @@ ggplot()+
   scale_x_date(name="", breaks=breaks_pretty(n=interval(min(deaths.reg$date, na.rm=TRUE), maxdate-days(3))%/% months(1)))+
   scale_y_continuous(name="Daily COVID-19 deaths per 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="Region")+
-  labs(title="The 'second wave' is more geographically unequal",
+  labs(title="Mortality trajectories in the 'second wave' have been much more varied between English regions",
        subtitle="Daily deaths per 100,000 within 28 days of a positive COVID-19 test",
        caption="Data from PHE | Plot by @VictimOfMaths")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
@@ -59,9 +59,9 @@ ggplot(peaks)+
   geom_abline(intercept=0)+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="Region")+
   theme_classic()+
-  scale_x_continuous(limits=c(0,2.5), name="Peak Spring mortality rate\n7-day rolling average")+
-  scale_y_continuous(limits=c(0,2.5), name="Peak Autumn mortality rate\n7-day rolling average")+
-  labs(title="Correlation between the Spring and Autumn peaks is fairly weak",
+  scale_x_continuous(limits=c(0,2.5), name="Peak mortality rate Mar-Jul\n7-day rolling average")+
+  scale_y_continuous(limits=c(0,2.5), name="Peak mortality rate Aug-Jan\n7-day rolling average")+
+  labs(title="Correlation between the Spring and Autumn/Winter peaks has strengthened",
        subtitle="Deaths per 100,000 within 28 days of a positive COVID-19 test",
        caption="Date from PHE | Plot by @VictimOfMaths")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
