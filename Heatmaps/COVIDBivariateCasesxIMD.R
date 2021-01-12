@@ -188,7 +188,9 @@ casedata.s <- read_csv(temp, col_types="cccccicicc") %>%
   select(date, IntZone, IntZoneName, CA, CAName, caserate) %>% 
   #keep only the latest day's data
   filter(date==max(date)) %>% 
-  mutate(region=if_else(CAName %in% c()))
+  mutate(region=if_else(CAName %in% c("East Dunbartonshire", "East renfrewshire",
+                                      "Glasgow City", "Inverclyde", "Renfrewshire",
+                                      "West Dunbartonshire"), "Glasgow", ""))
 
 #Bring in SIMD data (at datazone level)
 temp <- tempfile()
@@ -226,3 +228,98 @@ shapefile.s <- st_read(file.path(temp2, "SG_IntermediateZone_Bdry_2011.shp"))
 
 mapdata.s <- full_join(shapefile.s, SIMD_IZ, by=c("InterZone"="IntZone")) 
 
+#Map of Deprivation
+mapdata.s %>% 
+  filter(region=="Glasgow") %>% 
+  ggplot()+
+  geom_sf(aes(fill=max(SIMDrank)-SIMDrank, geometry=geometry), colour=NA)+
+  scale_fill_paletteer_c("pals::ocean.matter", name="Deprivation\n(darker = more deprived)", 
+                         limits=c(0,NA), direction=-1)+
+  theme_void()
+
+#Map of Deprivation
+mapdata.s %>% 
+  filter(region=="Glasgow") %>% 
+  ggplot()+
+  geom_sf(aes(fill=caserate, geometry=geometry), colour=NA)+
+  scale_fill_paletteer_c("pals::ocean.deep", name="New cases\nper 100,000", 
+                         limits=c(0,NA), direction=-1)+
+  theme_void()
+
+#Scatter plot
+tiff("Outputs/COVIDGlasgowCasesScatter.tiff", units="in", width=10, height=7, res=300)
+mapdata.s %>% 
+  filter(region=="Glasgow") %>% 
+  ggplot(aes(x=caserate, y=max(SIMDrank)-SIMDrank))+
+  geom_point(colour="#c51b8a")+
+  geom_smooth(method="lm", formula=y~x)+
+  scale_x_continuous(name="New COVID-19 cases per 100,000 in the past week", limits=c(0,NA))+
+  scale_y_continuous(name="Deprivation (higher = more deprived)")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="There are more COVID-19 cases in deprived parts of Glasgow",
+       subtitle="Rolling 7-day rate of new cases plotted against the Index of Multiple Deprivation for Intermediate Zones in Greater Glasgow",
+       caption="Data from PHS, Scottish Government | Plot by @VictimOfMaths")
+dev.off()
+
+#Bivariate map
+BVmapdata.s <- mapdata.s %>% 
+  filter(region=="Glasgow") %>% 
+  mutate(SIMDtert=quantcut(-SIMDrank, q=4, labels=FALSE),
+         casetert=quantcut(caserate, q=4, labels=FALSE))
+
+#Generate key
+keydata.s <- data.frame(SIMDtert=c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4), 
+                      casetert=c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4),
+                      RGB=c("#e8e8e8","#b9dddd","#89d3d3","#5ac8c8",
+                            "#dabcd4","#acb2ca","#7ea8c1","#509eb7",
+                            "#cc90c0","#9f86b7","#727dae","#4573a5",
+                            "#be64ac","#925ba4","#67529c","#3b4994"))
+
+#Bring colours into main data for plotting
+BVmapdata.s <- left_join(BVmapdata.s, keydata.s, by=c("SIMDtert", "casetert"))
+
+#Bivariate map
+BVmap.s <- BVmapdata.s %>% 
+  filter(region=="Glasgow") %>% 
+  ggplot()+
+  geom_sf(aes(fill=RGB, geometry=geometry), colour=NA)+
+  scale_fill_identity()+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(2)))+
+  labs(title="In Glasgow, the most deprived areas generally have more COVID-19 cases",
+       subtitle="Rolling 7-day rate of new cases plotted against the Index of Multiple Deprivation for Intermediate Zones",
+       cation="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")+
+  annotate("text", x=273000, y=670000, label="High deprivation,\nhigh cases", size=4)+
+  annotate("text", x=268000, y=658000, label="High deprivation,\nlow cases", size=4)+
+  annotate("text", x=227000, y=657000, label="Low deprivation,\nhigh cases", size=4)+
+  annotate("text", x=251000, y=684000, label="Low deprivation,\nlow cases", size=4)+
+  geom_curve(aes(x=272200, y=668800, xend=269300, yend=666000), curvature=-0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  geom_curve(aes(x=265400, y=659300, xend=259100, yend=662700), curvature=0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+  
+  geom_curve(aes(x=229000, y=658300, xend=231000, yend=661000), curvature=-0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  geom_curve(aes(x=251500, y=682700, xend=252300, yend=677000), curvature=0.15,
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))
+
+#Bivariate key
+key.s <- ggplot(keydata)+
+  geom_tile(aes(x=casetert, y=SIMDtert, fill=RGB))+
+  scale_fill_identity()+
+  labs(x = expression("More COVID-19 cases" %->%  ""),
+       y = expression("Greater deprivation" %->%  "")) +
+  theme_classic() +
+  # make font small enough
+  theme(
+    axis.title = element_text(size = 9),axis.line=element_blank(), 
+    axis.ticks=element_blank(), axis.text=element_blank())+
+  # quadratic tiles
+  coord_fixed()
+
+#Final plot
+tiff("Outputs/COVIDGlasgowCasesxIMD.tiff", units="in", width=12, height=8, res=300)
+ggdraw()+
+  draw_plot(BVmap.s, 0,0,1,1)+
+  draw_plot(key.s, 0.03,0.6,0.3,0.3) 
+dev.off()
