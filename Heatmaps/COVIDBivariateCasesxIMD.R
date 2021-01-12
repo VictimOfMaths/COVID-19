@@ -118,6 +118,8 @@ BVmapdata <- mapdata %>%
          casetert=quantcut(newCasesBySpecimenDateRollingRate, q=4, labels=FALSE))
 
 #Generate key
+#Colours inspired by @jscarto's post here: 
+#https://www.joshuastevens.net/cartography/make-a-bivariate-choropleth-map/
 keydata <- data.frame(IMDtert=c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4), 
                       casetert=c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4),
                       RGB=c("#e8e8e8","#b9dddd","#89d3d3","#5ac8c8",
