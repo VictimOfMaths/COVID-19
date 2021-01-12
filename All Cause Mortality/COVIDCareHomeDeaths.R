@@ -6,16 +6,17 @@ library(readxl)
 library(forcats)
 library(paletteer)
 library(scales)
+library(lubridate)
 
 #Increment by 7 each week
-MaxRange <- "JG"
+MaxRange <- "JO"
 #Increment by 1 each week
-MaxRange2 <- "AM"
+MaxRange2 <- "AN"
 
 #Read in data on deaths in care home residents notified to CQC
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20210104officialsensitivecoviddeathnotification.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20210110officialsensitivecoviddeathnotificationv2.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Deaths from COVID
@@ -106,19 +107,20 @@ data.all.2 <- read_excel(temp, sheet="Table 4", range=paste0("A12:", MaxRange2, 
   gather(cause, deaths, c(3:5)) %>% 
   mutate(causeloc=case_when(
     cause=="COVID" ~ paste0("COVID-19 deaths in ", location),
-    cause=="Other" ~ paste0("Other cause deaths in ", location)))
+    cause=="Other" ~ paste0("Other cause deaths in ", location)),
+    date=as.Date("2020-04-13")+days(7*(week-16)))
 
 tiff("Outputs/ONSCQCDeathsxCausexLoc.tiff", units="in", width=8, height=6, res=500)
 ggplot(subset(data.all.2, cause!="AllCause"))+
-  geom_col(aes(x=week, y=deaths, fill=causeloc))+
-  scale_x_continuous(name="Week")+
+  geom_col(aes(x=date, y=deaths, fill=causeloc))+
+  scale_x_date(name="", breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_continuous(name="Deaths of care home residents")+
   scale_fill_manual(values=c("#C70E7B", "#007BC3", "#EF7C12", "#FC6882", "#54BCD1", "#F4B95A"),
                     name="Cause and place of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Most COVID-19 deaths of care home residents are happening in care homes",
-       subtitle="Deaths notified to the Care Quality Commission of care home residents\nby cause, location and week of notification.",
+       subtitle="Weekly deaths notified to the Care Quality Commission of care home residents\nby cause and location.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
@@ -134,7 +136,7 @@ data %>%
   scale_y_discrete(name="")+
   scale_x_date(name="")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The majority of recent deaths in care homes in Kent, East Sussex and Stoke have been from COVID-19",
+  labs(title="The number of Local Authorities reporting a substantial proportion of deaths in care homes as COVID-related is rising",
        subtitle="Proportion of deaths in care homes notified to CQC recorded as involving COVID-19 by Local Authority in England.\nAuthorities are ordered by the date on which the highest proportion of deaths involved COVID-19.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
