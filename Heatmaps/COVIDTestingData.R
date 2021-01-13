@@ -41,13 +41,13 @@ plotto <- data %>%
 
 #Plot case rates by country by specimen date
 ggplot(data)+
-  geom_line(aes(x=date, y=cases_avg, colour=name))+
-  scale_x_date(name="", limits=c(as.Date("2020-08-01"), NA_Date_))+
+  geom_line(aes(x=date, y=testrate_avg, colour=name))+
+  scale_x_date(name="", limits=c(as.Date("2020-08-01"), NA))+
   scale_y_continuous(name="Daily tests published per 100,000 population")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Testing rates have risen in England & Wales in recent weeks",
+  labs(title="Testing rates have risen in England since Christmas",
        subtitle="Rolling 7-day average of new COVID-19 tests by publication date",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 
@@ -55,12 +55,12 @@ ggplot(data)+
 tiff("Outputs/COVIDTestRatesUK.tiff", units="in", width=8, height=6, res=500)
 ggplot(data)+
   geom_line(aes(x=date, y=testrate_avg, colour=name))+
-  scale_x_date(name="", limits=c(as.Date("2020-11-01"), NA_Date_))+
+  scale_x_date(name="", limits=c(as.Date("2020-11-01"), NA))+
   scale_y_continuous(name="Daily tests published per 100,000 population")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Testing rates have risen in England & Wales in recent weeks",
+  labs(title="Testing rates have risen in England since Christmas",
        subtitle="Rolling 7-day average of new COVID-19 tests by publication date",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -69,12 +69,12 @@ dev.off()
 tiff("Outputs/COVIDPosRatesUK.tiff", units="in", width=8, height=6, res=500)
 ggplot(data)+
   geom_line(aes(x=date, y=posrate_avg, colour=name))+
-  scale_x_date(name="", limits=c(as.Date("2020-11-01"), NA_Date_))+
+  scale_x_date(name="", limits=c(as.Date("2020-11-01"), NA))+
   scale_y_continuous(name="Proportion of tests returned as positive", labels=percent_format(accuracy = 1))+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Test positivity rates in Wales have stayed fairly steady as test numbers have risen",
+  labs(title="Test positivity rates are now falling everywhere",
        subtitle="Rolling 7-day average proportion of tests which are returned positive",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -123,7 +123,7 @@ ggplot(subset(APIdata2, date>as.Date("2020-11-01")))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  labs(title="The proportion of tests coming back as positive increased everywhere",
+  labs(title="The proportion of tests coming back as positive has levelled off",
        subtitle="Rolling 7-day average proportion of COVID-19 tests returned as positive",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
