@@ -13,13 +13,13 @@ library(forcats)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210113.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210114.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/Weekly-covid-admissions-and-beds-publication-210107.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/Weekly-covid-admissions-and-beds-publication-210114.xlsx"
 #Increment by one each day
-dailyrange <- "FJ"
+dailyrange <- "FK"
 #Increment by seven each week
-weeklyrange <- "BB"
+weeklyrange <- "BI"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -198,7 +198,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="The North of England still has a lot of patients with COVID-19 in hospital",
+  labs(title="Almost half of occupied hospital beds in London have COVID-19 patients in them",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -217,7 +217,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="The number of patients with COVID-19 has risen across almost all London hospitals",
+  labs(title="The number of patients with COVID-19 has risen further across almost all London hospitals",
      subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
      caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -253,7 +253,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Across the South West, COVID-19 bed occupancy has been generally stable",
+  labs(title="Most of the South West looks fairly stable, except for Dorset",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -289,7 +289,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="The number of COVID-19 patients is rising in hospitals the East of England",
+  labs(title="The number of COVID-19 patients is still rising in hospitals the East of England",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -307,7 +307,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="In the North West, numbers of COVID-19 patients in hospitals has been stable or falling",
+  labs(title="The number of COVID-19 patients in hospital is rising in some parts of the North West",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -325,7 +325,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="COVID-19 patient numbers have fallen slightly in the North East and Yorkshire",
+  labs(title="COVID-19 patient numbersare fairly stable in the North East and Yorkshire",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
