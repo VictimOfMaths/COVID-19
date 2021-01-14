@@ -11,13 +11,12 @@ library(ggtext)
 #APIdata <- get_data(filters="areaType=nation", 
 #                    structure=list(date="date",
 #                                   name="areaName",
-#                                   dose1="newPeopleReceivingFirstDose",
-#                                   dose2="newPeopleReceivingSecondDose"))
+#                                   dose1="weeklyPeopleVaccinatedFirstDoseByVaccinationDate",
+#                                   dose2="weeklyPeopleVaccinatedSecondDoseByVaccinationDate"))
 
-                    
 #So read in data directly
 temp <- tempfile()
-source="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=newPeopleReceivingFirstDose&metric=newPeopleReceivingSecondDose&format=csv"
+source="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=weeklyPeopleVaccinatedFirstDoseByVaccinationDate&metric=weeklyPeopleVaccinatedSecondDoseByVaccinationDate&format=csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 APIdata <- read.csv(temp)
 colnames(APIdata) <- c("date", "type", "code", "name", "dose1", "dose2")
@@ -65,7 +64,7 @@ ggplot()+
   scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Vaccine delivery across the UK isn't accelerating. Yet",
+  labs(title="Vaccine delivery across the UK has started accelerating",
        subtitle="Rates of delivery of 1st COVID-19 vaccine doses by country",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths\nEnglish data for the weeks ending 13th & 20th Dec is reported together, so figures for these weeks\nare estimated assuming the distribution between these weeks matched the rest of the UK")
 dev.off()
@@ -103,7 +102,7 @@ APIdata %>%
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Vaccination delivery in the UK needs to speed up rapidly",
+  labs(title="Vaccination delivery in the UK needs to speed up further",
        subtitle="<span style='color:DarkRed;'>Total COVID-19 vaccinations delivered</span>, by dose, in the UK compared to <span style='color:SkyBlue2;'>Boris Johnson's mid-February target",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths\nEnglish data for the weeks ending 13th & 20th Dec is reported together, so figures for these weeks\nare estimated assuming the distribution between these weeks matched the rest of the UK")
 dev.off()
