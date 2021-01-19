@@ -9,14 +9,14 @@ library(scales)
 library(lubridate)
 
 #Increment by 7 each week
-MaxRange <- "JO"
+MaxRange <- "JV"
 #Increment by 1 each week
-MaxRange2 <- "AN"
+MaxRange2 <- "AO"
 
 #Read in data on deaths in care home residents notified to CQC
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20210110officialsensitivecoviddeathnotificationv2.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fnumberofdeathsincarehomesnotifiedtothecarequalitycommissionengland%2f2021/cqcdata.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Deaths from COVID
@@ -70,7 +70,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown())+
-  labs(title="COVID-19 deaths in care homes in England are rising gradually",
+  labs(title="The increase in COVID-19 deaths in care homes in England is accelerating",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
