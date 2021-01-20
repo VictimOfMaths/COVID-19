@@ -10,7 +10,7 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "8th January"
-ScotDate <- "10th January"
+ScotDate <- "17th January"
 NIDate <- "8th January"
 
 #Locations for 2020/21 data
@@ -19,7 +19,7 @@ NIDate <- "8th January"
 Eng2021 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2021/publishedweek012021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-01.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-02.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
 NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.XLSX"
@@ -27,7 +27,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "C" 
-ScotRange <- "C" 
+ScotRange <- "D" 
 NIRange <- "57" 
 
 ##############################
@@ -1349,8 +1349,8 @@ ggplot(plot6)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Scotland is still seeing excess mortality",
-       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="All-cause deaths in Scotland are back within 'normal' levels",
+       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
            label=paste0("+", round(S.excess$excess, 0)," more deaths in 2020/21 than average (+", 
@@ -1399,7 +1399,7 @@ ann_text7 <- data.frame(date=rep(as.Date("2020-06-01"), times=2), deaths=c(750,7
                         sex=c("Male", "Female"))
 
 tiff("Outputs/NRSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=500)
-ggplot(plot2)+
+ggplot(plot7)+
   geom_ribbon(aes(x=date, ymin=min, ymax=max), fill="Skyblue2")+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
@@ -1410,10 +1410,10 @@ ggplot(plot2)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Excess mortality remains highest in men",
-       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="Deaths remain highest in men",
+       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
-  geom_text(data=ann_text2, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
+  geom_text(data=ann_text7, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
                                                                   round(S.excess.sex[1,4]*100, 0),"%)"), 
                                                            paste0("+", round(S.excess.sex[2,2],0)," deaths (+",
                                                                   round(S.excess.sex[2,4]*100, 0),"%)")), 
@@ -1466,8 +1466,8 @@ ggplot(plot8)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Excess mortality is highest in the oldest age groups",
-       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="All age groups are back within 'usual' levels of mortality",
+       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text8, aes(x=date, y=deaths), label=c(paste0(round(S.excess.age[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
                                                                   round(S.excess.age[1,4]*100, 1),"%)"), 
@@ -1535,8 +1535,8 @@ ggplot(plot9)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The increase in mortality has happened largely in hospitals",
-       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="We are still seeing excess deaths in Scottish homes",
+       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text9, aes(x=date, y=deaths), label=c(paste0(round(S.excess.loc[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
                                                                   round(S.excess.loc[1,4]*100, 0),"%)"), 
@@ -1557,7 +1557,7 @@ ggplot(plot9)+
   scale_colour_paletteer_d(name="Place of death", "ggsci::planetexpress_futurama")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Excess mortality has risen across all settings",
+  labs(title="Excess mortality has fallen across all settings",
        subtitle="Excess deaths by place of death in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1579,7 +1579,7 @@ ggplot(plot10)+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The increase in deaths is driven by an increase in COVID-19 deaths",
+  labs(title="The fall in deaths is driven by a reduction in non-COVID-19 deaths",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1604,7 +1604,7 @@ ggplot(plot11)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 deaths in Scottish hospitals have risen sharply",
+  labs(title="The number of COVID-19 deaths in hospitals and care homes is still high",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1677,8 +1677,8 @@ ggplot(plot12)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Most of the Central Belt has some degree of excess mortality",
-       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="Excess mortality has fallen across Scotland",
+       subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text12, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.HB[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
                                                                   round(S.excess.HB[1,4]*100, 0),"%)"), 
@@ -1757,7 +1757,7 @@ ggplot(plot13)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
   labs(title="Northern Ireland is still seeing excess mortality",
-       subtitle=paste0("Weekly deaths in Northern Ireland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+       subtitle=paste0("Weekly deaths in Northern Ireland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, " 2021."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
            label=paste0("+", round(NI.excess$excess, 0)," more deaths in 2020/21 than average (+", 
