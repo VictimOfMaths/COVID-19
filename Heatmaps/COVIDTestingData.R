@@ -74,7 +74,7 @@ ggplot(data)+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Test positivity rates are now falling everywhere",
+  labs(title="Test positivity rates are falling in all four UK nations",
        subtitle="Rolling 7-day average proportion of tests which are returned positive",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -123,7 +123,7 @@ ggplot(subset(APIdata2, date>as.Date("2020-11-01")))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  labs(title="The proportion of tests coming back as positive has levelled off",
+  labs(title="The fall in test positivity has stalled",
        subtitle="Rolling 7-day average proportion of COVID-19 tests returned as positive",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
