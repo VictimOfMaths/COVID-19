@@ -11,7 +11,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "8th January"
 ScotDate <- "17th January"
-NIDate <- "8th January"
+NIDate <- "15th January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -22,13 +22,13 @@ Eng2021 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbi
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-02.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_1.XLSX"
+NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "C" 
 ScotRange <- "D" 
-NIRange <- "57" 
+NIRange <- "7" 
 
 ##############################
 #Read in English & Welsh data#
@@ -857,7 +857,7 @@ data2020.cause.S <- bind_rows(data2020.ch.cause.S, data2020.home.cause.S, data20
 #Read in 2021 data
 #all locations
 data2021.all.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                   range=paste0("B15:", ScotRange, "20"), col_names=FALSE) %>% 
+                                   range=paste0("B16:", ScotRange, "21"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -865,7 +865,7 @@ data2021.all.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #care homes
 data2021.ch.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                  range=paste0("B39:", ScotRange, "44"), col_names=FALSE) %>% 
+                                  range=paste0("B40:", ScotRange, "45"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -873,7 +873,7 @@ data2021.ch.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #home
 data2021.home.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                    range=paste0("B63:", ScotRange, "68"), col_names=FALSE) %>% 
+                                    range=paste0("B64:", ScotRange, "69"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -881,7 +881,7 @@ data2021.home.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #hospital
 data2021.hosp.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                    range=paste0("B87:",ScotRange,  "92"), col_names=FALSE) %>% 
+                                    range=paste0("B88:",ScotRange,  "93"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -889,7 +889,7 @@ data2021.hosp.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #other (to be combined with home)
 data2021.oth.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                   range=paste0("B111:", ScotRange, "116"), col_names=FALSE) %>% 
+                                   range=paste0("B112:", ScotRange, "117"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -988,27 +988,33 @@ rm(data10.as.S, data11.as.S, data12.as.S, data13.as.S, data14.as.S, data15.as.S,
 temp <- tempfile()
 temp <- curl_download(url=NI2021, destfile=temp, quiet=FALSE, mode="wb")
 
-#Download 20/21 data from the latest spreadsheet
-data2021.NI <- read_excel(temp, sheet="Table 1", range=paste0("B6:C", NIRange), col_names=FALSE)
-colnames(data2021.NI) <- c("date", "deaths")
+#Download 2021 data from the latest spreadsheet
+data2021.NI <- read_excel(temp, sheet="Table 1", range=paste0("B6:C", NIRange), col_names=FALSE) %>% 
+  mutate(week=c(54:(nrow(.)+53)), year=2021)
+colnames(data2021.NI) <- c("date", "deaths", "week", "year")
 
-data2021.cause.NI <- read_excel(temp, sheet="Table 10", range=paste0("A5:C", as.numeric(NIRange)-1), 
+data2021.cause.NI <- read_excel(temp, sheet="Table 10", range=paste0("A57:C", as.numeric(NIRange)+51), 
                                 col_names=FALSE) %>% 
   rename(week=`...1`, date=`...2`, COVID=`...3`) %>% 
   mutate(COVID=as.numeric(gsub("-", "0", COVID)),
-         week=if_else(date>as.Date("2021-01-01"), week, week+1)) %>% 
-  #20/21 data unhelpfully now excludes the data from the start of 2020
-  #(i.e. if just covers a rolling 12-month window)
-  #luckily I have an older version cached which gives the figures from those weeks
-  bind_rows(data.frame(week=1:2, date=c(as.Date("2020-01-03"), as.Date("2020-01-10")), 
-                       COVID=c(0,0)))
+         week=week+53, year=2021) 
 
-#20/21 data unhelpfully now excludes the data from the start of 2020
-#(i.e. if just covers a rolling 12-month window)
-#luckily I have an older version cached which gives the figures from those weeks
-data2021.NI <- data2021.NI %>% 
-  bind_rows(data.frame(date=c(as.Date("2020-01-10")), deaths=c(395))) %>% 
-  mutate(week=week(date-days(1)), year=year(date-days(1))) 
+#Read in 2020 data
+temp <- tempfile()
+source <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Cumulative%20Weekly%20Deaths%2C%202020%20%28includes%20Covid-19%20deaths%29.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+data2020.NI <- read_excel(temp, sheet="Table 1", range="B6:C57", col_names=FALSE) %>% 
+  mutate(week=2:53, year=2020)
+colnames(data2020.NI) <- c("date", "deaths", "week", "year")
+
+data2020.cause.NI <- read_excel(temp, sheet="Table 10", range="A5:C56", 
+                                col_names=FALSE) %>% 
+  rename(week=`...1`, date=`...2`, COVID=`...3`) %>% 
+  mutate(COVID=as.numeric(gsub("-", "0", COVID)),
+         year=2020, week=week+1) %>% 
+  bind_rows(data2021.cause.NI) %>% 
+  bind_rows(data.frame(week=1, date=as.Date("2020-01-03"), COVID=0, year=2020))
 
 #Read in historical data
 temp <- tempfile()
@@ -1028,16 +1034,21 @@ data.NI <- bind_rows(data2011.NI, data2012.NI, data2013.NI, data2014.NI, data201
                      data2016.NI, data2017.NI, data2018.NI, data2019.NI) %>% 
   rename(date=`...1`, deaths=`...2`) %>% 
   mutate(week=week(date-days(1)), year=year(date-days(1))) %>% 
-  bind_rows(data2021.NI) %>% 
+  bind_rows(data2020.NI, data2021.NI) %>% 
   arrange(date)
 
 #Create cause dataset
 data.cause.NI <- data.NI %>% 
   filter(year<2020) %>% 
   group_by(week) %>% 
-  summarise(mean1119=mean(deaths)) %>% 
+  summarise(mean1119=mean(deaths)) 
+
+data.cause.NI <- data.cause.NI %>% 
+  filter(week<=max(data.NI$week)-53) %>% 
+  mutate(week=week+53) %>% 
+  bind_rows(data.cause.NI) %>% 
   merge(data.NI %>% filter(year>=2020), all.y=TRUE) %>% 
-  merge(data2021.cause.NI, all.x=TRUE) %>% 
+  merge(data2020.cause.NI, all.x=TRUE) %>% 
   mutate(other=deaths-COVID, otherexcess=other-mean1119,
          netexcess=deaths-mean1119) %>% 
   select(week, year, COVID, otherexcess, netexcess)
@@ -1774,8 +1785,7 @@ dev.off()
 
 #Plot by cause
 plot14 <- data.cause.NI %>% 
-  mutate(week=if_else(year==2021,week+53, week),
-         date=as.Date("2020-01-03")+weeks(week-1)) %>% 
+  mutate(date=as.Date("2020-01-03")+weeks(week-1)) %>% 
   gather(cause, deaths, c(3:5))
 
 tiff("Outputs/NISAExcessxCause.tiff", units="in", width=8, height=6, res=500)
@@ -1789,7 +1799,7 @@ ggplot()+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of COVID-19 deaths in Northern Ireland has fallen",
+  labs(title="Overall excess mortality in Northern Ireland has fallen, but COVID deaths have risen",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from NISRA | Plot by @VictimOfMaths")
 dev.off()
