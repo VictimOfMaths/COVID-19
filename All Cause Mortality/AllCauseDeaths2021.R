@@ -9,14 +9,14 @@ library(forcats)
 library(ggtext)
 
 #Latest date in the country-specific data
-EWDate <- "8th January"
+EWDate <- "15th January"
 ScotDate <- "17th January"
 NIDate <- "15th January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2021/publishedweek012021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek022021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-02.xlsx"
@@ -26,7 +26,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "C" 
+EngRange <- "D" 
 ScotRange <- "D" 
 NIRange <- "7" 
 
@@ -505,12 +505,13 @@ temp <- tempfile()
 temp <- curl_download(url=Eng2021, destfile=temp, quiet=FALSE, mode="wb")
 
 temp44 <- as.data.frame(t(read_excel(temp, sheet=12, range="B10:B15", col_names=FALSE)))
+temp45 <- as.data.frame(t(read_excel(temp, sheet=12, range="H10:H15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
-                    temp38, temp39, temp40, temp41, temp42, temp43, temp44) %>% 
+                    temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1129,8 +1130,8 @@ ggplot(plot1)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="All-cause deaths in England & Wales are still higher than 'normal'",
-       subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+  labs(title="England and Wales are seeing substantial levels of excess mortality",
+       subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
            label=paste0("+", round(EW.excess$excess, 0)," more deaths in 2020/21 than average (+", 
@@ -1191,7 +1192,7 @@ ggplot(plot2)+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Excess mortality remains highest in men",
-       subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+       subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=date, y=deaths), label=c(paste0("+", round(EW.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
                                                                     round(EW.excess.sex[1,4]*100, 0),"%)"), 
@@ -1247,7 +1248,7 @@ ggplot(plot3)+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Deaths are above 'normal' levels in all age groups over 45",
-       subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+       subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
                                                                     round(EW.excess.age[1,4]*100, 1),"%)"), 
@@ -1264,6 +1265,20 @@ ggplot(plot3)+
             size=3, colour=rep("red", times=6), hjust=0)
 dev.off()  
 
+#Excess deaths by age stacked
+tiff("Outputs/ONSWeeklyDeathsxAgeBars.tiff", units="in", width=8, height=6, res=500)
+ggplot(plot3)+
+  geom_col(aes(x=date, y=excess, fill=age))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Excess deaths vs. 2010-19 average")+
+  scale_fill_paletteer_d(name="Age", "awtools::a_palette")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Excess deaths are higest in older age groups",
+       subtitle=paste0("Weekly deaths registered in England & Wales by age compared to the 2010-19 average.\nData up to ", EWDate, " 2021."),
+       caption="Data from ONS | Plot by @VictimOfMaths")
+dev.off()
+
 #Plot by location
 plot4 <- data.loc.EW %>% 
   mutate(week=if_else(year==2021,week+53, week),
@@ -1279,7 +1294,7 @@ plot4 <- plot4 %>%
 tiff("Outputs/ONSWeeklyDeathsxLocation.tiff", units="in", width=12, height=8, res=500)
 ggplot()+
   geom_line(data=subset(plot4, year==1519 & week<53), aes(x=date, y=deaths), colour="Skyblue2")+
-  #geom_line(data=subset(plot4, year==1519 & week>53), aes(x=week, y=deaths), colour="Skyblue2")+
+  geom_line(data=subset(plot4, year==1519 & week>53), aes(x=date, y=deaths), colour="Skyblue2")+
   geom_line(data=subset(plot4, year>1519), aes(x=date, y=deaths), colour="Red")+
   scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
@@ -1287,7 +1302,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The biggest increase in deaths has come in hospitals",
+  labs(title="Deaths in hospitals are massively higher than is usual for this (or any) time of year",
        subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021.<br>Historic data for week 53 is not available"),
        caption="Data from ONS | Plot by @VictimOfMaths")
   
@@ -1309,7 +1324,7 @@ ggplot()+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The rise in excess deaths is being driven by COVID-19 deaths",
+  labs(title="High levels of excess deaths are being driven by COVID-19 deaths",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -1788,7 +1803,7 @@ plot14 <- data.cause.NI %>%
   mutate(date=as.Date("2020-01-03")+weeks(week-1)) %>% 
   gather(cause, deaths, c(3:5))
 
-tiff("Outputs/NISAExcessxCause.tiff", units="in", width=8, height=6, res=500)
+tiff("Outputs/NISRAExcessxCause.tiff", units="in", width=8, height=6, res=500)
 ggplot()+
   geom_col(data=subset(plot14, cause!="netexcess"), aes(x=date, y=deaths, fill=cause))+
   geom_hline(yintercept=0, colour="Grey30")+
@@ -1947,7 +1962,8 @@ dev.off()
 plot16 <- data.reg.UK %>%
   group_by(region, year) %>%
   arrange(region, year, date) %>% 
-  mutate(cumul_deaths=cumsum(deaths))
+  mutate(cumul_deaths=cumsum(deaths),
+         )
 
 tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
