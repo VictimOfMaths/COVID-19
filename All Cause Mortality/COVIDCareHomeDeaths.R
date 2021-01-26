@@ -9,9 +9,9 @@ library(scales)
 library(lubridate)
 
 #Increment by 7 each week
-MaxRange <- "JV"
+MaxRange <- "KC"
 #Increment by 1 each week
-MaxRange2 <- "AO"
+MaxRange2 <- "AP"
 
 #Read in data on deaths in care home residents notified to CQC
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
@@ -70,7 +70,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown())+
-  labs(title="The increase in COVID-19 deaths in care homes in England is accelerating",
+  labs(title="COVID-19 deaths in care homes in England are still rising alarmingly",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -124,7 +124,7 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
-#WIP heatmap
+#heatmap
 tiff("Outputs/ONSCQCDeathsHeatmap.tiff", units="in", width=13, height=14, res=500)
 data %>% 
   filter(name!="England" & cause=="AllCause" & !is.na(COVIDproproll)) %>% 
