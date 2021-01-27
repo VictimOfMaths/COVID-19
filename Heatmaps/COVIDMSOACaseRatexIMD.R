@@ -61,17 +61,37 @@ data <- IMD_MSOA %>%
   select(caserate, date, IMDrank, regionName) %>% 
   filter(date>=max(date)-weeks(3)) %>% 
   spread(date, caserate) %>% 
+  #There is definitely a better way to dynamically reference these columns, but this does work
   mutate(abs1wk=.[[ncol(.)]]-.[[ncol(.)-1]],
          abs2wk=.[[ncol(.)]]-.[[ncol(.)-2]],
          abs3wk=.[[ncol(.)]]-.[[ncol(.)-3]],
          rel1wk=abs1wk/.[[ncol(.)-1]],
          rel2wk=abs2wk/.[[ncol(.)-2]],
          rel3wk=abs3wk/.[[ncol(.)-3]],
-         IMDrank=max(IMDrank)-IMDrank)
+         IMDrank=max(IMDrank)-IMDrank) %>% 
+  rename(oldcases=4)
 
 #National level plots
+natrhocases <- cor(subset(data, !is.na(oldcases))$IMDrank, subset(data, !is.na(oldcases))$oldcases)
 natrhoabs <- cor(subset(data, !is.na(abs2wk))$IMDrank, subset(data, !is.na(abs2wk))$abs2wk)
-natrhorel <- cor(subset(data, !is.na(abs2wk))$IMDrank, subset(data, !is.na(abs2wk))$rel2wk)
+natrhorel <- cor(subset(data, !is.na(rel2wk))$IMDrank, subset(data, !is.na(rel2wk))$rel2wk)
+
+tiff("Outputs/COVIDMSOACaseRatexIMDOld.tiff", units="in", width=9, height=7, res=500)
+ggplot(data, aes(x=IMDrank, y=oldcases, colour=oldcases))+
+  geom_point(show.legend=FALSE)+
+  geom_smooth(method="lm", formula=y~x, colour="Red")+
+  scale_x_continuous(name="Deprivation (higher = more deprived)")+
+  scale_y_continuous(name="Change in cases per 100,000 in the past 2 weeks")+
+  scale_colour_paletteer_c("scico::tokyo", direction=-1)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="COVID-19 case rates were higher, on average, in more deprived areas",
+       subtitle=paste0("7-day average rates of new COVID-19 cases for MSOAs in England in the week ending ", 
+                       max(IMD_MSOA$date)-weeks(2)),
+       caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")+
+  annotate("text", x=33000, y=850, label=paste0("\u03C1", "=", round(natrhocases, 2)), colour="Red")
+dev.off()
 
 tiff("Outputs/COVIDMSOACaseRatexIMDAbs.tiff", units="in", width=9, height=7, res=500)
 ggplot(data, aes(x=IMDrank, y=abs2wk, colour=abs2wk))+
@@ -119,6 +139,16 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
+rhoold <- data %>% 
+  filter(!is.na(oldcases)) %>% 
+  group_by(regionName) %>% 
+  mutate(rho=cor(IMDrank, oldcases), 
+         IMDrank=27000, oldcases=2200) %>% 
+  ungroup() %>% 
+  select(regionName, rho, IMDrank, oldcases) %>% 
+  distinct() %>% 
+  mutate(label=paste0("\u03C1", "=", round(rho, 2)))
+
 rhoabs <- data %>% 
   filter(!is.na(abs2wk)) %>% 
   group_by(regionName) %>% 
@@ -138,6 +168,26 @@ rhorel <- data %>%
   select(regionName, rho, IMDrank, rel2wk) %>% 
   distinct() %>% 
   mutate(label=paste0("\u03C1", "=", round(rho, 2)))
+
+tiff("Outputs/COVIDMSOACaseRatexIMDOldxReg.tiff", units="in", width=10, height=10, res=500)
+ggplot(data, aes(x=IMDrank, y=oldcases, colour=oldcases))+
+  geom_point(show.legend=FALSE)+
+  geom_hline(yintercept=0, colour="Grey60")+
+  geom_smooth(method="lm", formula=y~x, colour="Red")+
+  geom_text(data=rhoold, aes(label=label), colour="Red")+
+  scale_x_continuous(name="Deprivation (higher = more deprived)")+
+  scale_y_continuous(name="Change in cases per 100,000 in the past 2 weeks")+
+  scale_colour_paletteer_c("scico::tokyo", direction=-1)+
+  facet_geo(~regionName, grid=mygrid)+  
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="COVID-19 case rates were higher, on average, in more deprived areas",
+       subtitle=paste0("7-day average rates of new COVID-19 cases for MSOAs in England in the week ending ", 
+                       max(IMD_MSOA$date)-weeks(2)),
+       caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")
+dev.off()
+
 
 tiff("Outputs/COVIDMSOACaseRatexIMDAbsxReg.tiff", units="in", width=10, height=10, res=500)
 ggplot(data, aes(x=IMDrank, y=abs2wk, colour=abs2wk))+
