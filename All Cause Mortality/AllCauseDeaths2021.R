@@ -10,7 +10,7 @@ library(ggtext)
 
 #Latest date in the country-specific data
 EWDate <- "15th January"
-ScotDate <- "17th January"
+ScotDate <- "24th January"
 NIDate <- "15th January"
 
 #Locations for 2020/21 data
@@ -19,7 +19,7 @@ NIDate <- "15th January"
 Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek022021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-02.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-03.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
 NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
@@ -27,7 +27,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "D" 
-ScotRange <- "D" 
+ScotRange <- "E" 
 NIRange <- "7" 
 
 ##############################
@@ -1375,7 +1375,7 @@ ggplot(plot6)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="All-cause deaths in Scotland are back within 'normal' levels",
+  labs(title="All-cause deaths in Scotland are high, but within the range of recent years",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
@@ -1436,7 +1436,7 @@ ggplot(plot7)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths remain highest in men",
+  labs(title="Deaths in men are above 'normal' levels",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text7, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1583,7 +1583,7 @@ ggplot(plot9)+
   scale_colour_paletteer_d(name="Place of death", "ggsci::planetexpress_futurama")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Excess mortality has fallen across all settings",
+  labs(title="Excess mortality has risen across all settings in the last week",
        subtitle="Excess deaths by place of death in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1605,7 +1605,7 @@ ggplot(plot10)+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The fall in deaths is driven by a reduction in non-COVID-19 deaths",
+  labs(title="Excess deaths are low in recent weeks, but COVID-19 deaths are still high",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1646,7 +1646,7 @@ ggplot(plot11)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 deaths in Scottish hospitals have risen sharply",
+  labs(title="COVID-19 deaths in Scottish hospitals are still rising sharply",
        subtitle="Registered deaths by cause and place of death in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1855,7 +1855,7 @@ plot15 <- plot15 %>%
   arrange(region)
 
 ann_text15 <- data.frame(date=rep(as.Date("2020-05-15"), times=12),
-                         deaths=c(2200, 2100, 1700, 2200, 1900, 1100, 1800, 2500, 1100, 
+                         deaths=c(2200, 2100, 1700, 2200, 1900, 1800, 1800, 2500, 1100, 
                                   500, 1600, 1700), 
                          region=levels(UK.excess.region$region))
 
@@ -1963,7 +1963,7 @@ plot16 <- data.reg.UK %>%
   group_by(region, year) %>%
   arrange(region, year, date) %>% 
   mutate(cumul_deaths=cumsum(deaths),
-         )
+         week=if_else(region=="Northern Ireland" & year==2021, week-53, week))
 
 tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
 ggplot()+
