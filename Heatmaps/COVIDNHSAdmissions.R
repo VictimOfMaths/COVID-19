@@ -13,11 +13,11 @@ library(forcats)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210121.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210127.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/Weekly-covid-admissions-and-beds-publication-210121.xlsx"
 #Increment by one each day
-dailyrange <- "FR"
+dailyrange <- "FX"
 #Increment by seven each week
 weeklyrange <- "BP"
 
@@ -73,7 +73,7 @@ ggplot(dailydata)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="There are some signs that COVID bed occupancy is starting to level off",
+  labs(title="There are some signs that COVID bed occupancy is starting to fall",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
