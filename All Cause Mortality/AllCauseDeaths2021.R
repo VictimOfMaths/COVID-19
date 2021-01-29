@@ -11,7 +11,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "15th January"
 ScotDate <- "24th January"
-NIDate <- "15th January"
+NIDate <- "22nd January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -28,7 +28,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #These need to be incremented by one letter each week
 EngRange <- "D" 
 ScotRange <- "E" 
-NIRange <- "7" 
+NIRange <- "8" 
 
 ##############################
 #Read in English & Welsh data#
@@ -1687,7 +1687,7 @@ plot12 <- plot12 %>%
   arrange(HB)
 
 ann_text12 <- data.frame(date=rep(as.Date("2020-05-15"), times=14),
-                         deaths=c(350, 400, 250, 230, 300, 210, 150, 250, 80, 200, 150, 100, 
+                         deaths=c(350, 400, 250, 230, 300, 210, 150, 250, 180, 200, 150, 100, 
                                   80, 80), 
                          HB=levels(S.excess.HB$HB))
 
@@ -1743,8 +1743,7 @@ dev.off()
 
 #Overall plot
 plot13 <- data.NI %>% 
-  mutate(week=if_else(year==2021,week+53, week),
-         date=as.Date(date))
+  mutate(date=as.Date(date))
 
 plot13.old <- plot13 %>% 
   filter(year<2020) %>% 
@@ -1814,7 +1813,7 @@ ggplot()+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Overall excess mortality in Northern Ireland has fallen, but COVID deaths have risen",
+  labs(title="The number of COVID-19 deaths in Northern Ireland is falling, but remains high",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from NISRA | Plot by @VictimOfMaths")
 dev.off()
