@@ -1820,7 +1820,9 @@ dev.off()
 
 #Regional plot for the whole of the UK
 plot15 <- data.reg.UK %>% 
-  mutate(week=if_else(year==2021,week+53, week),
+  mutate(week=case_when(
+    region!= "Northern Ireland" & year==2021 ~ week+53, 
+    TRUE~week),
          date=as.Date(date)) 
 
 plot15.old <- plot15 %>% 
