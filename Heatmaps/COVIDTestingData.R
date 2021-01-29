@@ -75,7 +75,7 @@ ggplot(data)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Test positivity rates are falling in all four UK nations",
-       subtitle="Rolling 7-day average proportion of tests which are returned positive",
+       subtitle="Rolling 7-day average proportion of tests which are returned positive by publication date",
        caption="Date from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
@@ -106,11 +106,11 @@ tiff("Outputs/COVIDRegTestCounts.tiff", units="in", width=8, height=6, res=500)
 ggplot(subset(APIdata2, date>as.Date("2020-11-01")))+
   geom_line(aes(x=date, y=peoplerate, colour=name))+
   scale_x_date(name="")+
-  scale_y_continuous(name="Number of unique people tested per 100,000")+
+  scale_y_continuous(name="Number of unique people tested per 100,000", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  labs(title="The number of people being tested for COVID-19 fell dramatically over the holidays",
+  labs(title="The number of people being tested for COVID-19 is falling across England",
        subtitle="Rolling 7-day rate of the number of individuals being tested per 100,000 population",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -119,12 +119,12 @@ tiff("Outputs/COVIDRegPosRates.tiff", units="in", width=8, height=6, res=500)
 ggplot(subset(APIdata2, date>as.Date("2020-11-01")))+
   geom_line(aes(x=date, y=positivity/100, colour=name))+
   scale_x_date(name="")+
-  scale_y_continuous(name="Positivity rate", labels=scales::label_percent(accuracy=1))+
+  scale_y_continuous(name="Positivity rate", labels=scales::label_percent(accuracy=1), limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  labs(title="The fall in test positivity has stalled",
-       subtitle="Rolling 7-day average proportion of COVID-19 tests returned as positive",
+  labs(title="Test positivity is falling across England again",
+       subtitle="Rolling 7-day average proportion of COVID-19 tests returned as positive by specimen date",
        caption="Data from coronavirus.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
