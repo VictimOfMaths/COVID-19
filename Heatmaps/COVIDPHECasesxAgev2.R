@@ -124,6 +124,8 @@ data <- data %>%
 #Save files for the app to use
 data %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/data.csv")
+data %>% filter(areaType %in% c("ltla", "nation", "region") & date>=as.Date("2021-01-01")) %>% 
+  write.csv("COVID_Case_Trends_By_Age/data.csv")
 shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/shortdata.csv")
 
@@ -135,7 +137,7 @@ data %>%
   filter(areaType=="nation" & !is.na(caserateroll)) %>%
   ggplot()+
   geom_tile(aes(x=date, y=age, fill=caserateroll))+
-  scale_fill_paletteer_c("viridis::magma", name="Daily cases\nper 100,000")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily cases\nper 100,000")+
   scale_x_date(name="", limits=c(plotfrom, NA))+
   scale_y_discrete(name="Age")+
   theme_classic()+
@@ -152,10 +154,10 @@ data %>%
   geom_line(aes(x=date, y=caserateroll, colour=age))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   scale_x_date(name="", limits=c(plotfrom, NA))+
-  scale_y_continuous(name="Dailynew cases per 100,000")+
+  scale_y_continuous(name="Daily new cases per 100,000")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
-  labs(title="Cases are rising gradually across all age groups",
+  labs(title="Case rates have finally started falling in the oldest age group",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -167,7 +169,7 @@ data %>%
   geom_line(aes(x=date, y=caserateroll, colour=age), show.legend=FALSE)+
   scale_colour_manual(values=c(rep("Grey80", times=18), "#FF4E86"))+
   scale_x_date(name="", limits=c(plotfrom, NA))+
-  scale_y_continuous(name="Dailynew cases per 100,000")+
+  scale_y_continuous(name="Daily new cases per 100,000")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"), plot.subtitle=element_markdown())+
   labs(title="New COVID-19 cases are rising fastest in the most vulnerable group",
@@ -281,7 +283,7 @@ shortdata %>%
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 cases are rising in the most vulnerable age group across the South East,\nbut increases in other regions are driven by younger ages, so far.",
+  labs(title="COVID-19 case rates in the oldest age group are not falling along with younger groups",
        subtitle="Rolling 7-day average of confirmed new cases by age",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
