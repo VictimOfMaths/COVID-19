@@ -9,14 +9,14 @@ library(forcats)
 library(ggtext)
 
 #Latest date in the country-specific data
-EWDate <- "15th January"
+EWDate <- "22nd  January"
 ScotDate <- "24th January"
 NIDate <- "22nd January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek022021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek032021final.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-03.xlsx"
@@ -26,7 +26,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "D" 
+EngRange <- "E" 
 ScotRange <- "E" 
 NIRange <- "8" 
 
@@ -1191,7 +1191,7 @@ ggplot(plot2)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Excess mortality remains highest in men",
+  labs(title="Excess mortality has risen for both men and women",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=date, y=deaths), label=c(paste0("+", round(EW.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1302,7 +1302,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths in hospitals are massively higher than is usual for this (or any) time of year",
+  labs(title="Deaths in hospitals are still way above what is usual for this (or any) time of year",
        subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021.<br>Historic data for week 53 is not available"),
        caption="Data from ONS | Plot by @VictimOfMaths")
   
@@ -1856,12 +1856,12 @@ plot15 <- plot15 %>%
   arrange(region)
 
 ann_text15 <- data.frame(date=rep(as.Date("2020-05-15"), times=12),
-                         deaths=c(2200, 2100, 1700, 2200, 1900, 1800, 1800, 2500, 1100, 
-                                  500, 1600, 1700), 
+                         deaths=c(2500, 2100, 1700, 2200, 1900, 1400, 2400, 2000, 1100, 
+                                  600, 1600, 1700), 
                          region=levels(UK.excess.region$region))
 
-subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>England, Wales and Northern Ireland data to ", EWDate, ".<br>Scotland data to ", ScotDate, "."),
-                   paste0("Weekly deaths in <span style='color:red;'>2020</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to ",  EWDate, ".<br>Northern Ireland data to ", NIDate, ".<br>Scotland data to ", ScotDate, "."))
+subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>England, Wales and Northern Ireland data to ", EWDate, ".<br>Scotland data to ", ScotDate, "."),
+                   paste0("Weekly deaths in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to ",  EWDate, ".<br>Northern Ireland data to ", NIDate, ".<br>Scotland data to ", ScotDate, "."))
 
 
 RegPlot <- ggplot(plot15)+
