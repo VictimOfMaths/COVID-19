@@ -4,6 +4,7 @@ library(tidyverse)
 library(curl)
 library(paletteer)
 library(scales)
+library(gtools)
 
 #Download MSOA-level COVID deaths
 temp <- tempfile()
@@ -106,6 +107,61 @@ ggplot()+
   labs(title="COVID-19 is responsible for a greater proportion of deaths in urban areas",
        subtitle="Proportion of all deaths in Mar-Dec 2020 which are due to COVID in Middle Super Output Areas",
        caption="Data from ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+dev.off()
+
+#Bivariate cartogram
+#Bivariate map
+BVmapdata <- MSOA %>% 
+  mutate(IMDtert=quantcut(-IMDrank, q=4, labels=FALSE),
+         covtert=quantcut(covprop, q=4, labels=FALSE))
+
+#Generate key
+keydata <- data.frame(IMDtert=c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4), 
+                      covtert=c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4),
+                      RGB=c("#e8e8e8","#b9dddd","#89d3d3","#5ac8c8",
+                            "#dabcd4","#acb2ca","#7ea8c1","#509eb7",
+                            "#cc90c0","#9f86b7","#727dae","#4573a5",
+                            "#be64ac","#925ba4","#67529c","#3b4994"))
+
+#Bring colours into main data for plotting
+BVmapdata <- left_join(BVmapdata, keydata, by=c("IMDtert", "covtert")) %>% 
+  mutate(RGB=if_else(substr(cuacode,1,1)=="W", NA_character_, as.character(RGB)))
+
+#Bivariate map
+BVmap <- BVmapdata %>% 
+  ggplot()+
+  geom_sf(data=Background, aes(geometry=geom))+
+  geom_sf(data=BVmapdata, aes(geometry=geom, fill=RGB), colour=NA)+
+  geom_sf(data=LAs, aes(geometry=geom), fill=NA, colour="White")+
+  geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
+                                      hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_identity()+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="COVID-19 deaths are highest in deprived urban areas",
+       subtitle="Proportion of total deaths in Mar-Dec 2020 attributable to COVID compared to Index of Multiple Deprivation ranks\nfor Middle Super Output Areas (MSOAs) in England",
+       caption="Data from PHE, ONS & MHCLG | Cartogram by @carlbaker | Plot by @VictimOfMaths")
+
+#Bivariate key
+key <- ggplot(keydata)+
+  geom_tile(aes(x=covtert, y=IMDtert, fill=RGB))+
+  scale_fill_identity()+
+  labs(x = expression("Greater % of deaths from COVID" %->%  ""),
+       y = expression("Greater deprivation" %->%  "")) +
+  theme_classic() +
+  # make font small enough
+  theme(
+    axis.title = element_text(size = 9),axis.line=element_blank(), 
+    axis.ticks=element_blank(), axis.text=element_blank())+
+  # quadratic tiles
+  coord_fixed()
+
+#Final plot
+tiff("Outputs/COVIDDeathPropMSOA.tiff", units="in", width=8, height=10, res=500)
+ggdraw()+
+  draw_plot(BVmap, 0,0,1,1)+
+  draw_plot(key, 0.68,0.66,0.28,0.28) 
 dev.off()
 
 
