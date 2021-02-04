@@ -13,11 +13,12 @@ library(forcats)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/COVID-19-daily-admissions-and-beds-20210128.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210203.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/01/Weekly-covid-admissions-and-beds-publication-210128.xlsx"
 #Increment by one each day
-dailyrange <- "FY"
+dailyrange <- "GE"
+dailyoccrange <- "GG"
 #Increment by seven each week
 weeklyrange <- "BW"
 
@@ -31,15 +32,15 @@ daily1 <- read_excel(dailydata, range=paste0("B15:", dailyrange, "21"), col_name
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
   
-#Total admissions
-daily2 <- read_excel(dailydata, range=paste0("B91:", dailyrange, "97"), col_names=FALSE) %>% 
+#Total occupancy
+daily2 <- read_excel(dailydata, range=paste0("B91:", dailyoccrange, "97"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
-#Total admissions
-daily3 <- read_excel(dailydata, range=paste0("B106:", dailyrange, "112"), col_names=FALSE) %>% 
+#Total MV occupancy
+daily3 <- read_excel(dailydata, range=paste0("B106:", dailyoccrange, "112"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy of MV beds",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
@@ -73,7 +74,7 @@ ggplot(dailydata)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="There are some signs that COVID bed occupancy is starting to fall",
+  labs(title="All measures of COVID-19 hospital usage are now falling across all regions",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
