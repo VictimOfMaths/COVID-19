@@ -11,7 +11,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "22nd  January"
 ScotDate <- "31st January"
-NIDate <- "22nd January"
+NIDate <- "29th January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -22,13 +22,13 @@ Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/births
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-04.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
+NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_2.xlsx"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "E" 
 ScotRange <- "F" 
-NIRange <- "8" 
+NIRange <- "9" 
 
 ##############################
 #Read in English & Welsh data#
@@ -1703,7 +1703,7 @@ ggplot(plot12)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Excess mortality has risen slightly across most of Scotland",
+  labs(title="Excess mortality has risen slightly across much of Scotland",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text12, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.HB[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
