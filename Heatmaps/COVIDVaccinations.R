@@ -5,6 +5,7 @@ library(curl)
 library(ukcovid19)
 library(paletteer)
 library(ggtext)
+library(RcppRoll)
 
 #This first block of code is broken as PHE keep changing the variable names...
 
@@ -127,20 +128,25 @@ APIdata2 <- APIdata2 %>%
          dose2rate=dose2*1000000/pop,
          cumpropdose1=cumdose1/pop,
          cumpropdose2=cumdose2/pop,
-         date=as.Date(date))
+         date=as.Date(date)) %>% 
+  ungroup() %>% 
+  group_by(name) %>% 
+  arrange(name, date) %>% 
+  mutate(dose1rateroll=roll_mean(dose1rate, 7, align="center", fill=NA)) %>% 
+  ungroup()
 
 tiff("Outputs/COVIDVaccinationRateDaily.tiff", units="in", width=8, height=6, res=500)
 APIdata2 %>% 
   filter(name!="UK") %>% 
 ggplot()+
-  geom_line(aes(x=date, y=dose1rate, colour=name))+
+  geom_line(aes(x=date, y=dose1rateroll, colour=name))+
   scale_x_date(name="Week ending")+
-  scale_y_continuous(name="First doses delivered per 1m population")+
+  scale_y_continuous(name="First doses delivered per 1m population", limits=c(0,NA))+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Vaccine delivery across the UK hasn't sped up in the last week",
-       subtitle="Rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
+  labs(title="Vaccine delivery across the UK is still accelerating",
+       subtitle="Rolling 7-day average rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
@@ -173,13 +179,13 @@ APIdata2 %>%
   mutate(date=as.Date(date)) %>% 
   ggplot()+
   geom_line(aes(x=date, y=count/1000000, linetype=dose), colour="Darkred")+
-  geom_hline(yintercept=13.4, colour="SkyBlue")+
+  geom_hline(yintercept=14.6, colour="SkyBlue")+
   scale_x_date(name="", limits=c(as.Date("2021-01-10"), as.Date("2021-02-14")))+
   scale_y_continuous(name="Total vaccine doses delivered (millions)")+
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Vaccination delivery in the UK is just about on target",
+  labs(title="Vaccination delivery in the UK is on target",
        subtitle="<span style='color:DarkRed;'>Total COVID-19 vaccinations delivered</span>, by dose, in the UK compared to <span style='color:SkyBlue2;'>Boris Johnson's mid-February target</span><br>Data by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
