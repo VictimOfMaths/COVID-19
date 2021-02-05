@@ -5,6 +5,7 @@ library(curl)
 library(paletteer)
 library(scales)
 library(gtools)
+library(ggtext)
 
 #Download MSOA-level COVID deaths
 temp <- tempfile()
@@ -68,7 +69,7 @@ IMD <- merge(IMD, pop)
 #Calculate IMD rank at MSOA level as weighted average of LSOA level ranks, weight by population
 IMD_MSOA <- IMD %>% 
   group_by(MSOA11CD) %>% 
-  summarise(IMDrank=weighted.mean(IMDrank, pop)) %>% 
+  summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() %>% 
   #Then merge into COVID case data
   merge(deaths.total, by="MSOA11CD", all=TRUE) %>% 
@@ -109,6 +110,23 @@ ggplot()+
        caption="Data from ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDDeathsMSOACumul.tiff", units="in", width=10, height=8, res=800)
+ggplot()+
+  geom_sf(data=Background, aes(geometry=geom))+
+  geom_sf(data=MSOA, aes(geometry=geom, fill=COVID*100000/pop), colour=NA)+
+  geom_sf(data=LAs, aes(geometry=geom), fill=NA, colour="White")+
+  geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
+                                      hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("viridis::inferno", direction=-1,
+                         name="Total COVID deaths\nper 100,000")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="COVID-19 death rates are highest in the North of England",
+       subtitle="Total COVID-19 deaths between March and December 2020 in English Middle Super Output Areas",
+       caption="Data from ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+dev.off()
+
 #Bivariate cartogram
 #Bivariate map
 BVmapdata <- MSOA %>% 
@@ -125,14 +143,14 @@ keydata <- data.frame(IMDtert=c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4),
 
 #Bring colours into main data for plotting
 BVmapdata <- left_join(BVmapdata, keydata, by=c("IMDtert", "covtert")) %>% 
-  mutate(RGB=if_else(substr(cuacode,1,1)=="W", NA_character_, as.character(RGB)))
+  mutate(RGB=if_else(substr(cuacode,1,1)=="W", "White", as.character(RGB)))
 
 #Bivariate map
 BVmap <- BVmapdata %>% 
   ggplot()+
   geom_sf(data=Background, aes(geometry=geom))+
   geom_sf(data=BVmapdata, aes(geometry=geom, fill=RGB), colour=NA)+
-  geom_sf(data=LAs, aes(geometry=geom), fill=NA, colour="White")+
+  geom_sf(data=LAs, aes(geometry=geom), fill=NA, colour="White", size=0.5)+
   geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
                                       hjust=just), size=rel(2.4), colour="Black")+
@@ -164,4 +182,72 @@ ggdraw()+
   draw_plot(key, 0.68,0.66,0.28,0.28) 
 dev.off()
 
+#Scatterplot
+tiff("Outputs/COVIDDeathPropMSOAScatter.tiff", units="in", width=8, height=6, res=500)
+ggplot(IMD_MSOA, aes(x=covprop, y=-IMDrank, colour=COVID))+
+  geom_point()+
+  geom_smooth(method="lm", colour="Darkred")+
+  scale_x_continuous(name="Proportion of all deaths which were from COVID",
+                     labels=label_percent(accuracy=1))+
+  scale_y_continuous(name="Index of Multiple Deprivation",
+                     breaks=c(-max(IMD_MSOA$IMDrank, na.rm=TRUE), 
+                              -min(IMD_MSOA$IMDrank, na.rm=TRUE)),
+                     labels=c("Least Deprived", "Most Deprived"))+
+  scale_colour_paletteer_c("pals::ocean.haline", name="Total COVID deaths",
+                           direction=-1)+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="On average more deprived areas have seen more COVID-19 deaths",
+       subtitle="Proportion of all deaths in March-December 2020 which were due to COVID-19 by deprivation\nin English Middle Super Output Areas",
+       caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")
+dev.off()
+
+#########################################################################
+#Look at wave 1 vs. wave 2 deaths
+waves <- deaths %>% 
+  filter(month!="Total") %>% 
+  mutate(wave=if_else(month %in% c("Mar", "Apr", "May", "Jun", "Jul"), "Wave 1", "Wave 2")) %>% 
+  group_by(MSOA11CD, cause, wave) %>% 
+  summarise(deaths=sum(deaths)) %>% 
+  spread(wave, deaths) %>% 
+  ungroup() %>% 
+  mutate(ratio=`Wave 1`/(`Wave 1`+ `Wave 2`)) %>% 
+  rename(msoa11cd=MSOA11CD)
+
+#Merge into map
+temp <- tempfile()
+source <- ("https://github.com/houseofcommonslibrary/uk-hex-cartograms-noncontiguous/raw/main/geopackages/MSOA.gpkg")
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+Background <- st_read(temp, layer="5 Background")
+
+MSOA <- st_read(temp, layer="4 MSOA hex") %>% 
+  left_join(waves, by="msoa11cd")
+
+Groups <- st_read(temp, layer="2 Groups")
+
+Group_labels <- st_read(temp, layer="1 Group labels") %>% 
+  mutate(just=if_else(LabelPosit=="Left", 0, 1))
+
+LAs <- st_read(temp, layer="3 Local authority outlines (2019)")
+
+tiff("Outputs/COVIDDeathsMSOAWaves.tiff", units="in", width=10, height=8, res=800)
+ggplot()+
+  geom_sf(data=Background, aes(geometry=geom), fill="Grey60")+
+  geom_sf(data=MSOA, aes(geometry=geom, fill=ratio), colour=NA)+
+  geom_sf(data=LAs, aes(geometry=geom), fill=NA, colour="Grey40", size=0.1)+
+  geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
+                                      hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.balance",
+                         name="", breaks=c(0, 0.5, 1),
+                         labels=c("More deaths\nin Aug-Dec", "Equal deaths", "More deaths\nin Mar-Jul"))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        plot.subtitle=element_markdown())+
+  labs(title="There seems to be little evidence for 'herd immunity' for mortality even at small geographies",
+       subtitle="Proportion of total COVID-19 deaths which occurred in <span style='color:#982629;'>March-July</span> compared to <span style='color:#1d4e9f;'>August-December</span>.<br>Data at Middle Super Output Area level",
+       caption="Data from ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+dev.off()
 
