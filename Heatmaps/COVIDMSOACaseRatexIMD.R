@@ -6,6 +6,7 @@ library(readxl)
 library(lubridate)
 library(paletteer)
 library(geofacet)
+library(scales)
 
 temp <- tempfile()
 source <- ("https://api.coronavirus.data.gov.uk/v2/data?areaType=msoa&metric=newCasesBySpecimenDateRollingRate&format=csv")
@@ -91,6 +92,7 @@ ggplot(data, aes(x=IMDrank, y=oldcases, colour=oldcases))+
                        max(IMD_MSOA$date)-weeks(2)),
        caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")+
   annotate("text", x=33000, y=850, label=paste0("\u03C1", "=", round(natrhocases, 2)), colour="Red")
+
 dev.off()
 
 tiff("Outputs/COVIDMSOACaseRatexIMDAbs.tiff", units="in", width=9, height=7, res=500)
@@ -101,15 +103,16 @@ ggplot(data, aes(x=IMDrank, y=abs2wk, colour=abs2wk))+
   scale_x_continuous(name="Deprivation (higher = more deprived)")+
   scale_y_continuous(name="Change in cases per 100,000 in the past 2 weeks")+
   scale_colour_paletteer_c("scico::roma", name="Change in\ncase rates",
-                           limit=c(-1,1)*max(abs(data$abs2wk)))+
+                           limit=c(-1,1)*max(abs(data$abs2wk), na.rm=TRUE))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The absolute fall in COVID-19 cases is very equal across the deprivation spectrum",
+  labs(title="The absolute fall in COVID-19 cases is larger in more deprived areas",
        subtitle=paste0("Change in rolling 7-day rates of new COVID-19 cases for MSOAs in England between ", 
                        max(IMD_MSOA$date)-weeks(2), " and ",  max(IMD_MSOA$date)),
        caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")+
   annotate("text", x=33000, y=-100, label=paste0("\u03C1", "=", round(natrhoabs, 2)), colour="Red")
+
 dev.off()
 
 tiff("Outputs/COVIDMSOACaseRatexIMDRel.tiff", units="in", width=9, height=7, res=500)
@@ -125,11 +128,12 @@ ggplot(data, aes(x=IMDrank, y=rel2wk, colour=rel2wk))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Relative reductions in COVID-19 cases are smaller in more deprived areas",
+  labs(title="Relative reductions in COVID-19 cases are broadly equal across the deprivation spectrum",
        subtitle=paste0("Change in rolling 7-day rates of new COVID-19 cases for MSOAs in England between ", 
                        max(IMD_MSOA$date)-weeks(2), " and ",  max(IMD_MSOA$date)),
        caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")+
   annotate("text", x=33000, y=-0.3, label=paste0("\u03C1", "=", round(natrhorel, 2)), colour="Red")
+
 dev.off()
 
 
@@ -198,7 +202,7 @@ ggplot(data, aes(x=IMDrank, y=abs2wk, colour=abs2wk))+
   scale_x_continuous(name="Deprivation (higher = more deprived)")+
   scale_y_continuous(name="Change in cases per 100,000 in the past 2 weeks")+
   scale_colour_paletteer_c("scico::roma", name="Change in\ncase rates",
-                           limit=c(-1,1)*max(abs(data$abs2wk)))+
+                           limit=c(-1,1)*max(abs(data$abs2wk), na.rm=TRUE))+
   facet_geo(~regionName, grid=mygrid)+  
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -230,4 +234,31 @@ ggplot(data, aes(x=IMDrank, y=rel2wk, colour=rel2wk))+
        caption="Data from PHE, ONS & MHCLG | Plot by @VictimOfMaths")
 dev.off()
 
+#Add deciles
+deciledata <- data %>% 
+  mutate(decile=ntile(IMDrank, 10)) %>% 
+  group_by(regionName, decile) %>% 
+  summarise(oldcases=sum(oldcases, na.rm=TRUE), abs2wk=sum(abs2wk, na.rm=TRUE),
+            rel2wk=abs2wk/oldcases)
 
+tiff("Outputs/COVIDMSOACaseRatexIMDRelxRegBar.tiff", units="in", width=10, height=10, res=500)
+ggplot(deciledata)+
+  geom_col(aes(x=decile, y=rel2wk, fill=rel2wk), show.legend=FALSE)+
+  #geom_col(aes(x=decile, y=rel2wk, fill=as.factor(decile)), show.legend=FALSE)+
+  scale_x_continuous(name="Deprivation", breaks=c(1,10), 
+                     labels=c("Least\ndeprived", "Most\ndeprived"))+
+  scale_y_continuous(name="Change in cases per 100,000 in the past 2 weeks",
+                     labels=label_percent(accuracy=1))+
+  scale_fill_paletteer_c("pals::ocean.tempo",
+                           limit=c(NA,0), direction=-1)+
+  #scale_fill_paletteer_d("ggsci::purple_material")+
+  facet_geo(~regionName, grid=mygrid)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.5)))+
+  labs(title="COVID-19 cases are falling across England, but at unequal rates",
+       subtitle=paste0("Change in rolling 7-day rates of new COVID-19 cases for MSOAs in England between ", 
+                       max(IMD_MSOA$date)-weeks(2), " and ",  max(IMD_MSOA$date)),
+       caption="Data from Public Health England, Office for National Statistics\nand the Ministry of Housing, Communities & Local Government\n\nPlot and analysis by Colin Angus")
+
+dev.off()
