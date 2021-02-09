@@ -9,14 +9,14 @@ library(forcats)
 library(ggtext)
 
 #Latest date in the country-specific data
-EWDate <- "22nd  January"
+EWDate <- "29th January"
 ScotDate <- "31st January"
 NIDate <- "29th January"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek032021final.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/copyofpublishedweek042021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-04.xlsx"
@@ -26,7 +26,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "E" 
+EngRange <- "F" 
 ScotRange <- "F" 
 NIRange <- "9" 
 
@@ -506,12 +506,13 @@ temp <- curl_download(url=Eng2021, destfile=temp, quiet=FALSE, mode="wb")
 
 temp44 <- as.data.frame(t(read_excel(temp, sheet=12, range="B10:B15", col_names=FALSE)))
 temp45 <- as.data.frame(t(read_excel(temp, sheet=12, range="H10:H15", col_names=FALSE)))
+temp46 <- as.data.frame(t(read_excel(temp, sheet=12, range="N10:N15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
-                    temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45) %>% 
+                    temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1191,7 +1192,7 @@ ggplot(plot2)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Excess mortality has risen for both men and women",
+  labs(title="We are still seeing substantial excess mortality in both men and women",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=date, y=deaths), label=c(paste0("+", round(EW.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1247,7 +1248,7 @@ ggplot(plot3)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths are above 'normal' levels in all age groups over 45",
+  labs(title="Deaths are above 'normal' levels in all age groups over 15",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
@@ -1260,6 +1261,40 @@ ggplot(plot3)+
                                                                     round(EW.excess.age[4,4]*100, 0),"%)"),
                                                            paste0("+", round(EW.excess.age[5,2],0)," deaths (+",
                                                                     round(EW.excess.age[5,4]*100, 0),"%)"),
+                                                           paste0("+", round(EW.excess.age[6,2],0)," deaths (+",
+                                                                  round(EW.excess.age[6,4]*100, 0),"%)")), 
+            size=3, colour=rep("red", times=6), hjust=0)
+dev.off()  
+
+ann_text3 <- data.frame(date=rep(as.Date("2020-06-01"), times=6), 
+                        deaths=c(120, 400, 2000, 3000, 5000, 7000), 
+                        age=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"))
+
+tiff("Outputs/ONSWeeklyDeathsxAgev2.tiff", units="in", width=12, height=8, res=500)
+ggplot(plot3)+
+  geom_ribbon(aes(x=date, ymin=min, ymax=max), fill="Skyblue2")+
+  geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
+  geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
+  geom_line(aes(x=date, y=deaths), colour="Red")+
+  scale_x_date(name="", date_labels="%b-%y")+
+  scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="Deaths are above 'normal' levels in all age groups over 15",
+       subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
+       caption="Data from ONS | Plot by @VictimOfMaths")+
+  geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
+                                                                  round(EW.excess.age[1,4]*100, 1),"%)"), 
+                                                           paste0("+", round(EW.excess.age[2,2],0)," deaths (+",
+                                                                  round(EW.excess.age[2,4]*100, 0),"%)"),
+                                                           paste0("+", round(EW.excess.age[3,2],0)," deaths (+",
+                                                                  round(EW.excess.age[3,4]*100, 0),"%)"),
+                                                           paste0("+", round(EW.excess.age[4,2],0)," deaths (+",
+                                                                  round(EW.excess.age[4,4]*100, 0),"%)"),
+                                                           paste0("+", round(EW.excess.age[5,2],0)," deaths (+",
+                                                                  round(EW.excess.age[5,4]*100, 0),"%)"),
                                                            paste0("+", round(EW.excess.age[6,2],0)," deaths (+",
                                                                   round(EW.excess.age[6,4]*100, 0),"%)")), 
             size=3, colour=rep("red", times=6), hjust=0)
@@ -1856,7 +1891,7 @@ plot15 <- plot15 %>%
   arrange(region)
 
 ann_text15 <- data.frame(date=rep(as.Date("2020-05-15"), times=12),
-                         deaths=c(2500, 2100, 1700, 2200, 1900, 1400, 2400, 2000, 1100, 
+                         deaths=c(2500, 2100, 1700, 2200, 2100, 2300, 1400, 2000, 1100, 
                                   600, 1600, 1700), 
                          region=levels(UK.excess.region$region))
 
