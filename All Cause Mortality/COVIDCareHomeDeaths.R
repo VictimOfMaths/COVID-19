@@ -9,14 +9,14 @@ library(scales)
 library(lubridate)
 
 #Increment by 7 each week
-MaxRange <- "KC"
+MaxRange <- "KQ"
 #Increment by 1 each week
-MaxRange2 <- "AP"
+MaxRange2 <- "AR"
 
 #Read in data on deaths in care home residents notified to CQC
-#https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020
+#https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
 temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fnumberofdeathsincarehomesnotifiedtothecarequalitycommissionengland%2f2021/cqcdata.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/cqcdata.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Deaths from COVID
@@ -70,7 +70,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown())+
-  labs(title="COVID-19 deaths in care homes in England are still rising alarmingly",
+  labs(title="COVID-19 deaths in care homes in England are falling",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -136,7 +136,7 @@ data %>%
   scale_y_discrete(name="")+
   scale_x_date(name="")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of Local Authorities reporting a substantial proportion of deaths in care homes as COVID-related is rising",
+  labs(title="COVID-19 is still causing a significant number of deaths in care homes",
        subtitle="Proportion of deaths in care homes notified to CQC recorded as involving COVID-19 by Local Authority in England.\nAuthorities are ordered by the date on which the highest proportion of deaths involved COVID-19.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
