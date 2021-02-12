@@ -4,11 +4,12 @@ library(tidyverse)
 library(curl)
 library(readxl)
 library(paletteer)
+library(scales)
 
 #Read in data
 temp <- tempfile()
 #source <- "https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata"
-source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fconditionsanddiseases%2fdatasets%2fcoronaviruscovid19infectionsurveydata%2f2020/covid19infectionsurveydatasets2020122423122020174305.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/covid19infectionsurveydatasets202102123.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read_excel(temp, sheet="1g", range="A8:V49", col_names=FALSE)
 
@@ -33,7 +34,20 @@ ggplot(data, aes(x=date, y=age, fill=prevalence))+
          geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="")+
-  scale_fill_paletteer_c("viridis::magma", name="Prevalence", labels=scales::label_percent())+
+  scale_fill_paletteer_c("viridis::inferno", name="Prevalence", labels=scales::label_percent())+
+  labs(title="The ONS infection survey gives a very different picture of the age distribution of cases",
+       subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
+       caption="Data from ONS | Plot by @VictimOfMaths")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))
+dev.off()
+
+tiff("Outputs/ONSInfSurveyxAgeLine.tiff", units="in", width=11, height=4, res=500)
+ggplot(data, aes(x=date, y=prevalence, colour=age))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="", label=label_percent(accuracy=2))+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   labs(title="The ONS infection survey gives a very different picture of the age distribution of cases",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
