@@ -11,7 +11,7 @@ library(ggtext)
 #Latest date in the country-specific data
 EWDate <- "29th January"
 ScotDate <- "7th February"
-NIDate <- "29th January"
+NIDate <- "5th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -22,13 +22,13 @@ Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/births
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-05.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_2.xlsx"
+NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "F" 
 ScotRange <- "G" 
-NIRange <- "9" 
+NIRange <- "10" 
 
 ##############################
 #Read in English & Welsh data#
