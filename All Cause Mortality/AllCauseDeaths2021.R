@@ -1868,7 +1868,7 @@ plot15.old <- plot15 %>%
 
 #Add extra weeks to old data
 plot15.old <- plot15.old %>% 
-  filter(week<=min(Eng2021MaxWeek-53, Scot2021MaxWeek-53, NI2021MaxWeek)) %>% 
+  filter(week<=max(Eng2021MaxWeek-53, Scot2021MaxWeek-53, NI2021MaxWeek)) %>% 
   mutate(week=week+53) %>% 
   bind_rows(plot15.old)
 
