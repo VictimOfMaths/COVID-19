@@ -129,7 +129,7 @@ data %>% filter(areaType %in% c("ltla", "nation", "region") & date>=as.Date("202
 shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/shortdata.csv")
 
-plotfrom <- as.Date("2020-09-01")
+plotfrom <- as.Date("2020-12-27")
 
 #England plot
 tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=5, res=500)
@@ -142,7 +142,7 @@ data %>%
   scale_y_discrete(name="Age")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
-  labs(title="Case rates are highest in people of working age",
+  labs(title="Case rates are falling across all age groups",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -157,7 +157,7 @@ data %>%
   scale_y_continuous(name="Daily new cases per 100,000")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
-  labs(title="Case rates have finally started falling in the oldest age group",
+  labs(title="Case rates are falling across all age groups",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
