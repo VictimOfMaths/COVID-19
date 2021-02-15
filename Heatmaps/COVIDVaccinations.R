@@ -62,6 +62,7 @@ ggplot()+
   labs(title="Vaccine delivery across the UK has started accelerating",
        subtitle="Rates of delivery of 1st COVID-19 vaccine doses by country",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths\nEnglish data for the weeks ending 13th & 20th Dec is reported together, so figures for these weeks\nare estimated assuming the distribution between these weeks matched the rest of the UK")
+
 dev.off()
 
 tiff("Outputs/COVIDVaccinationTotals.tiff", units="in", width=8, height=6, res=500)
@@ -81,6 +82,7 @@ APIdata %>%
   labs(title="Wales is lagging behind the rest of the UK in delivering COVID-19 vaccines",
        subtitle="Rates of delivery of COVID-19 vaccines by country",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths\nEnglish data for the weeks ending 13th & 20th Dec is reported together, so figures for these weeks\nare estimated assuming the distribution between these weeks matched the rest of the UK")
+
 dev.off()
 
 tiff("Outputs/COVIDVaccinationTarget.tiff", units="in", width=8, height=6, res=500)
@@ -100,6 +102,7 @@ APIdata %>%
   labs(title="Vaccination delivery in the UK needs to speed up further",
        subtitle="<span style='color:DarkRed;'>Total COVID-19 vaccinations delivered</span>, by dose, in the UK compared to <span style='color:SkyBlue2;'>Boris Johnson's mid-February target",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths\nEnglish data for the weeks ending 13th & 20th Dec is reported together, so figures for these weeks\nare estimated assuming the distribution between these weeks matched the rest of the UK")
+
 dev.off()
 
 ########################################################
@@ -145,7 +148,7 @@ ggplot()+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Vaccine delivery across the UK is still accelerating",
+  labs(title="Vaccine delivery has accelerated in recent weeks, except in England",
        subtitle="Rolling 7-day average rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -165,7 +168,7 @@ APIdata2 %>%
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Scotland and Wales are lagging behind the rest of the UK in delivering COVID-19 vaccines",
+  labs(title="Scotland and Wales have picked up their delivery of COVID-19 vaccines",
        subtitle="Rates of delivery of COVID-19 vaccines by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -185,7 +188,7 @@ APIdata2 %>%
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Vaccination delivery in the UK is on target",
+  labs(title="Vaccine delivery in the UK has now surpassed the Mid-February target",
        subtitle="<span style='color:DarkRed;'>Total COVID-19 vaccinations delivered</span>, by dose, in the UK compared to <span style='color:SkyBlue2;'>Boris Johnson's mid-February target</span><br>Data by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
