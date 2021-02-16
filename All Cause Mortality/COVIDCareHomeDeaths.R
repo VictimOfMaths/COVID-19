@@ -7,31 +7,53 @@ library(forcats)
 library(paletteer)
 library(scales)
 library(lubridate)
+library(ragg)
 
 #Increment by 7 each week
-MaxRange <- "KQ"
+MaxRange <- "AR"
 #Increment by 1 each week
-MaxRange2 <- "AR"
+MaxRange2 <- "G"
 
-#Read in data on deaths in care home residents notified to CQC
+#Read in data on deaths in care home residents notified to CQC 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
-temp <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/cqcdata.xlsx"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+temp21 <- tempfile()
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210214cqccoviddeathnotifications.xlsx"
+temp21 <- curl_download(url=source, destfile=temp21, quiet=FALSE, mode="wb")
 
-#Deaths from COVID
-data.COVID <- read_excel(temp, sheet="Table 2", range=paste0("A4:", MaxRange, "153"),
+#2020 data
+temp20 <- tempfile()
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2020/20210211coviddeathnotifs2020only.xlsx"
+temp20 <- curl_download(url=source, destfile=temp20, quiet=FALSE, mode="wb")
+
+#Deaths from COVID 
+data.COVID.21 <- read_excel(temp21, sheet="Table 2", range=paste0("A4:", MaxRange, "153"),
                          col_names=FALSE) %>% 
+  gather(date, COVID, c(2:ncol(.))) %>% 
+  mutate(date=as.Date("2021-01-01")+days(as.numeric(substr(date, 4,6))-2)) %>% 
+  rename(name=`...1`)
+
+data.COVID.20 <- read_excel(temp20, sheet="Table 2", range=paste0("A4:JG153"),
+                            col_names=FALSE) %>% 
   gather(date, COVID, c(2:ncol(.))) %>% 
   mutate(date=as.Date("2020-04-10")+days(as.numeric(substr(date, 4,6))-2)) %>% 
   rename(name=`...1`)
 
+data.COVID <- bind_rows(data.COVID.21, data.COVID.20)
+
 #Deaths from all causes
-data.all <- read_excel(temp, sheet="Table 3", range=paste0("A4:", MaxRange, "153"),
+data.all.21 <- read_excel(temp21, sheet="Table 3", range=paste0("A4:", MaxRange, "153"),
                        col_names=FALSE) %>% 
+  gather(date, AllCause, c(2:ncol(.))) %>% 
+  mutate(date=as.Date("2021-01-01")+days(as.numeric(substr(date, 4,6))-2))%>% 
+  rename(name=`...1`)
+
+data.all.20 <- read_excel(temp20, sheet="Table 3", range=paste0("A4:JG153"),
+                          col_names=FALSE) %>% 
   gather(date, AllCause, c(2:ncol(.))) %>% 
   mutate(date=as.Date("2020-04-10")+days(as.numeric(substr(date, 4,6))-2))%>% 
   rename(name=`...1`)
+
+data.all <- bind_rows(data.all.21, data.all.20)
 
 #Combine
 data <- merge(data.COVID, data.all) %>% 
@@ -58,7 +80,7 @@ data %>%
 plotfrom=min(data$date[!is.na(data$deathsroll)])
 plotto=max(data$date[!is.na(data$deathsroll)])
 
-tiff("Outputs/ONSCQCDeathsxCause.tiff", units="in", width=8, height=6, res=500)
+agg_tiff("Outputs/ONSCQCDeathsxCause.tiff", units="in", width=8, height=6, res=500)
 ggplot()+
   geom_area(data=subset(data, name=="England" & cause=="COVID" & !is.na(deathsroll)),
             aes(x=date, y=deathsroll), fill="#F44B4B")+
@@ -77,8 +99,20 @@ dev.off()
 
 #Read in place of death data for care home residents
 #Deaths from All Causes
-data.COVID.2 <- read_excel(temp, sheet="Table 4", range=paste0("A6:", MaxRange2, "9"),
+data.COVID.21.2 <- read_excel(temp21, sheet="Table 4", range=paste0("A6:", MaxRange2, "9"),
                          col_names=FALSE) %>% 
+  gather(week, AllCause, c(2:ncol(.))) %>% 
+  mutate(week=as.numeric(substr(week, 4,6))+52,
+         location=case_when(
+           `...1` %in% c("Elsewhere", "Not Stated") ~ "Other/Unknown",
+           TRUE ~ `...1`)) %>% 
+  group_by(week, location) %>% 
+  mutate(AllCause=as.numeric(AllCause)) %>% 
+  summarise(AllCause=sum(AllCause)) %>% 
+  ungroup()
+
+data.COVID.20.2 <- read_excel(temp20, sheet="Table 4", range=paste0("A6:AM9"),
+                              col_names=FALSE) %>% 
   gather(week, AllCause, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4,6))+14,
          location=case_when(
@@ -89,8 +123,22 @@ data.COVID.2 <- read_excel(temp, sheet="Table 4", range=paste0("A6:", MaxRange2,
   summarise(AllCause=sum(AllCause)) %>% 
   ungroup()
 
+data.COVID.2 <- bind_rows(data.COVID.21.2, data.COVID.20.2)
+
 #Deaths from COVID  
-data.all.2 <- read_excel(temp, sheet="Table 4", range=paste0("A12:", MaxRange2, "15"),
+data.all.21.2 <- read_excel(temp21, sheet="Table 4", range=paste0("A12:", MaxRange2, "15"),
+                         col_names=FALSE) %>% 
+  gather(week, COVID, c(2:ncol(.))) %>% 
+  mutate(week=as.numeric(substr(week, 4,6))+52,
+         location=case_when(
+           `...1` %in% c("Elsewhere", "Not Stated") ~ "Other/Unknown",
+           TRUE ~ `...1`)) %>% 
+  group_by(week, location) %>% 
+  mutate(COVID=as.numeric(COVID)) %>% 
+  summarise(COVID=sum(COVID)) %>% 
+  ungroup()
+  
+data.all.20.2 <- read_excel(temp20, sheet="Table 4", range=paste0("A12:AM159"),
                          col_names=FALSE) %>% 
   gather(week, COVID, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4,6))+14,
@@ -100,7 +148,9 @@ data.all.2 <- read_excel(temp, sheet="Table 4", range=paste0("A12:", MaxRange2, 
   group_by(week, location) %>% 
   mutate(COVID=as.numeric(COVID)) %>% 
   summarise(COVID=sum(COVID)) %>% 
-  ungroup() %>% 
+  ungroup()
+
+data.all.2 <- bind_rows(data.all.21.2, data.all.20.2) %>%   
   #Merge
   merge(data.COVID.2) %>% 
   mutate(Other=AllCause-COVID) %>% 
@@ -110,7 +160,7 @@ data.all.2 <- read_excel(temp, sheet="Table 4", range=paste0("A12:", MaxRange2, 
     cause=="Other" ~ paste0("Other cause deaths in ", location)),
     date=as.Date("2020-04-13")+days(7*(week-16)))
 
-tiff("Outputs/ONSCQCDeathsxCausexLoc.tiff", units="in", width=8, height=6, res=500)
+agg_tiff("Outputs/ONSCQCDeathsxCausexLoc.tiff", units="in", width=8, height=6, res=500)
 ggplot(subset(data.all.2, cause!="AllCause"))+
   geom_col(aes(x=date, y=deaths, fill=causeloc))+
   scale_x_date(name="", breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
@@ -125,7 +175,7 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
 dev.off()
 
 #heatmap
-tiff("Outputs/ONSCQCDeathsHeatmap.tiff", units="in", width=13, height=14, res=500)
+agg_tiff("Outputs/ONSCQCDeathsHeatmap.tiff", units="in", width=13, height=14, res=500)
 data %>% 
   filter(name!="England" & cause=="AllCause" & !is.na(COVIDproproll)) %>% 
   ggplot()+
