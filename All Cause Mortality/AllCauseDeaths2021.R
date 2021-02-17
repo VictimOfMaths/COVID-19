@@ -11,7 +11,7 @@ library(ragg)
 
 #Latest date in the country-specific data
 EWDate <- "5th February"
-ScotDate <- "7th February"
+ScotDate <- "14th February"
 NIDate <- "5th February"
 
 #Locations for 2020/21 data
@@ -20,7 +20,7 @@ NIDate <- "5th February"
 Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek052021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-05.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-06.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
 NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
@@ -28,7 +28,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "G" 
-ScotRange <- "G" 
+ScotRange <- "H" 
 NIRange <- "10" 
 
 ##############################
@@ -1414,7 +1414,7 @@ ggplot(plot6)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="All-cause deaths in Scotland have fallen, but are still higher than previous years",
+  labs(title="All-cause deaths in Scotland have fallen again, but are still higher than previous years",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
@@ -1531,7 +1531,7 @@ ggplot(plot8)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Scotland is seeing excess mortality in 45-64 and 75-84 year olds",
+  labs(title="Scotland is seeing excess mortality in 45-84 year olds",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text8, aes(x=date, y=deaths), label=c(paste0(round(S.excess.age[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
@@ -1600,7 +1600,7 @@ ggplot(plot9)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="We are still seeing excess deaths in Scottish homes",
+  labs(title="Scottish care home deaths have dropped sharply",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2015-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text9, aes(x=date, y=deaths), label=c(paste0(round(S.excess.loc[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
@@ -1644,7 +1644,7 @@ ggplot(plot10)+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="Cause of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 deaths have fallen slightly, but remain high",
+  labs(title="COVID-19 deaths have continued to fall",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
@@ -1669,7 +1669,7 @@ ggplot(plot11)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The number of COVID-19 deaths in hospitals and care homes is still high",
+  labs(title="The number of COVID-19 deaths is falling much faster in care homes than in hospitals",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
