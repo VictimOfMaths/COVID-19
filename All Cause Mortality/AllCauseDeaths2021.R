@@ -12,7 +12,7 @@ library(ragg)
 #Latest date in the country-specific data
 EWDate <- "5th February"
 ScotDate <- "14th February"
-NIDate <- "5th February"
+NIDate <- "12th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -23,13 +23,13 @@ Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/births
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-06.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths_0.xlsx"
+NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "G" 
 ScotRange <- "H" 
-NIRange <- "10" 
+NIRange <- "11" 
 
 ##############################
 #Read in English & Welsh data#
@@ -1852,7 +1852,7 @@ ggplot()+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of COVID-19 deaths in Northern Ireland is falling, but remains high",
+  labs(title="The number of COVID-19 deaths in Northern Ireland continues to fall",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from NISRA | Plot by @VictimOfMaths")
 dev.off()
