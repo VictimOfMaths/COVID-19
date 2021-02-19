@@ -129,7 +129,7 @@ data %>% filter(areaType %in% c("ltla", "nation", "region") & date>=as.Date("202
 shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/shortdata.csv")
 
-plotfrom <- as.Date("2020-12-27")
+plotfrom <- as.Date("2020-09-01")
 
 #England plot
 tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=5, res=500)
@@ -283,7 +283,24 @@ shortdata %>%
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 case rates in the oldest age group are not falling along with younger groups",
+  labs(title="COVID-19 case rates are falling at different rates across England",
+       subtitle="Rolling 7-day average of confirmed new cases by age",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
+tiff("Outputs/COVIDCasesxAgeRegStream.tiff", units="in", width=9, height=11, res=500)
+shortdata %>% 
+  filter(areaType=="region" & date>=plotfrom) %>% 
+  ggplot()+
+  geom_stream(aes(x=date, y=caserateroll, fill=ageband))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000", labels=abs)+
+  scale_fill_paletteer_d("awtools::a_palette", name="Age")+
+  facet_geo(~areaName, grid=mygrid)+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)))+
+  labs(title="COVID-19 case rates are falling at different rates across England",
        subtitle="Rolling 7-day average of confirmed new cases by age",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
