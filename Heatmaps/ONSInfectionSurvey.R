@@ -5,11 +5,12 @@ library(curl)
 library(readxl)
 library(paletteer)
 library(scales)
+library(ragg)
 
 #Read in data
 temp <- tempfile()
 #source <- "https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata"
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/covid19infectionsurveydatasets202102123.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/covid19infectionsurveydatasets20210219.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 rawdata <- read_excel(temp, sheet="1g", range="A8:V49", col_names=FALSE)
 
@@ -29,26 +30,27 @@ data <- rawdata %>%
     age=factor(age, levels=c("Age 2 - Year 6","Year 7 - Year 11","Year 12 - Age 24",
                              "Ages 25 - 34","Ages 35 - 49","Ages 50 - 69","Ages 70+")))
 
-tiff("Outputs/ONSInfSurveyxAge.tiff", units="in", width=11, height=4, res=500)
+agg_tiff("Outputs/ONSInfSurveyxAge.tiff", units="in", width=11, height=4, res=500)
 ggplot(data, aes(x=date, y=age, fill=prevalence))+
          geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="")+
-  scale_fill_paletteer_c("viridis::inferno", name="Prevalence", labels=scales::label_percent())+
-  labs(title="The ONS infection survey gives a very different picture of the age distribution of cases",
+  scale_fill_paletteer_c("viridis::inferno", name="Prevalence", labels=scales::label_percent(),
+                         limits=c(0,NA))+
+  labs(title="The ONS infection survey shows case rates falling in all age groups",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
-tiff("Outputs/ONSInfSurveyxAgeLine.tiff", units="in", width=11, height=4, res=500)
+agg_tiff("Outputs/ONSInfSurveyxAgeLine.tiff", units="in", width=11, height=4, res=500)
 ggplot(data, aes(x=date, y=prevalence, colour=age))+
   geom_line()+
   scale_x_date(name="")+
-  scale_y_continuous(name="", label=label_percent(accuracy=2))+
+  scale_y_continuous(name="", label=label_percent(accuracy=1), limits=c(0,NA))+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
-  labs(title="The ONS infection survey gives a very different picture of the age distribution of cases",
+  labs(title="The ONS infection survey shows case rates falling in all age groups",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
