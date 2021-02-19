@@ -6,6 +6,7 @@ library(sf)
 library(ragg)
 library(ggtext)
 library(scales)
+library(gganimate)
 
 #Start with LA level cases for the whole of the UK
 cases <- tempfile()
@@ -181,3 +182,41 @@ dev.off()
 agg_png("Outputs/COVIDCasesMSOAChangeCartogram.png", units="in", width=10, height=8, res=800)
 plot4
 dev.off()
+
+#######################################################
+#LTLA level animation
+animdata <- read.csv(cases) %>% 
+  mutate(date=as.Date(date)) %>% 
+  rename(Lacode=areaCode)
+
+ltlacaseanim <- st_read(ltla, layer="4 LTLA-2019") %>% 
+  left_join(animdata, by="Lacode")
+
+#extract latest date with full UK data
+temp <- animdata %>%
+  group_by(Lacode) %>%
+  filter(!is.na(newCasesBySpecimenDateRollingRate)) %>% 
+  mutate(min=min(date), max=max(date))
+
+completefrom <- max(temp$min, na.rm=TRUE)
+completeto <- min(temp$max, na.rm=TRUE)
+
+CartogramanimUK <- ggplot()+
+  geom_sf(data=Background, aes(geometry=geom))+
+  geom_sf(data=subset(ltlacaseanim, date>=as.Date("2020-09-01") & date<=as.Date(completeto)), 
+          aes(geometry=geom, fill=newCasesBySpecimenDateRollingRate), 
+          colour="Black", size=0.1)+
+  geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
+                                      hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases per\n100,000", 
+                       na.value="white")+
+  transition_time(date)+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Timeline of the UK's 'Second Wave'",
+       subtitle="Rolling 7-day average number of case rates\nData up to  {frame_time}",
+       caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+animate(CartogramanimUK, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/CartogramanimUK.gif"), 
+        device="ragg_png", end_pause=60)
