@@ -10,17 +10,18 @@ library(geofacet)
 library(ggtext)
 library(snakecase)
 library(forcats)
+library(ragg)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210211.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210218.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Weekly-covid-admissions-and-beds-publication-210211.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Weekly-covid-admissions-and-beds-publication-210218.xlsx"
 #Increment by one each day
-dailyrange <- "GM"
-dailyoccrange <- "GO"
+dailyrange <- "GT"
+dailyoccrange <- "GV"
 #Increment by seven each week
-weeklyrange <- "CK"
+weeklyrange <- "CR"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -64,7 +65,7 @@ dailydata <- bind_rows(daily1, daily2, daily3) %>%
 maxdailydate=max(dailydata$date)
 
 #Line charts
-tiff("Outputs/COVIDNHSMetricsxReg.tiff", units="in", width=12, height=6, res=500)
+agg_tiff("Outputs/COVIDNHSMetricsxReg.tiff", units="in", width=12, height=6, res=500)
 ggplot(dailydata)+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
@@ -79,8 +80,24 @@ ggplot(dailydata)+
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDNHSMetricsxRegLog.tiff", units="in", width=12, height=6, res=500)
+ggplot(subset(dailydata, date>as.Date("2021-01-01")))+
+  geom_line(aes(x=date, y=rollrate, colour=region))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Rate per 100,000 population (log scale)", trans="log",
+                     labels=label_number(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
+  facet_wrap(~metric, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="All measures of COVID-19 hospital usage are still falling across all regions",
+       subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
 #Admissions only
-tiff("Outputs/COVIDNHSAdmissionsxReg.tiff", units="in", width=9, height=6, res=500)
+agg_tiff("Outputs/COVIDNHSAdmissionsxReg.tiff", units="in", width=9, height=6, res=500)
 ggplot(subset(dailydata, metric=="Admissions"))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
@@ -165,7 +182,7 @@ natdata <- natdata %>%
     rate=count*100000/pop)
 
 #Single national plot
-tiff("Outputs/COVIDNHSBedOccupancy.tiff", units="in", width=8, height=6, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancy.tiff", units="in", width=8, height=6, res=500)
 ggplot(subset(natdata, trust=="ENGLAND"))+
   geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
   scale_x_date(name="")+
@@ -188,7 +205,7 @@ mygrid <- data.frame(name=c("North West", "North East and Yorkshire",
                      code=c(1:7))
 
 #Faceted regional plot
-tiff("Outputs/COVIDNHSBedOccupancyxReg.tiff", units="in", width=8, height=8, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyxReg.tiff", units="in", width=8, height=8, res=500)
 ggplot(subset(natdata, trust!="ENGLAND"))+
   geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
   scale_x_date(name="")+
@@ -205,7 +222,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
 dev.off()
 
 #Get into trust-level data
-tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=8, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="London") %>% 
   ggplot()+
@@ -223,7 +240,7 @@ trustdata %>%
      caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=8, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="South East") %>% 
   ggplot()+
@@ -241,7 +258,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=10, height=6, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=10, height=6, res=500)
 trustdata %>% 
   filter(region=="South West") %>% 
   ggplot()+
@@ -259,7 +276,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=14, height=9, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=14, height=9, res=500)
 trustdata %>% 
   filter(region=="Midlands") %>% 
   ggplot()+
@@ -277,7 +294,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=10, height=6, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=10, height=6, res=500)
 trustdata %>% 
   filter(region=="East of England") %>% 
   ggplot()+
@@ -295,7 +312,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=8, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="North West") %>% 
   ggplot()+
@@ -313,7 +330,7 @@ trustdata %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=8, res=500)
+agg_tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=8, res=500)
 trustdata %>% 
   filter(region=="North East and Yorkshire") %>% 
   ggplot()+
