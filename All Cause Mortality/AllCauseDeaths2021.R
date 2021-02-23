@@ -10,14 +10,14 @@ library(ggtext)
 library(ragg)
 
 #Latest date in the country-specific data
-EWDate <- "5th February"
+EWDate <- "12th February"
 ScotDate <- "14th February"
 NIDate <- "12th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek052021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek06202122022021175551.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-06.xlsx"
@@ -27,7 +27,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "G" 
+EngRange <- "H" 
 ScotRange <- "H" 
 NIRange <- "11" 
 
@@ -510,13 +510,14 @@ temp45 <- as.data.frame(t(read_excel(temp, sheet=12, range="H10:H15", col_names=
 temp46 <- as.data.frame(t(read_excel(temp, sheet=12, range="N10:N15", col_names=FALSE)))
 temp47 <- as.data.frame(t(read_excel(temp, sheet=12, range="T10:T15", col_names=FALSE)))
 temp48 <- as.data.frame(t(read_excel(temp, sheet=12, range="Z10:Z15", col_names=FALSE)))
+temp49 <- as.data.frame(t(read_excel(temp, sheet=12, range="AF10:AF15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
-                    temp47, temp48) %>% 
+                    temp47, temp48, temp49) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1135,7 +1136,7 @@ ggplot(plot1)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Excess mortality in England & Wales has fallen. Slightly.",
+  labs(title="Excess mortality in England & Wales is still falling. Slowly.",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
@@ -1341,7 +1342,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths have fallen across all settings, but remain extremely high in hospitals",
+  labs(title="Deaths in hospitals have fallen sharply",
        subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021.<br>Historic data for week 53 is not available"),
        caption="Data from ONS | Plot by @VictimOfMaths")
   
@@ -1363,7 +1364,7 @@ ggplot()+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of COVID-19 deaths has fallen for the first time this year",
+  labs(title="The number of COVID-19 deaths has continued to fall",
        subtitle="Excess deaths vs. 2015-19 average by cause for England & Wales",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
