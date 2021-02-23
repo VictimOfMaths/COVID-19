@@ -8,16 +8,17 @@ library(paletteer)
 library(scales)
 library(lubridate)
 library(ragg)
+library(RcppRoll)
 
 #Increment by 7 each week
-MaxRange <- "AR"
+MaxRange <- "AY"
 #Increment by 1 each week
-MaxRange2 <- "G"
+MaxRange2 <- "H"
 
 #Read in data on deaths in care home residents notified to CQC 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
 temp21 <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210214cqccoviddeathnotifications.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210221coviddeathnotificationsv1.xlsx"
 temp21 <- curl_download(url=source, destfile=temp21, quiet=FALSE, mode="wb")
 
 #2020 data
@@ -92,7 +93,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown())+
-  labs(title="COVID-19 deaths in care homes in England are falling",
+  labs(title="COVID-19 deaths in care homes in England are still falling",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -169,7 +170,7 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
                     name="Cause and place of death")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Most COVID-19 deaths of care home residents are happening in care homes",
+  labs(title="Fewer care home residents are dying of COVID-19 in all settings",
        subtitle="Weekly deaths notified to the Care Quality Commission of care home residents\nby cause and location.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -186,7 +187,7 @@ data %>%
   scale_y_discrete(name="")+
   scale_x_date(name="")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 is still causing a significant number of deaths in care homes",
+  labs(title="COVID-19 deaths in care homes are falling across the country",
        subtitle="Proportion of deaths in care homes notified to CQC recorded as involving COVID-19 by Local Authority in England.\nAuthorities are ordered by the date on which the highest proportion of deaths involved COVID-19.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
