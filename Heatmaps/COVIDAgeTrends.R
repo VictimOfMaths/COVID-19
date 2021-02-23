@@ -1,10 +1,12 @@
 rm(list=ls())
 
 library(tidyverse)
+library(broom)
 library(curl)
 library(readxl)
 library(lubridate)
 library(RcppRoll)
+library(ragg)
 
 #Read in Case data
 temp <- tempfile()
@@ -49,7 +51,7 @@ data2 <- read.csv(temp) %>%
   summarise(count=sum(deaths))
 
 #Read in Admissions data
-#Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/
+#Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Updated each Thursday (I think)
 admrange <- "DR"
 
@@ -75,10 +77,10 @@ data3 <- as.data.frame(t(read_excel(temp, range=paste0("D16:", admrange, "23"),
 #Read in Hospital deaths data
 #Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/
 #Updated daily
-deathrange <- "ML"
+deathrange <- "MT"
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-total-announced-deaths-15-February-2021.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-total-announced-deaths-23-February-2021.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data4 <- as.data.frame(t(read_excel(temp, sheet="Tab3 Deaths by age", 
@@ -128,7 +130,7 @@ plot.data <- data %>%
          baseline=exp(intercept+slope*daysfrom))
 
 #Plot of cases
-tiff("Outputs/COVIDAgeEffects1Cases.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDAgeEffects1Cases.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Cases" & age!="Unknown"))+
   geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
   geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
@@ -147,10 +149,11 @@ ggplot(subset(plot.data, metric=="Cases" & age!="Unknown"))+
   labs(title="Age-specific trends in new COVID-19 cases",
        subtitle=paste0("Rolling 7-day average of new COVID-19 cases by specimen date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
 dev.off()
 
 #Plot of deaths within 28 days
-tiff("Outputs/COVIDAgeEffects2Deaths.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDAgeEffects2Deaths.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Deaths" & age!="Unknown"))+
   geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
   geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
@@ -172,7 +175,7 @@ ggplot(subset(plot.data, metric=="Deaths" & age!="Unknown"))+
 dev.off()
 
 #Plot of admissions
-tiff("Outputs/COVIDAgeEffects3Admissions.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDAgeEffects3Admissions.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Admissions" & age!="Unknown"))+
   geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
   geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
@@ -194,7 +197,7 @@ ggplot(subset(plot.data, metric=="Admissions" & age!="Unknown"))+
 dev.off()
 
 #Plot of hospital deaths
-tiff("Outputs/COVIDAgeEffects4HopsDeaths.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDAgeEffects4HopsDeaths.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Hospital Deaths" & age!="Unknown"))+
   geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
   geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
