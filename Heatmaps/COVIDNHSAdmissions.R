@@ -14,14 +14,14 @@ library(ragg)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210218.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210225.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Weekly-covid-admissions-and-beds-publication-210218.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Weekly-covid-admissions-and-beds-publication-210225.xlsx"
 #Increment by one each day
-dailyrange <- "GT"
-dailyoccrange <- "GV"
+dailyrange <- "HA"
+dailyoccrange <- "HC"
 #Increment by seven each week
-weeklyrange <- "CR"
+weeklyrange <- "CY"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -216,7 +216,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="COVID-19 bed occupancy is falling in all regions of England",
+  labs(title="COVID-19 bed occupancy is still falling in all regions of England",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -289,7 +289,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="COVID-19 bed occupancy in the Midlands hasn't fallen across all NHS trusts",
+  labs(title="COVID-19 bed occupancy in the Midlands is falling more slowly in some NHS trusts",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -325,7 +325,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="The number of COVID-19 patients in hospital is stable or falling across the North West",
+  labs(title="The number of COVID-19 patients in hospital is falling, but at different rates, across the North West",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -343,7 +343,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="COVID-19 patient numbers are still fairly stable in the North East and Yorkshire",
+  labs(title="COVID-19 patient numbers are falling slowly across North East and Yorkshire",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
