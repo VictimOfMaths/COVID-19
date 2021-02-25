@@ -145,8 +145,8 @@ ggplot(vaxdeciles %>% filter(age=="80+"),
   scale_colour_paletteer_c("viridis::magma", direction=-1)+
   scale_x_continuous(name="Proportion of 80+ population vaccinated",
                      labels=label_percent(accuracy=1))+
-  scale_y_discrete(name="Index of Multiple Deprivation", labels=c("1 - most deprived", "2", "3", "4", "5", "6", "7", 
-                                                                    "8", "9", "10 - least deprived"))+  
+  scale_y_discrete(name="Index of Multiple Deprivation", labels=c("1 - least deprived", "2", "3", "4", "5", "6", "7", 
+                                                                    "8", "9", "10 - most deprived"))+  
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)))+
   labs(title="COVID vaccine uptake is lower in more deprived areas in England",
@@ -159,4 +159,20 @@ ggplot(vaxdeciles %>% filter(age=="80+"),
   geom_segment(aes(x=1.05, y=3.55,  xend=0.975, yend=3.95), colour="Grey20")
 dev.off()
 
+
+agg_tiff("Outputs/COVIDVaxMSOASxIMDScatterxAge.tiff", units="in", width=12, height=8, res=800)
+ggplot(vaxdata, aes(x=vaxprop, y=-IMDrank, colour=vaxprop))+
+  geom_point(shape=21, alpha=0.6, show.legend=FALSE)+
+  scale_x_continuous(name="Proportion of population vaccinated", labels=label_percent(accuracy=1))+
+  scale_y_continuous(name="Index of Multiple Deprivation", breaks=c(0, -32507),
+                     labels=c("Most deprived", "Least deprived"))+
+  scale_colour_paletteer_c("viridis::magma", direction=-1)+
+  facet_wrap(~age)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="COVID vaccine uptake is lower in more deprived areas in England",
+       subtitle="Number of people vaccinated by age group and MSOA compared compared to the estimated population in 2019.",
+       caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")
+dev.off()
 
