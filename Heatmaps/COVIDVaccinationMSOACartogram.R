@@ -6,6 +6,7 @@ library(paletteer)
 library(sf)
 library(scales)
 library(ragg)
+library(gtools)
 
 #Download vaccination data by MSOA
 vax <- tempfile()
@@ -123,3 +124,39 @@ dev.off()
 agg_png("Outputs/COVIDVaxMSOACartogram.png", units="in", width=10, height=8, res=800)
 plot
 dev.off()
+
+#Calculate deprivation gradients within IMD deciles
+#Allocate to deciles
+vaxdeciles <- vaxdata %>% 
+  mutate(decile=quantcut(-IMDrank, 10, labels=FALSE)) %>% 
+  group_by(age, decile) %>% 
+  mutate(decilemean=sum(vaccinated)/sum(pop)) %>% 
+  ungroup() %>% 
+  group_by(age) %>% 
+  mutate(popmean=sum(vaccinated)/sum(pop)) %>% 
+  ungroup()
+
+agg_tiff("Outputs/COVIDVaxMSOASxIMDScatter.tiff", units="in", width=12, height=8, res=800)
+ggplot(vaxdeciles %>% filter(age=="80+"), 
+       aes(x=vaxprop, y=as.factor(decile), colour=vaxprop))+
+  geom_jitter(shape=21, alpha=0.6, show.legend=FALSE)+
+  geom_segment(aes(x=popmean, xend=popmean, y=Inf, yend=-Inf), colour="Grey20")+
+  geom_point(aes(x=decilemean, y=as.factor(decile)), colour="Grey20", fill="Cyan", shape=23, size=2)+
+  scale_colour_paletteer_c("viridis::magma", direction=-1)+
+  scale_x_continuous(name="Proportion of 80+ population vaccinated",
+                     labels=label_percent(accuracy=1))+
+  scale_y_discrete(name="Index of Multiple Deprivation", labels=c("1 - most deprived", "2", "3", "4", "5", "6", "7", 
+                                                                    "8", "9", "10 - least deprived"))+  
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="COVID vaccine uptake is lower in more deprived areas in England",
+       subtitle="Number of people aged 80+ vaccinated by MSOA compared compared to the estimated 80+ population in 2019.",
+       caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")+
+  annotate("text", x=0.3, y=9.9, label="Each circle = 1 MSOA", size=3)+
+  annotate("text", x=0.8, y=6.5, label="Population average", size=3)+
+  annotate("text", x=1.05, y=3.5, label="Decile average", size=3)+
+  geom_segment(aes(x=0.88, y=6.5,  xend=0.942, yend=6.5), colour="Grey20")+
+  geom_segment(aes(x=1.05, y=3.55,  xend=0.975, yend=3.95), colour="Grey20")
+dev.off()
+
+
