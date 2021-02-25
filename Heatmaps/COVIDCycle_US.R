@@ -5,6 +5,7 @@ library(curl)
 library(paletteer)
 library(geofacet)
 library(ggtext)
+library(ragg)
 
 options(scipen=999)
 
@@ -44,7 +45,7 @@ data <- data %>%
   mutate(hosprate=hospitalizedIncrease*100000/Population,
          deathrate=deathIncrease*100000/Population,
          inhosprate=hospitalizedCurrently*100000/Population,
-         week=week(date))
+         week=if_else(year(date)==2020, week(date), week(date)+52))
 
 #National version
 natdata <- data %>% 
@@ -56,7 +57,7 @@ natdata <- data %>%
   mutate(hosprate=hospitalizedIncrease*100000/(Population),
          deathrate=deathIncrease*100000/(Population),
          inhosprate=hospitalizedCurrently*100000/Population,
-         week=week(date))
+         week=if_else(year(date)==2020, week(date), week(date)+52))
 
 #generate weekly time series for both
 weekdata <- data %>% 
@@ -84,7 +85,7 @@ weeknatdata <- natdata %>%
          label=format(label, "%d %b"))
 
 #Plot
-tiff("Outputs/COVIDCycleUSA.tiff", units="in", width=12, height=8, res=500)
+agg_tiff("Outputs/COVIDCycleUSA.tiff", units="in", width=12, height=8, res=500)
 ggplot()+
   geom_path(data=subset(natdata, week>=12), 
             aes(x=hosprate, y=deathrate), colour="Grey40", alpha=0.1,
@@ -100,9 +101,10 @@ ggplot()+
   scale_colour_paletteer_c("pals::ocean.amp", limits=c(0.75*min(data$week),NA))+
   theme_classic()+
   theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold", size=rel(2)))+
-  labs(title="Going round in circles",
+  labs(title="Things in the US are slowly getting better",
        subtitle="COVID-19 hospitalisations and deaths in the United States <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from The COVID Tracking Project (CC BY 4.0) | Plot by @VictimOfMaths")
+
 dev.off()
 
 tiff("Outputs/COVIDCycleUSStates.tiff", units="in", width=14, height=10, res=500)
@@ -119,7 +121,8 @@ ggplot(data)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(2)))+
-  labs(title="Going round in circles",
+  labs(title="Breaking the cycles",
        subtitle="COVID-19 hospitalisations and deaths in the United States. Darker colours reflect more recent data",
        caption="Inspired by @maartenzam | Data from The COVID Tracking Project (CC BY 4.0) | Plot by @VictimOfMaths")
+
 dev.off()
