@@ -107,7 +107,7 @@ ggplot()+
 
 dev.off()
 
-tiff("Outputs/COVIDCycleUSStates.tiff", units="in", width=14, height=10, res=500)
+agg_tiff("Outputs/COVIDCycleUSStates.tiff", units="in", width=14, height=10, res=500)
 ggplot(data)+
   #geom_path(data=subset(data, week>=12), 
   #          aes(x=inhosprate, y=deathrate), colour="Grey40", alpha=0.1,
