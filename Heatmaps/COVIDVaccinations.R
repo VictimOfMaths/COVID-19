@@ -48,7 +48,7 @@ ggplot()+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Vaccine delivery has accelerated in recent weeks, except in England",
+  labs(title="Rates of delivery of 1st vaccine doses have slowed as 2nd dose delivery increases",
        subtitle="Rolling 7-day average rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -68,7 +68,7 @@ APIdata2 %>%
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Scotland and Wales have picked up their delivery of COVID-19 💉",
+  labs(title="Wales is getting on with delivering 2nd doses of the COVID-19 💉",
        subtitle="Rates of delivery of COVID-19 vaccines by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
