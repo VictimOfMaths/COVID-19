@@ -7,6 +7,7 @@ library(readxl)
 library(lubridate)
 library(RcppRoll)
 library(ragg)
+library(scales)
 
 #Read in Case data
 temp <- tempfile()
@@ -74,13 +75,32 @@ data3 <- as.data.frame(t(read_excel(temp, range=paste0("D16:", admrange, "23"),
     TRUE ~ "Unknown"),
     metric="Admissions")
 
+#Read in less detailed but more regular admissions data from the dashboard
+temp <- tempfile()
+source <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumAdmissionsByAge&format=csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+data3.1 <- read.csv(temp) %>% 
+  mutate(date=as.Date(date),
+         age=case_when(
+           age=="0_to_5" ~ "0-5",
+           age=="6_to_17" ~ "6-17",
+           age=="18_to_64" ~ "18-64",
+           age=="65_to_84" ~ "65-84",
+           TRUE ~ "85+"),
+         metric="Admissions2") %>% 
+  group_by(age) %>% 
+  arrange(date) %>% 
+  mutate(count=value-lag(value, 1)) %>% 
+  ungroup()
+
 #Read in Hospital deaths data
 #Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/
 #Updated daily
-deathrange <- "MT"
+deathrange <- "MW"
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-total-announced-deaths-23-February-2021.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-total-announced-deaths-26-February-2021.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data4 <- as.data.frame(t(read_excel(temp, sheet="Tab3 Deaths by age", 
@@ -98,16 +118,16 @@ data4 <- as.data.frame(t(read_excel(temp, sheet="Tab3 Deaths by age",
     metric="Hospital Deaths")
   
 #Combine them all together
-data <- bind_rows(data1, data2, data3, data4)
+data <- bind_rows(data1, data2, data3, data3.1, data4)
 
 #Take rolling 7-day averages
 data <- data %>% 
   group_by(age, metric) %>% 
   arrange(date) %>% 
   mutate(count_roll=roll_mean(count, 7, align="center", fill=NA),
-         age=factor(age, levels=c("0-5", "0-14", "0-19", "6-17", "15-24", "18-54", "20-39",
+         age=factor(age, levels=c("0-5", "0-14", "0-19", "6-17", "15-24", "18-54", "18-64", "20-39",
                                   "25-44", "40-59", "45-64", "55-64", "60-79", "65-74",
-                                  "65-79", "75-84", "80+", "85+", "Unknown")))
+                                  "65-79", "65-84", "75-84", "80+", "85+", "Unknown")))
 
 #Fit linear models
 FitFrom <- as.Date("2021-01-21")
@@ -174,6 +194,27 @@ ggplot(subset(plot.data, metric=="Deaths" & age!="Unknown"))+
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDAgeEffects2DeathsReduced.tiff", units="in", width=10, height=7, res=500)
+ggplot(subset(plot.data, metric=="Deaths" & !age %in% c("Unknown", "0-14", "15-24")))+
+  geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
+  geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
+  geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
+  geom_point(aes(x=date, y=count), colour="Black", alpha=0.08)+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="Daily deaths (log scale)", 
+                     labels=number_format(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(),
+        strip.text=element_text(face="bold"),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Age-specific trends in COVID-19 deaths",
+       subtitle=paste0("Rolling 7-day average counts of deaths within 28 days of a positive COVID-19 test by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
 #Plot of admissions
 agg_tiff("Outputs/COVIDAgeEffects3Admissions.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Admissions" & age!="Unknown"))+
@@ -196,9 +237,94 @@ ggplot(subset(plot.data, metric=="Admissions" & age!="Unknown"))+
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDAgeEffects3AdmissionsReduced.tiff", units="in", width=10, height=7, res=500)
+ggplot(subset(plot.data, metric=="Admissions" & !age %in% c("Unknown", "0-5", "6-17")))+
+  geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
+  geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
+  geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
+  geom_point(aes(x=date, y=count), colour="Black", alpha=0.08)+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="Daily new admissions (log scale)", 
+                     labels=number_format(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(),
+        strip.text=element_text(face="bold"),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Age-specific trends in new COVID-19 admissions",
+       subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Plot of admissions from dashboard data
+agg_tiff("Outputs/COVIDAgeEffects3.1Admissions.tiff", units="in", width=10, height=7, res=500)
+ggplot(subset(plot.data, metric=="Admissions2" & age!="Unknown"))+
+  geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
+  geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
+  geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
+  geom_point(aes(x=date, y=count), colour="Black", alpha=0.08)+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="Daily new admissions (log scale)", 
+                     labels=number_format(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(),
+        strip.text=element_text(face="bold"),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Age-specific trends in new COVID-19 admissions",
+       subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAgeEffects3.1AdmissionsReduced.tiff", units="in", width=10, height=7, res=500)
+ggplot(subset(plot.data, metric=="Admissions2" & !age %in% c("Unknown", "0-5", "6-17")))+
+  geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
+  geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
+  geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
+  geom_point(aes(x=date, y=count), colour="Black", alpha=0.08)+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="Daily new admissions (log scale)", 
+                     labels=number_format(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(),
+        strip.text=element_text(face="bold"),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Age-specific trends in new COVID-19 admissions",
+       subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
 #Plot of hospital deaths
 agg_tiff("Outputs/COVIDAgeEffects4HopsDeaths.tiff", units="in", width=10, height=7, res=500)
 ggplot(subset(plot.data, metric=="Hospital Deaths" & age!="Unknown"))+
+  geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
+  geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
+  geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
+  geom_point(aes(x=date, y=count), colour="Black", alpha=0.08)+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="Daily new cases (log scale)", 
+                     labels=number_format(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  facet_wrap(~age, scales="free_y")+
+  theme_classic()+
+  theme(strip.background=element_blank(),
+        strip.text=element_text(face="bold"),
+        plot.title=element_text(face="bold", size=rel(1.2)))+
+  labs(title="Age-specific trends in COVID-19 deaths in hospitals",
+       subtitle=paste0("Rolling 7-day average of COVID-19 deaths in hospitals by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAgeEffects4HopsDeathsReduced.tiff", units="in", width=10, height=7, res=500)
+ggplot(subset(plot.data, metric=="Hospital Deaths" & !age  %in% c("Unknown", "0-19", "20-39")))+
   geom_line(aes(x=date, y=baseline, colour=age), show.legend=FALSE)+
   geom_ribbon(aes(x=date, ymin=count_roll, ymax=baseline, fill=age), alpha=0.3, show.legend=FALSE)+
   geom_point(aes(x=date, y=count_roll, colour=age), show.legend = FALSE)+
