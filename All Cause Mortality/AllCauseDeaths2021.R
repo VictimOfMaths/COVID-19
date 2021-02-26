@@ -12,7 +12,7 @@ library(ragg)
 #Latest date in the country-specific data
 EWDate <- "12th February"
 ScotDate <- "21st February"
-NIDate <- "12th February"
+NIDate <- "19th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -29,7 +29,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #These need to be incremented by one letter each week
 EngRange <- "H" 
 ScotRange <- "I" 
-NIRange <- "11" 
+NIRange <- "12" 
 
 ##############################
 #Read in English & Welsh data#
@@ -1821,7 +1821,7 @@ ggplot(plot13)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="Northern Ireland is still seeing excess mortality",
+  labs(title="All-cause mortality rates in Northern Ireland have fallen again 👍",
        subtitle=paste0("Weekly deaths in Northern Ireland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, " 2021."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
