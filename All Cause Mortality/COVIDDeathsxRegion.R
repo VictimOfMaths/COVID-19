@@ -6,6 +6,7 @@ library(paletteer)
 library(RcppRoll)
 library(lubridate)
 library(scales)
+library(ragg)
 
 #Get daily regional death data
 deaths.reg <- get_data(filters="areaType=region", structure=list(date="date",
@@ -31,7 +32,7 @@ deaths.reg <- deaths.reg %>%
 
 maxdate <- max(deaths.reg$date)
 
-tiff("Outputs/COVIDDeathsxRegionLine.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDDeathsxRegionLine.tiff", units="in", width=10, height=7, res=500)
 deaths.reg %>% 
   filter(date<maxdate-days(3)) %>% 
 ggplot()+
@@ -46,7 +47,7 @@ ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
-tiff("Outputs/COVIDDeathsxRegionLineRecent.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDDeathsxRegionLineRecent.tiff", units="in", width=10, height=7, res=500)
 deaths.reg %>% 
   filter(date<maxdate-days(3) & date>as.Date("2020-09-01")) %>% 
   ggplot()+
@@ -55,7 +56,7 @@ deaths.reg %>%
   scale_x_date(name="", breaks=breaks_pretty(n=interval(min(deaths.reg$date, na.rm=TRUE), maxdate-days(3))%/% months(1)))+
   scale_y_continuous(name="Daily COVID-19 deaths per 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="Region")+
-  labs(title="Deaths associated with COVID-19 are falling rapidly across England",
+  labs(title="Deaths associated with COVID-19 are still falling rapidly across England",
        subtitle="Daily deaths per 100,000 within 28 days of a positive COVID-19 test",
        caption="Data from PHE | Plot by @VictimOfMaths")+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
@@ -69,7 +70,7 @@ peaks <- deaths.reg %>%
   summarise(peak=max(mortrateroll, na.rm=TRUE)) %>% 
   spread(period, peak)
 
-tiff("Outputs/COVIDDeathsxRegionScatter.tiff", units="in", width=8, height=6, res=500)
+agg_tiff("Outputs/COVIDDeathsxRegionScatter.tiff", units="in", width=8, height=6, res=500)
 ggplot(peaks)+
   geom_point(aes(x=`Wave 1`, y=`Wave 2`, colour=name))+
   geom_abline(intercept=0)+
@@ -104,7 +105,7 @@ deaths.nat <- deaths.nat %>%
   ungroup()
   
 
-tiff("Outputs/COVIDDeathsxCountryLine.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDDeathsxCountryLine.tiff", units="in", width=10, height=7, res=500)
 deaths.nat %>% 
   filter(date<maxdate-days(3)) %>% 
   ggplot()+
@@ -119,7 +120,7 @@ deaths.nat %>%
   theme(plot.title=element_text(face="bold", size=rel(1.2)))
 dev.off()
 
-tiff("Outputs/COVIDDeathsxCountryLineRecent.tiff", units="in", width=10, height=7, res=500)
+agg_tiff("Outputs/COVIDDeathsxCountryLineRecent.tiff", units="in", width=10, height=7, res=500)
 deaths.nat %>% 
   filter(date<maxdate-days(3) & date>as.Date("2020-09-01")) %>% 
   ggplot()+
