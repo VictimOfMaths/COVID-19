@@ -97,10 +97,10 @@ data3.1 <- read.csv(temp) %>%
 #Read in Hospital deaths data
 #Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/
 #Updated daily
-deathrange <- "MW"
+deathrange <- "NA"
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-total-announced-deaths-26-February-2021.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-total-announced-deaths-2-March-2021.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data4 <- as.data.frame(t(read_excel(temp, sheet="Tab3 Deaths by age", 
