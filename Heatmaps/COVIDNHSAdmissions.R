@@ -14,12 +14,12 @@ library(ragg)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/COVID-19-daily-admissions-and-beds-20210225.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-daily-admissions-and-beds-20210302.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Weekly-covid-admissions-and-beds-publication-210225.xlsx"
 #Increment by one each day
-dailyrange <- "HA"
-dailyoccrange <- "HC"
+dailyrange <- "HF"
+dailyoccrange <- "HH"
 #Increment by seven each week
 weeklyrange <- "CY"
 
