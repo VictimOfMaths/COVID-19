@@ -10,25 +10,25 @@ library(ggtext)
 library(ragg)
 
 #Latest date in the country-specific data
-EWDate <- "12th February"
-ScotDate <- "21st February"
+EWDate <- "19th February"
+ScotDate <- "28th February"
 NIDate <- "19th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek06202122022021175551.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek07202101032021165557.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-07.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-08.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
 NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly_Deaths.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "H" 
-ScotRange <- "I" 
+EngRange <- "I" 
+ScotRange <- "J" 
 NIRange <- "12" 
 
 ##############################
@@ -511,13 +511,14 @@ temp46 <- as.data.frame(t(read_excel(temp, sheet=12, range="N10:N15", col_names=
 temp47 <- as.data.frame(t(read_excel(temp, sheet=12, range="T10:T15", col_names=FALSE)))
 temp48 <- as.data.frame(t(read_excel(temp, sheet=12, range="Z10:Z15", col_names=FALSE)))
 temp49 <- as.data.frame(t(read_excel(temp, sheet=12, range="AF10:AF15", col_names=FALSE)))
+temp50 <- as.data.frame(t(read_excel(temp, sheet=12, range="AL10:AL15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
-                    temp47, temp48, temp49) %>% 
+                    temp47, temp48, temp49, temp50) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -864,7 +865,7 @@ data2020.cause.S <- bind_rows(data2020.ch.cause.S, data2020.home.cause.S, data20
 #Read in 2021 data
 #all locations
 data2021.all.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                   range=paste0("B16:", ScotRange, "21"), col_names=FALSE) %>% 
+                                   range=paste0("B15:", ScotRange, "20"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -872,7 +873,7 @@ data2021.all.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #care homes
 data2021.ch.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                  range=paste0("B40:", ScotRange, "45"), col_names=FALSE) %>% 
+                                  range=paste0("B39:", ScotRange, "44"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -880,7 +881,7 @@ data2021.ch.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #home
 data2021.home.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                    range=paste0("B64:", ScotRange, "69"), col_names=FALSE) %>% 
+                                    range=paste0("B63:", ScotRange, "68"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -888,7 +889,7 @@ data2021.home.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #hospital
 data2021.hosp.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                    range=paste0("B88:",ScotRange,  "93"), col_names=FALSE) %>% 
+                                    range=paste0("B87:",ScotRange,  "92"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -896,7 +897,7 @@ data2021.hosp.cause.S <- read_excel(temp, sheet="Table 3  (2021)",
 
 #other (to be combined with home)
 data2021.oth.cause.S <- read_excel(temp, sheet="Table 3  (2021)", 
-                                   range=paste0("B112:", ScotRange, "117"), col_names=FALSE) %>% 
+                                   range=paste0("B111:", ScotRange, "116"), col_names=FALSE) %>% 
   rename(cause=`...1`) %>% 
   gather(week, deaths, c(2:ncol(.))) %>% 
   mutate(week=as.numeric(substr(week, 4, 6))-1,
@@ -1253,7 +1254,7 @@ ggplot(plot3)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths are above 'normal' levels in all age groups over 15",
+  labs(title="Deaths are above 'normal' levels in all age groups over 45",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
@@ -1287,7 +1288,7 @@ ggplot(plot3)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths are above 'normal' levels in all age groups over 15",
+  labs(title="Deaths are above 'normal' levels in all age groups over 45",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
@@ -1314,7 +1315,7 @@ ggplot(plot3)+
   scale_fill_paletteer_d(name="Age", "awtools::a_palette")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Excess deaths are highest in older age groups",
+  labs(title="Excess deaths falling fastest in the oldest age group",
        subtitle=paste0("Weekly deaths registered in England & Wales by age compared to the 2010-19 average.\nData up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -1342,7 +1343,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths in hospitals have fallen sharply",
+  labs(title="Deaths in hospitals have continued to fall sharply",
        subtitle=paste0("Weekly deaths in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021.<br>Historic data for week 53 is not available"),
        caption="Data from ONS | Plot by @VictimOfMaths")
   
@@ -1415,7 +1416,7 @@ ggplot(plot6)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="All-cause deaths in Scotland are still higher than previous years",
+  labs(title="All-cause deaths in Scotland have fallen again",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
@@ -1476,7 +1477,7 @@ ggplot(plot7)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths in men have fallen but are still above 'normal' levels",
+  labs(title="Deaths in men have fallen sharply",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text7, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1532,7 +1533,7 @@ ggplot(plot8)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Scotland is seeing excess mortality in 45-84 year olds",
+  labs(title="The biggest fall in all-cause mortality is in the oldest age group",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text8, aes(x=date, y=deaths), label=c(paste0(round(S.excess.age[1,2],0)," excess deaths in 2020\nvs. 2010-19 average (",
