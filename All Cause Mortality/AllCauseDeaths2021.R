@@ -12,7 +12,7 @@ library(ragg)
 #Latest date in the country-specific data
 EWDate <- "19th February"
 ScotDate <- "28th February"
-NIDate <- "19th February"
+NIDate <- "26th February"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -29,7 +29,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 #These need to be incremented by one letter each week
 EngRange <- "I" 
 ScotRange <- "J" 
-NIRange <- "12" 
+NIRange <- "13" 
 
 ##############################
 #Read in English & Welsh data#
@@ -1822,7 +1822,7 @@ ggplot(plot13)+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown())+
-  labs(title="All-cause mortality rates in Northern Ireland have fallen again 👍",
+  labs(title="All-cause mortality rates in Northern Ireland are back at 'normal' levels",
        subtitle=paste0("Weekly deaths in Northern Ireland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", NIDate, " 2021."),
        caption="Data from NISRA | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
@@ -2007,7 +2007,7 @@ plot16 <- data.reg.UK %>%
   mutate(cumul_deaths=cumsum(deaths),
          week=if_else(region=="Northern Ireland" & year==2021, week-53, week))
 
-agg_tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=300)
+agg_tiff("Outputs/ONSNRSNISRAWeeklyCumulDeaths_reg.tiff", units="in", width=12, height=8, res=350)
 ggplot()+
   geom_line(data=subset(plot16, year!=2020), aes(x=week, y=cumul_deaths, group=as.factor(year)), colour="Grey80")+
   geom_line(data=subset(plot16, year==2020), aes(x=week, y=cumul_deaths), colour="Tomato")+
