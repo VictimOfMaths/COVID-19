@@ -11,14 +11,14 @@ library(ragg)
 library(RcppRoll)
 
 #Increment by 7 each week
-MaxRange <- "BF"
+MaxRange <- "BM"
 #Increment by 1 each week
-MaxRange2 <- "H"
+MaxRange2 <- "I"
 
 #Read in data on deaths in care home residents notified to CQC 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
 temp21 <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210228coviddeathnotificationsv1.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210307coviddeathnotificationsv1.xlsx"
 temp21 <- curl_download(url=source, destfile=temp21, quiet=FALSE, mode="wb")
 
 #2020 data
