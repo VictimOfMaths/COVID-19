@@ -172,7 +172,7 @@ data %>%
   scale_y_continuous(name="Daily new cases per 100,000")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"), plot.subtitle=element_markdown())+
-  labs(title="New COVID-19 cases are rising fastest in the most vulnerable group",
+  labs(title="New COVID-19 cases are falling fastest in the most vulnerable group",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 in the <span style='color:#FF4E86;'>**over 90s**</span> compared to <span style='color:Grey70;'>**other ages**",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -196,7 +196,7 @@ data %>%
   theme_classic()+
   theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Everywhere has seen a 'student bump', but cases are rising in older ages across the North",
+  labs(title="Cases are still falling across ENgland",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
@@ -294,13 +294,13 @@ shortdata %>%
   ggplot()+
   geom_stream(aes(x=date, y=caserateroll, fill=ageband))+
   scale_x_date(name="")+
-  scale_y_continuous(name="Daily cases per 100,000", labels=abs)+
+  scale_y_continuous(name="Daily cases per 100,000", labels=abs, breaks=c(-200,0,200))+
   scale_fill_paletteer_d("awtools::a_palette", name="Age")+
   facet_geo(~areaName, grid=mygrid)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="COVID-19 case rates are falling at different rates across England",
+  labs(title="COVID-19 case rates continue to fall across England in all age groups",
        subtitle="Rolling 7-day average of confirmed new cases by age",
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
