@@ -80,7 +80,7 @@ plot2 <- ggplot()+
                          na.value="transparent")+
   theme_void()+
   theme(plot.title=element_markdown(face="bold", size=rel(1.5)))+
-  labs(title="COVID-19 cases are falling *almost* everywhere",
+  labs(title="COVID-19 cases have fallen *almost* everywhere in the last week",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
