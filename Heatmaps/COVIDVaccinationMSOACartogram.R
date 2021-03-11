@@ -11,14 +11,15 @@ library(gtools)
 library(ggridges)
 
 #Download vaccination data by MSOA
+#https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-4-March-2021-1.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-11-March-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:L6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<65`=`...3`, `65-69`=`...4`, `70-74`=`...5`, 
-         `75-79`=`...6`, `80+`=`...7`) %>% 
-  gather(age, vaccinated, c(3:7))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:M6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<60`=`...3`, `60-64`=`...4`, `65-69`=`...5`, `70-74`=`...6`, 
+         `75-79`=`...7`, `80+`=`...8`) %>% 
+  gather(age, vaccinated, c(3:8))
 
 #Download IMD data
 temp <- tempfile()
@@ -60,15 +61,16 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="L16:S6806", col_names=FALSE) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="M16:U6806", col_names=FALSE) %>% 
   select(-c(2)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:7)) %>% 
+  gather(age, pop, c(2:8)) %>% 
   mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<65",
-    age=="...5" ~ "65-69",
-    age=="...6" ~ "70-74",
-    age=="...7" ~ "75-79",
+    age %in% c("...3", "...4") ~ "<60",
+    age=="...5" ~ "60-64",
+    age=="...6" ~ "65-69",
+    age=="...7" ~ "70-74",
+    age=="...8" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -218,7 +220,7 @@ dev.off()
 
 plot5 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA %>% filter(age=="<65"), 
+  geom_sf(data=MSOA %>% filter(age=="60-64"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
@@ -232,19 +234,47 @@ plot5 <- ggplot()+
                          labels=label_percent(accuracy=1))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="Vaccination rates in under 65s",
+  labs(title="Vaccination rates in 60-64 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOAu65Cartogram.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDVaxMSOA6064Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot5
 dev.off()
 
-agg_png("Outputs/COVIDVaxMSOAu65Cartogram.png", units="in", width=10, height=8, res=800)
+agg_png("Outputs/COVIDVaxMSOA6064Cartogram.png", units="in", width=10, height=8, res=800)
 plot5
 dev.off()
 
 plot6 <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA %>% filter(age=="<60"), 
+          aes(geometry=geom, fill=vaxprop), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="Vaccination rates in under 60s",
+       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOAu60Cartogram.tiff", units="in", width=10, height=8, res=800)
+plot6
+dev.off()
+
+agg_png("Outputs/COVIDVaxMSOAu60Cartogram.png", units="in", width=10, height=8, res=800)
+plot6
+dev.off()
+
+plot7 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
   geom_sf(data=MSOA %>% filter(age=="Total"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
@@ -265,11 +295,11 @@ plot6 <- ggplot()+
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
-plot6
+plot7
 dev.off()
 
 agg_png("Outputs/COVIDVaxMSOACartogram.png", units="in", width=10, height=8, res=800)
-plot6
+plot7
 dev.off()
 
 #Calculate deprivation gradients within IMD deciles
@@ -347,7 +377,7 @@ ggplot(vaxdata %>% filter(age!="Total"), aes(x=vaxprop, y=-IMDrank, colour=vaxpr
   scale_x_continuous(name="Proportion of population vaccinated", labels=label_percent(accuracy=1))+
   scale_y_continuous(name="Index of Multiple Deprivation", breaks=c(0, -32507),
                      labels=c("Most deprived", "Least deprived"))+
-  scale_colour_paletteer_c("viridis::magma", direction=-1)+
+  scale_colour_paletteer_c("pals::ocean.haline", direction=-1)+
   facet_wrap(~age)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -363,7 +393,7 @@ ggplot(vaxdata %>% filter(age=="Total"), aes(x=vaxprop, y=-IMDrank, colour=vaxpr
   scale_x_continuous(name="Proportion of population vaccinated", labels=label_percent(accuracy=1))+
   scale_y_continuous(name="Index of Multiple Deprivation", breaks=c(0, -32507),
                      labels=c("Most deprived", "Least deprived"))+
-  scale_colour_paletteer_c("viridis::magma", direction=-1)+
+  scale_colour_paletteer_c("pals::ocean.haline", direction=-1)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.4)))+
