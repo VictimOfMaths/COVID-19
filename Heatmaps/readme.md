@@ -10,6 +10,8 @@
 [ScotlandCOVIDHouseParties.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/ScotlandCOVIDHouseParties.R) is a small piece of analysis looking at data from Scotland on regulation-breaching house parties. Finally, [COVIDPillars.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDPillars.R) is another, obsolete, approach using older, pre-dashboard API, data to separate out case trajectories by testing pillar, while [Misc Case Analysis.R](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/Misc%20Case%20Analysis.R) is a collection of various quick plots related to various aspects of case data.<br><br>
 I've also made a few apps to allow you to explore local and national COVID-19 data. [One](https://victimofmaths.shinyapps.io/COVID_LA_Plots/) for mortality, cases and admissions data, [one](https://victimofmaths.shinyapps.io/COVID_Cases_By_Age/) for case data stratified by age and [another](https://victimofmaths.shinyapps.io/COVID_Case_Trends_By_Age/) which compares trends in recent age-specific case data.
 
+![Vaccination cartogram](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDVaxMSOACartogram.png)
+
 ![Cases heatmap](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDLACasesHeatmap.png)
 
 ![COVID Cycle England](https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDCycleEng.png)
