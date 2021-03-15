@@ -12,7 +12,7 @@ library(ragg)
 #Latest date in the country-specific data
 EWDate <- "26th February"
 ScotDate <- "7th March"
-NIDate <- "26th February"
+NIDate <- "5th March"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
@@ -998,11 +998,11 @@ temp <- tempfile()
 temp <- curl_download(url=NI2021, destfile=temp, quiet=FALSE, mode="wb")
 
 #Download 2021 data from the latest spreadsheet
-data2021.NI <- read_excel(temp, sheet="Table 1", range=paste0("B6:C", NIRange), col_names=FALSE) %>% 
+data2021.NI <- read_excel(temp, sheet="Table 1", range=paste0("B5:C", NIRange), col_names=FALSE) %>% 
   mutate(week=c(54:(nrow(.)+53)), year=2021)
 colnames(data2021.NI) <- c("date", "deaths", "week", "year")
 
-data2021.cause.NI <- read_excel(temp, sheet="Table 10", range=paste0("A57:C", as.numeric(NIRange)+51), 
+data2021.cause.NI <- read_excel(temp, sheet="Table 10", range=paste0("A57:C", as.numeric(NIRange)+52), 
                                 col_names=FALSE) %>% 
   rename(week=`...1`, date=`...2`, COVID=`...3`) %>% 
   mutate(COVID=as.numeric(gsub("-", "0", COVID)),
@@ -1729,7 +1729,7 @@ plot12 <- plot12 %>%
   arrange(HB)
 
 ann_text12 <- data.frame(date=rep(as.Date("2020-05-15"), times=14),
-                         deaths=c(350, 400, 250, 230, 300, 210, 150, 250, 180, 200, 150, 100, 
+                         deaths=c(350, 250, 400, 230, 300, 210, 150, 250, 180, 200, 150, 100, 
                                   80, 80), 
                          HB=levels(S.excess.HB$HB))
 
