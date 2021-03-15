@@ -8,6 +8,8 @@ library(lubridate)
 library(RcppRoll)
 library(ragg)
 library(scales)
+library(paletteer)
+library(extrafont)
 
 #Read in Case data
 temp <- tempfile()
@@ -54,10 +56,10 @@ data2 <- read.csv(temp) %>%
 #Read in Admissions data
 #Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Updated each Thursday (I think)
-admrange <- "DR"
+admrange <- "ET"
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/02/Covid-Publication-11-02-2021-Supplementary-Data.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/Covid-Publication-11-03-2021-Supplementary-Data.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data3 <- as.data.frame(t(read_excel(temp, range=paste0("D16:", admrange, "23"), 
@@ -97,10 +99,10 @@ data3.1 <- read.csv(temp) %>%
 #Read in Hospital deaths data
 #Taken from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-daily-deaths/
 #Updated daily
-deathrange <- "NA"
+deathrange <- "NN"
 
 temp <- tempfile()
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-total-announced-deaths-2-March-2021.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-total-announced-deaths-15-March-2021.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data4 <- as.data.frame(t(read_excel(temp, sheet="Tab3 Deaths by age", 
@@ -165,7 +167,8 @@ ggplot(subset(plot.data, metric=="Cases" & age!="Unknown"))+
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in new COVID-19 cases",
        subtitle=paste0("Rolling 7-day average of new COVID-19 cases by specimen date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -188,7 +191,8 @@ ggplot(subset(plot.data, metric=="Deaths" & age!="Unknown"))+
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in COVID-19 deaths",
        subtitle=paste0("Rolling 7-day average counts of deaths within 28 days of a positive COVID-19 test by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -209,7 +213,8 @@ ggplot(subset(plot.data, metric=="Deaths" & !age %in% c("Unknown", "0-14", "15-2
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in COVID-19 deaths",
        subtitle=paste0("Rolling 7-day average counts of deaths within 28 days of a positive COVID-19 test by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -231,7 +236,8 @@ ggplot(subset(plot.data, metric=="Admissions" & age!="Unknown"))+
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in new COVID-19 admissions",
        subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -252,7 +258,8 @@ ggplot(subset(plot.data, metric=="Admissions" & !age %in% c("Unknown", "0-5", "6
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in new COVID-19 admissions",
        subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -274,7 +281,8 @@ ggplot(subset(plot.data, metric=="Admissions2" & age!="Unknown"))+
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in new COVID-19 admissions",
        subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -295,7 +303,8 @@ ggplot(subset(plot.data, metric=="Admissions2" & !age %in% c("Unknown", "0-5", "
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in new COVID-19 admissions",
        subtitle=paste0("Rolling 7-day average of new hospital admissions with a positive COVID-19 test by admission date. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -317,7 +326,8 @@ ggplot(subset(plot.data, metric=="Hospital Deaths" & age!="Unknown"))+
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in COVID-19 deaths in hospitals",
        subtitle=paste0("Rolling 7-day average of COVID-19 deaths in hospitals by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -338,7 +348,8 @@ ggplot(subset(plot.data, metric=="Hospital Deaths" & !age  %in% c("Unknown", "0-
   theme_classic()+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Age-specific trends in COVID-19 deaths in hospitals",
        subtitle=paste0("Rolling 7-day average of COVID-19 deaths in hospitals by date of death. Grey dots reflect daily data.\nTrend line fitted between ", FitFrom, " to ", FitTo),
        caption="Data from NHS England | Plot by @VictimOfMaths")
