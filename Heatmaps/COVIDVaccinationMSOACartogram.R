@@ -9,6 +9,8 @@ library(scales)
 library(ragg)
 library(gtools)
 library(ggridges)
+library(patchwork)
+library(extrafont)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
@@ -400,5 +402,48 @@ ggplot(vaxdata %>% filter(age=="Total"), aes(x=vaxprop, y=-IMDrank, colour=vaxpr
   labs(title="COVID vaccine uptake is lower in more deprived areas in England",
        subtitle="Number of people vaccinated by age group and MSOA compared compared to the estimated population in 2019.",
        caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")
+dev.off()
+
+#############################
+#Local analysis
+#Download MSOA map
+#Download shapefile of LA boundaries
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/826dc85fb600440889480f4d9dbb1a24_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
+
+
+map <- full_join(shapefile, MSOA %>% select(Laname, msoa11cd, IMDrank, vaxprop, pop, age) %>% as.data.frame(), 
+                 by="msoa11cd", all.y=TRUE)
+
+SheffIMD <- map %>% filter(age=="Total" & Laname=="Sheffield") %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=IMDrank), show.legend=FALSE, colour=NA)+
+  scale_fill_paletteer_c("pals::ocean.matter")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)), text=element_text(family="Roboto"))+
+  labs(title="Index of Multiple deprivation",
+       subtitle="Darker colours = more deprived")
+
+Sheffvax <- map %>% filter(age!="Total" & Laname=="Sheffield") %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=vaxprop), colour=NA)+
+  facet_wrap(~age)+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)), text=element_text(family="Roboto"))+
+  labs(title="COVID-19 vaccination rates",
+       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOASSheffield.tiff", units="in", width=12, height=8, res=800)
+SheffIMD+Sheffvax
 dev.off()
 
