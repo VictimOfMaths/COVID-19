@@ -10,14 +10,14 @@ library(ggtext)
 library(ragg)
 
 #Latest date in the country-specific data
-EWDate <- "26th February"
+EWDate <- "5th March"
 ScotDate <- "7th March"
 NIDate <- "5th March"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek082021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek092021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-09.xlsx"
@@ -27,7 +27,7 @@ NI2021 <- "https://www.nisra.gov.uk/sites/nisra.gov.uk/files/publications/Weekly
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "J" 
+EngRange <- "K" 
 ScotRange <- "K" 
 NIRange <- "13" 
 
@@ -513,13 +513,14 @@ temp48 <- as.data.frame(t(read_excel(temp, sheet=12, range="Z10:Z15", col_names=
 temp49 <- as.data.frame(t(read_excel(temp, sheet=12, range="AF10:AF15", col_names=FALSE)))
 temp50 <- as.data.frame(t(read_excel(temp, sheet=12, range="AL10:AL15", col_names=FALSE)))
 temp51 <- as.data.frame(t(read_excel(temp, sheet=12, range="AR10:AR15", col_names=FALSE)))
+temp52 <- as.data.frame(t(read_excel(temp, sheet=12, range="AX10:AX15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
-                    temp47, temp48, temp49, temp50, temp51) %>% 
+                    temp47, temp48, temp49, temp50, temp51, temp52) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1185,7 +1186,7 @@ EW.excess.sex <- plot2 %>%
   ungroup()
 
 ann_text2 <- data.frame(date=rep(as.Date("2020-06-01"), times=2), deaths=c(7500,7000), 
-                        sex=c("Male", "Female"))
+                        sex=factor(c("Male", "Female"), levels=c("Male", "Female")))
 
 agg_tiff("Outputs/ONSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot2)+
@@ -1241,7 +1242,8 @@ EW.excess.age <- plot3 %>%
 
 ann_text3 <- data.frame(date=rep(as.Date("2020-06-01"), times=6), 
                         deaths=c(1300, 1400, 2000, 3000, 5000, 7000), 
-                        age=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"))
+                        age=factor(c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"),
+                                   levels=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+")))
 
 agg_tiff("Outputs/ONSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot3)+
@@ -1275,7 +1277,8 @@ dev.off()
 
 ann_text3 <- data.frame(date=rep(as.Date("2020-06-01"), times=6), 
                         deaths=c(120, 400, 2000, 3000, 5000, 7000), 
-                        age=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"))
+                        age=factor(c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"),
+                                    levels=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+")))
 
 agg_tiff("Outputs/ONSWeeklyDeathsxAgev2.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot3)+
@@ -1289,7 +1292,7 @@ ggplot(plot3)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths are above 'normal' levels in 45-84 year olds",
+  labs(title="Deaths are above 'normal' levels in 45-74 year olds",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text3, aes(x=date, y=deaths), label=c(paste0(round(EW.excess.age[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (",
@@ -1316,7 +1319,7 @@ ggplot(plot3)+
   scale_fill_paletteer_d(name="Age", "awtools::a_palette")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Excess deaths are falling fastest in the oldest age groups",
+  labs(title="Excess deaths are at their lowest level since October",
        subtitle=paste0("Weekly deaths registered in England & Wales by age compared to the 2010-19 average.\nData up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -1464,7 +1467,7 @@ S.excess.sex <- plot7 %>%
   ungroup()
 
 ann_text7 <- data.frame(date=rep(as.Date("2020-06-01"), times=2), deaths=c(750,700), 
-                        sex=c("Male", "Female"))
+                        sex=factor(c("Male", "Female"), levels=c("Male", "Female")))
 
 agg_tiff("Outputs/NRSWeeklyDeathsxSex.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot7)+
@@ -1520,7 +1523,8 @@ S.excess.age <- plot8 %>%
 
 ann_text8 <- data.frame(date=rep(as.Date("2020-06-01"), times=6), 
                         deaths=c(100, 150, 270, 350, 500, 600), 
-                        age=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"))
+                        age=factor(c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+"),
+                                   levels=c("Under 15", "15-44", "45-64", "65-74", "75-84", "85+")))
 
 agg_tiff("Outputs/NRSWeeklyDeathsxAge.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot8)+
@@ -1589,7 +1593,8 @@ S.excess.loc <- plot9 %>%
   ungroup()
 
 ann_text9 <- data.frame(date=rep(as.Date("2020-05-10"), times=3), deaths=c(750,500, 600), 
-                        loc=c("Hospital", "Care Home", "Home/Other"))
+                        loc=factor(c("Hospital", "Care Home", "Home/Other"),
+                                   levels=c("Hospital", "Care Home", "Home/Other")))
 
 agg_tiff("Outputs/NRSWeeklyDeathsxLocation.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot9)+
@@ -1731,7 +1736,7 @@ plot12 <- plot12 %>%
 ann_text12 <- data.frame(date=rep(as.Date("2020-05-15"), times=14),
                          deaths=c(350, 250, 400, 230, 300, 210, 150, 250, 180, 200, 150, 100, 
                                   80, 80), 
-                         HB=levels(S.excess.HB$HB))
+                         HB=factor(S.excess.HB$HB, levels(S.excess.HB$HB)))
 
 agg_tiff("Outputs/NRSWeeklyDeathsxHB.tiff", units="in", width=12, height=8, res=500)
 ggplot(plot12)+
@@ -1900,7 +1905,7 @@ plot15 <- plot15 %>%
 ann_text15 <- data.frame(date=rep(as.Date("2020-05-15"), times=12),
                          deaths=c(2500, 2100, 1700, 2200, 2100, 2300, 1400, 2000, 1100, 
                                   600, 1600, 1700), 
-                         region=levels(UK.excess.region$region))
+                         region=factor(UK.excess.region$region, levels(UK.excess.region$region)))
 
 subtitle <- ifelse(EWDate==NIDate, paste0("Weekly deaths in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>.<br>England, Wales and Northern Ireland data to ", EWDate, ".<br>Scotland data to ", ScotDate, "."),
                    paste0("Weekly deaths in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span><br>England and Wales data to ",  EWDate, ".<br>Northern Ireland data to ", NIDate, ".<br>Scotland data to ", ScotDate, "."))
