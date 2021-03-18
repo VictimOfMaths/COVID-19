@@ -15,13 +15,13 @@ library(extrafont)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-11-March-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-18-March-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:M6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<60`=`...3`, `60-64`=`...4`, `65-69`=`...5`, `70-74`=`...6`, 
-         `75-79`=`...7`, `80+`=`...8`) %>% 
-  gather(age, vaccinated, c(3:8))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:N6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<55`=`...3`, `55-59`=`...4`, `60-64`=`...5`, `65-69`=`...6`, 
+         `70-74`=`...7`, `75-79`=`...8`, `80+`=`...9`) %>% 
+  gather(age, vaccinated, c(3:9))
 
 #Download IMD data
 temp <- tempfile()
@@ -63,16 +63,17 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="M16:U6806", col_names=FALSE) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="N16:W6806", col_names=FALSE) %>% 
   select(-c(2)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:8)) %>% 
+  gather(age, pop, c(2:9)) %>% 
   mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<60",
-    age=="...5" ~ "60-64",
-    age=="...6" ~ "65-69",
-    age=="...7" ~ "70-74",
-    age=="...8" ~ "75-79",
+    age %in% c("...3", "...4") ~ "<55",
+    age=="...5" ~ "55-59",
+    age=="...6" ~ "60-64",
+    age=="...7" ~ "65-69",
+    age=="...8" ~ "70-74",
+    age=="...9" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -123,7 +124,8 @@ plot <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in the over 80s",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -151,7 +153,8 @@ plot2 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 75-79 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -179,7 +182,8 @@ plot3 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 70-74 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -207,7 +211,8 @@ plot4 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 65-69 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -235,7 +240,8 @@ plot5 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 60-64 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -250,7 +256,7 @@ dev.off()
 
 plot6 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA %>% filter(age=="<60"), 
+  geom_sf(data=MSOA %>% filter(age=="55-59"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
@@ -263,20 +269,50 @@ plot6 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="Vaccination rates in under 60s",
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
+  labs(title="Vaccination rates in 55-59 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOAu60Cartogram.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDVaxMSOA5559Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot6
 dev.off()
 
-agg_png("Outputs/COVIDVaxMSOAu60Cartogram.png", units="in", width=10, height=8, res=800)
+agg_png("Outputs/COVIDVaxMSOA5559Cartogram.png", units="in", width=10, height=8, res=800)
 plot6
 dev.off()
 
 plot7 <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA %>% filter(age=="<55"), 
+          aes(geometry=geom, fill=vaxprop), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
+  labs(title="Vaccination rates in under 55s",
+       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOAu55Cartogram.tiff", units="in", width=10, height=8, res=800)
+plot7
+dev.off()
+
+agg_png("Outputs/COVIDVaxMSOAu55Cartogram.png", units="in", width=10, height=8, res=800)
+plot7
+dev.off()
+
+plot8 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
   geom_sf(data=MSOA %>% filter(age=="Total"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
@@ -291,17 +327,18 @@ plot7 <- ggplot()+
                          name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Overall adult vaccination rates",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
-plot7
+plot8
 dev.off()
 
 agg_png("Outputs/COVIDVaxMSOACartogram.png", units="in", width=10, height=8, res=800)
-plot7
+plot8
 dev.off()
 
 #Calculate deprivation gradients within IMD deciles
@@ -348,7 +385,8 @@ ggplot(vaxdeciles %>% filter(age=="Total"),
                      labels=label_percent(accuracy=1))+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1)+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in England are lower in more deprived areas",
        subtitle="Distribution of MSOA-level vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -367,7 +405,8 @@ ggplot(vaxdeciles %>% filter(age!="Total"),
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         strip.background=element_blank(),
-        strip.text=element_text(face="bold", size=rel(1)))+
+        strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in England are lower in more deprived areas",
        subtitle="Distribution of MSOA-level vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -383,7 +422,8 @@ ggplot(vaxdata %>% filter(age!="Total"), aes(x=vaxprop, y=-IMDrank, colour=vaxpr
   facet_wrap(~age)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.4)))+
+        plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="COVID vaccine uptake is lower in more deprived areas in England",
        subtitle="Number of people vaccinated by age group and MSOA compared compared to the estimated population in 2019.",
        caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")
@@ -398,7 +438,8 @@ ggplot(vaxdata %>% filter(age=="Total"), aes(x=vaxprop, y=-IMDrank, colour=vaxpr
   scale_colour_paletteer_c("pals::ocean.haline", direction=-1)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.4)))+
+        plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="COVID vaccine uptake is lower in more deprived areas in England",
        subtitle="Number of people vaccinated by age group and MSOA compared compared to the estimated population in 2019.",
        caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")
