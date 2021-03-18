@@ -7,6 +7,7 @@ library(paletteer)
 library(ggtext)
 library(RcppRoll)
 library(ragg)
+library(extrafont)
 
 #Bring in daily data
 temp <- tempfile()
@@ -47,8 +48,9 @@ ggplot()+
   scale_y_continuous(name="First doses delivered per 1m population", limits=c(0,NA))+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="Rates of delivery of 1st vaccine doses have slowed as 2nd dose delivery increases",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="Rates of delivery of 1st vaccine doses have increased in the last few days",
        subtitle="Rolling 7-day average rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -67,7 +69,8 @@ APIdata2 %>%
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="Nation")+
   scale_linetype_discrete(name="Dose", labels=c("1st", "2nd"))+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Wales is getting on with delivering 2nd doses of the COVID-19 💉",
        subtitle="Rates of delivery of COVID-19 vaccines by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
