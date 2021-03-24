@@ -9,16 +9,17 @@ library(scales)
 library(lubridate)
 library(ragg)
 library(RcppRoll)
+library(extrafont)
 
 #Increment by 7 each week
-MaxRange <- "BT"
+MaxRange <- "CA"
 #Increment by 1 each week
-MaxRange2 <- "J"
+MaxRange2 <- "L"
 
 #Read in data on deaths in care home residents notified to CQC 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
 temp21 <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210315coviddeathsnotifs2021.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210322coviddeathsnotifs2021.xlsx"
 temp21 <- curl_download(url=source, destfile=temp21, quiet=FALSE, mode="wb")
 
 #2020 data
@@ -92,8 +93,8 @@ ggplot()+
   scale_y_continuous(name="Daily deaths in care homes", labels=abs)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        plot.subtitle=element_markdown())+
-  labs(title="COVID-19 deaths in care homes in England are still falling",
+        plot.subtitle=element_markdown(), text=element_text(family="Roboto"))+
+  labs(title="There are now very few COVID-19 deaths in care homes",
        subtitle="Deaths from <span style='color:#F44B4B;'>COVID-19</span> and <span style='color:#F19743;'>all other causes</span> notified to the Care Quality Commission, by date of notification",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -169,7 +170,7 @@ ggplot(subset(data.all.2, cause!="AllCause"))+
   scale_fill_manual(values=c("#C70E7B", "#007BC3", "#EF7C12", "#FC6882", "#54BCD1", "#F4B95A"),
                     name="Cause and place of death")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), text=element_text(family="Roboto"))+
   labs(title="Fewer care home residents are dying of COVID-19 in all settings",
        subtitle="Weekly deaths notified to the Care Quality Commission of care home residents\nby cause and location.",
        caption="Data from ONS | Plot by @VictimOfMaths")
@@ -186,8 +187,8 @@ data %>%
                          labels=scales::percent)+
   scale_y_discrete(name="")+
   scale_x_date(name="")+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 deaths in care homes are falling across the country",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), text=element_text(family="Roboto"))+
+  labs(title="There are very few COVID-19 deaths in care homes anywhere in England",
        subtitle="Proportion of deaths in care homes notified to CQC recorded as involving COVID-19 by Local Authority in England.\nAuthorities are ordered by the date on which the highest proportion of deaths involved COVID-19.",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
