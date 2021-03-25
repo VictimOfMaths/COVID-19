@@ -6,6 +6,7 @@ library(sf)
 library(ragg)
 library(ggtext)
 library(scales)
+library(extrafont)
 library(gganimate)
 
 #Start with LA level cases for the whole of the UK
@@ -56,8 +57,9 @@ plot1 <- ggplot()+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1,
                          name="Cases per\n100,000")+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 cases are highest in the Midlands and urban areas in the North",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 cases are highest in the Yorkshire and Central Scotland",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -79,8 +81,9 @@ plot2 <- ggplot()+
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_void()+
-  theme(plot.title=element_markdown(face="bold", size=rel(1.5)))+
-  labs(title="COVID-19 cases have fallen *almost* everywhere in the last week",
+  theme(plot.title=element_markdown(face="bold", size=rel(1.5)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 case rates are falling in some areas and rising in others",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -136,16 +139,21 @@ LAsMSOA <- st_read(msoa, layer="3 Local authority outlines (2019)")
 
 plot3 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA, aes(geometry=geom, fill=latest), colour=NA)+
-  geom_sf(data=LAsMSOA, aes(geometry=geom), fill=NA, colour="White", size=0.1)+
-  geom_sf(data=GroupsMSOA, aes(geometry=geom), fill=NA, colour="Black")+
-  geom_sf_text(data=Group_labelsMSOA, aes(geometry=geom, label=Group.labe,
+  geom_sf(data=MSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom, fill=latest), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
                                       hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
                          name="Cases per\n100,000", limits=c(0,NA))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 cases are highest in the Midlands and urban areas in the North",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 cases are highest in Yorkshire and Manchester",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Middle Super Output Area level in England\nData up to ", 
                        maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in grey."),       
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
@@ -160,16 +168,21 @@ dev.off()
 
 plot4 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA, aes(geometry=geom, fill=abschange), colour=NA)+
-  geom_sf(data=LAsMSOA, aes(geometry=geom), fill=NA, colour="White", size=0.1)+
-  geom_sf(data=GroupsMSOA, aes(geometry=geom), fill=NA, colour="Black")+
-  geom_sf_text(data=Group_labelsMSOA, aes(geometry=geom, label=Group.labe,
+  geom_sf(data=MSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom, fill=abschange), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
                                       hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(msoacasedata$abschange), na.rm=TRUE), 
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="COVID-19 cases are falling in almost all parts of England",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Middle Super Output Area level in England\nData up to ", 
                        maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in grey."),       
@@ -213,7 +226,8 @@ CartogramanimUK <- ggplot()+
                        na.value="white")+
   transition_time(date)+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
   labs(title="Timeline of the UK's 'Second Wave'",
        subtitle="Rolling 7-day average number of case rates\nData up to  {frame_time}",
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
