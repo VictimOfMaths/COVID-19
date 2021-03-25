@@ -15,13 +15,14 @@ library(extrafont)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-18-March-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-25-March-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:N6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<55`=`...3`, `55-59`=`...4`, `60-64`=`...5`, `65-69`=`...6`, 
-         `70-74`=`...7`, `75-79`=`...8`, `80+`=`...9`) %>% 
-  gather(age, vaccinated, c(3:9))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:O6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<50`=`...3`,  `50-54`=`...4`, `55-59`=`...5`, 
+         `60-64`=`...6`, `65-69`=`...7`, 
+         `70-74`=`...8`, `75-79`=`...9`, `80+`=`...10`) %>% 
+  gather(age, vaccinated, c(3:10))
 
 #Download IMD data
 temp <- tempfile()
@@ -63,17 +64,18 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="N16:W6806", col_names=FALSE) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="O16:Y6806", col_names=FALSE) %>% 
   select(-c(2)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:9)) %>% 
+  gather(age, pop, c(2:10)) %>% 
   mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<55",
-    age=="...5" ~ "55-59",
-    age=="...6" ~ "60-64",
-    age=="...7" ~ "65-69",
-    age=="...8" ~ "70-74",
-    age=="...9" ~ "75-79",
+    age %in% c("...3", "...4") ~ "<50",
+    age=="...5" ~ "50-54",
+    age=="...6" ~ "55-59",
+    age=="...7" ~ "60-64",
+    age=="...8" ~ "65-69",
+    age=="...9" ~ "70-74",
+    age=="...10" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -285,7 +287,7 @@ dev.off()
 
 plot7 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA %>% filter(age=="<55"), 
+  geom_sf(data=MSOA %>% filter(age=="50-54"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
@@ -300,19 +302,48 @@ plot7 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
-  labs(title="Vaccination rates in under 55s",
+  labs(title="Vaccination rates in 50-54 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOAu55Cartogram.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDVaxMSOA5054Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot7
 dev.off()
 
-agg_png("Outputs/COVIDVaxMSOAu55Cartogram.png", units="in", width=10, height=8, res=800)
+agg_png("Outputs/COVIDVaxMSOA5054Cartogram.png", units="in", width=10, height=8, res=800)
 plot7
 dev.off()
 
 plot8 <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA %>% filter(age=="<50"), 
+          aes(geometry=geom, fill=vaxprop), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
+  labs(title="Vaccination rates in under 50s",
+       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOAu50Cartogram.tiff", units="in", width=10, height=8, res=800)
+plot8
+dev.off()
+
+agg_png("Outputs/COVIDVaxMSOAu50Cartogram.png", units="in", width=10, height=8, res=800)
+plot8
+dev.off()
+
+plot9 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
   geom_sf(data=MSOA %>% filter(age=="Total"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
@@ -334,11 +365,11 @@ plot8 <- ggplot()+
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
-plot8
+plot9
 dev.off()
 
 agg_png("Outputs/COVIDVaxMSOACartogram.png", units="in", width=10, height=8, res=800)
-plot8
+plot9
 dev.off()
 
 #Calculate deprivation gradients within IMD deciles
