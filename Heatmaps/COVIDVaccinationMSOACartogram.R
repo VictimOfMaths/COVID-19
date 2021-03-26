@@ -543,15 +543,16 @@ MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>%
                  aes(geometry=geom, label=Group.labe,
                      hjust=just), size=rel(2.4), colour="Black")+
     scale_fill_paletteer_c("pals::ocean.dense", direction=-1, 
-                           name="Proportion of\npopulation\nvaccinated", limits=c(0,NA),
+                           name="Proportion of adults vaccinated\n(age-standardised)", limits=c(0,NA),
                            labels=label_percent(accuracy=1))+
     theme_void()+
     theme(plot.title=element_text(face="bold", size=rel(1.4)),
-          text=element_text(family="Roboto"))+
-    labs(title="Vaccination rates are lowest in urban areas even after accounting\nfor the fact that they tend to have younger populations",
-         subtitle="Age-standardised rates of vaccination (1st dose) in England by Middle Super Output Area.",       
+          text=element_text(family="Roboto"), legend.position="top")+
+    guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                                 barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+    labs(title="Vaccination rates are lowest in urban areas even after accounting\nfor the fact that they tend to have younger populations\n \n ",
          caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
   
-  agg_tiff("Outputs/COVIDVaxMSOAAgeStdCartogram.tiff", units="in", width=9, height=8, res=800)
+  agg_tiff("Outputs/COVIDVaxMSOAAgeStdCartogram.tiff", units="in", width=9, height=10, res=800)
   plot10
   dev.off()
