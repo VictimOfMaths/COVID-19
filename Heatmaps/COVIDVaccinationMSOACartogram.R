@@ -519,3 +519,39 @@ agg_tiff("Outputs/COVIDVaxMSOASSheffield.tiff", units="in", width=12, height=8, 
 SheffIMD+Sheffvax
 dev.off()
 
+#Calculate age-standardised vaccination rates
+asvax <- vaxdata %>% 
+  filter(age!="Total") %>% 
+  select(-c(vaccinated, pop)) %>% 
+  spread(age, vaxprop) %>% 
+  mutate(asrate=(`<50`*45000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
+                   `75-79`*4000+`80+`*5000)/84000)
+
+MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(asvax, by="msoa11cd") %>% 
+  filter(RegionNation!="Wales")
+
+  plot10 <- ggplot()+
+    geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+    geom_sf(data=MSOA2, 
+            aes(geometry=geom, fill=asrate), colour=NA)+
+    geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+            aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+    geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+            aes(geometry=geom), fill=NA, colour="Black")+
+    geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+                 aes(geometry=geom, label=Group.labe,
+                     hjust=just), size=rel(2.4), colour="Black")+
+    scale_fill_paletteer_c("pals::ocean.dense", direction=-1, 
+                           name="Proportion of\npopulation\nvaccinated", limits=c(0,NA),
+                           labels=label_percent(accuracy=1))+
+    theme_void()+
+    theme(plot.title=element_text(face="bold", size=rel(1.4)),
+          text=element_text(family="Roboto"))+
+    labs(title="Vaccination rates are lowest in urban areas even after accounting\nfor the fact that they tend to have younger populations",
+         subtitle="Age-standardised rates of vaccination (1st dose) in England by Middle Super Output Area.",       
+         caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+  
+  agg_tiff("Outputs/COVIDVaxMSOAAgeStdCartogram.tiff", units="in", width=9, height=8, res=800)
+  plot10
+  dev.off()
