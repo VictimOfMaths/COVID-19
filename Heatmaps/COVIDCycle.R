@@ -6,6 +6,7 @@ library(lubridate)
 library(ukcovid19) #remotes::install_github("publichealthengland/coronavirus-dashboard-api-R-sdk")
 library(paletteer)
 library(ggtext)
+library(extrafont)
 
 options(scipen=9999)
 
@@ -56,8 +57,9 @@ ggplot()+
   facet_wrap(~name)+
   theme_classic()+
   theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
-        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Going round in circles",
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with positive COVID-19 test and deaths within 28 days of a positive test across the UK <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -74,8 +76,9 @@ EngCycle <- ggplot()+
  scale_x_continuous(trans="log10", name="Daily COVID-19 admissions (log scale)")+
  scale_y_continuous(trans="log10", name="Daily COVID-19 deaths (log scale)")+
   theme_classic()+
-  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
-  labs(title="Going round in circles",
+  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with positive COVID-19 test and deaths within 28 days of a positive test<br>in England <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -99,8 +102,9 @@ ggplot()+
   scale_x_continuous(trans="log10", name="Daily COVID-19 admissions (log scale)")+
   scale_y_continuous(trans="log10", name="Daily COVID-19 deaths (log scale)")+
   theme_classic()+
-  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
-  labs(title="Going round in circles",
+  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with positive COVID-19 test and deaths within 28 days of a positive test<br>in Wales <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -118,8 +122,9 @@ ggplot()+
   scale_x_continuous(trans="log10", name="Daily COVID-19 admissions (log scale)")+
   scale_y_continuous(trans="log10", name="Daily COVID-19 deaths (log scale)")+
   theme_classic()+
-  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
-  labs(title="Going round in circles",
+  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with positive COVID-19 test and deaths within 28 days of a positive test<br>in Scotland <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -137,8 +142,9 @@ ggplot()+
   scale_x_continuous(trans="log10", name="Daily COVID-19 admissions (log scale)")+
   scale_y_continuous(trans="log10", name="Daily COVID-19 deaths (log scale)")+
   theme_classic()+
-  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"))+
-  labs(title="Going round in circles",
+  theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with positive COVID-19 test and deaths within 28 days of a positive test<br>in Northern Ireland <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -202,8 +208,9 @@ ggplot()+
   facet_wrap(~name)+
   theme_classic()+
   theme(plot.subtitle=element_markdown(), plot.title=element_text(face="bold"),
-        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Going round in circles",
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Roboto"))+
+  labs(title="Heading in the right direction",
        subtitle="New hospital admissions with a positive COVID-19 test and deaths within 28 days of a positive test in England England <span style='color:Grey60;'>by day</span> and <span style='color:tomato;'>the weekly average</span>.<br>Admissions data is published for NHS regions while deaths data is at government region level. These geographies are similar but may not overlap perfectly.",
        caption="Inspired by @maartenzam | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
