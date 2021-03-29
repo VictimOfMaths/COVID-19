@@ -8,17 +8,18 @@ library(ggridges)
 library(paletteer)
 library(ggstream)
 library(RcppRoll)
+library(extrafont)
 
 #Scottish age data
 #https://www.opendata.nhs.scot/dataset/covid-19-in-scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210108.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210329.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
 
 data <- data %>% 
-  filter(!AgeGroup %in% c("Total", "Unknown")) %>% 
+  filter(!AgeGroup %in% c("Total", "0 to 59", "60+")) %>% 
   mutate(date=as.Date(as.character(Date), format="%Y%m%d"))
 
 #Bring in populations
@@ -36,7 +37,7 @@ pop <- bind_rows(pop.m, pop.f)
 
 pop$age <- c(0:90)
 pop$AgeGroup <- case_when(
-  pop$age<15 ~ "Under 15",
+  pop$age<15 ~ "0 to 14",
   pop$age<20 ~ "15 to 19",
   pop$age<25 ~ "20 to 24",
   pop$age<45 ~ "25 to 44",
@@ -69,31 +70,33 @@ data <- data %>%
          posrate_avg=roll_mean(posrate, 7, align="right", fill=0))
 
 tiff("Outputs/COVIDCasesStreamgraphScotlandxSex.tiff", units="in", width=10, height=6, res=500)
-ggplot(subset(data, Sex!="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
+ggplot(subset(data, Sex!="Total"), aes(x=date, y=cases_avg, fill=AgeGroup))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("awtools::a_palette", name="Age",
-                         labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
+                         labels=c("Under 15", "15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_y_continuous(name="New cases per day", labels=abs)+
   scale_x_date(name="")+
   facet_wrap(~Sex)+
   theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Cases in Scotland are rising fast",
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Roboto"), plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="Cases in Scotland are rising in the under 15s",
        subtitle="Confirmed new COVID-19 cases in Scotland by sex and age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
 tiff("Outputs/COVIDCasesStreamgraphScotland.tiff", units="in", width=10, height=6, res=500)
-ggplot(subset(data, Sex=="Total"), aes(x=date, y=DailyPositive, fill=AgeGroup))+
+ggplot(subset(data, Sex=="Total"), aes(x=date, y=cases_avg, fill=AgeGroup))+
   geom_stream(bw=0.2)+
   scale_fill_paletteer_d("awtools::a_palette", name="Age",
-                         labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
+                         labels=c("Under 15", "15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_y_continuous(name="New cases per day", labels=abs)+
   scale_x_date(name="")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="COVID-19 cases in Scotland are rising in people of working age",
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 cases in Scotland are rising in the under 15s",
        subtitle="Confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -105,11 +108,12 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="Age group",
-                   labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
+                   labels=c("Under 15", "15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title="The number of new COVID-19 cases in 25-64 year olds is rising fast",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="The number of new COVID-19 cases in the under 15s is rising",
        subtitle="Rolling 7-day average of daily confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -119,12 +123,12 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
   geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="Age group",
-                   labels=c("15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
+                   labels=c("Under 15", "15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))+
-  
-  labs(title="COVID-19 case rates in 20-24 year olds now have surpassed the student spike in September",
+  theme(plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 case rates have started rising in all ages below 65",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -134,22 +138,23 @@ dev.off()
 
 #Line graph version
 tiff("Outputs/COVIDCasesLineScotlandRate.tiff", units="in", width=8, height=6, res=500)
-ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$date)), 
+ggplot(subset(data, Sex=="Total" & date>=as.Date("2021-01-01") & date<max(data$date)), 
        aes(x=date, y=posrate_avg, colour=AgeGroup))+
   geom_line()+
   scale_x_date(name="")+
   scale_y_continuous(name="Daily new cases per 100,000")+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold"))+
-  labs(title="The rapid rise of COVID-19 cases across all age groups in Scotland",
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID-19 case rates have started rising in the under 45s",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
-       caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
+       caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210108.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210329.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -173,7 +178,8 @@ ggplot(subset(data.simd, date>=as.Date("2020-07-01") & date<max(data$date)),
                    labels=c("1 - most deprived", "2", "3", "4", "5 - least deprived"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold"))+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="The most deprived areas in Scotland have the highest rate of new COVID-19 cases",
        subtitle="Rolling 7-day average of confirmed daily new cases in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
@@ -186,6 +192,8 @@ COVIDDeathsHeatmapScotlandxIMD <- ggplot(data.simd, aes(x=date, y=as.factor(SIMD
                    labels=c("1 - most deprived", "2", "3", "4", "5 - least deprived"))+
   scale_fill_paletteer_c("viridis::magma", name="Deaths per day")+
   theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
   labs(title="COVID deaths in both 'waves' have come disproportionately from the most deprived areas",
        subtitle="Rolling 7-day average of confirmed daily deaths in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
@@ -194,3 +202,13 @@ tiff("Outputs/COVIDDeathsHeatmapScotlandxIMD.tiff", units="in", width=10, height
 COVIDDeathsHeatmapScotlandxIMD
 dev.off()
 
+#Save jpeg for SIPHER blog
+ggsave("Outputs/JPEGs/MortIneqBlog6.jpeg", plot=COVIDDeathsHeatmapScotlandxIMD, 
+       units="in", width=10, height=3)
+
+#Rayshader version
+library(rayshader)
+library(rayrender)
+
+plot_gg(CaseratexAge, width=10, height=3, multicore = TRUE, windowsize = c(1000, 600), 
+        zoom = 0.65, phi = 35, theta = 40, sunangle = 225, soliddepth = -100) 
