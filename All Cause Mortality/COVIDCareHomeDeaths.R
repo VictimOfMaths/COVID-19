@@ -12,14 +12,14 @@ library(RcppRoll)
 library(extrafont)
 
 #Increment by 7 each week
-MaxRange <- "CA"
+MaxRange <- "CH"
 #Increment by 1 each week
-MaxRange2 <- "L"
+MaxRange2 <- "M"
 
 #Read in data on deaths in care home residents notified to CQC 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland
 temp21 <- tempfile()
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210322coviddeathsnotifs2021.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/numberofdeathsincarehomesnotifiedtothecarequalitycommissionengland/2021/20210329officialsensitivecoviddeathsnotifs20211.xlsx"
 temp21 <- curl_download(url=source, destfile=temp21, quiet=FALSE, mode="wb")
 
 #2020 data
