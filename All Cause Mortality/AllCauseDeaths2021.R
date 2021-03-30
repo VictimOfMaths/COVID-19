@@ -11,26 +11,26 @@ library(ragg)
 library(extrafont)
 
 #Latest date in the country-specific data
-EWDate <- "12th March"
+EWDate <- "19th March"
 ScotDate <- "21st March"
-NIDate <- "12th March"
+NIDate <- "19th March"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek102021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek112021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-11.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths_190321.XLSX"
+NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%2019th%20March%202021.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "L" 
+EngRange <- "M" 
 ScotRange <- "M" 
-NIRange <- "14" 
+NIRange <- "15" 
 
 ##############################
 #Read in English & Welsh data#
@@ -516,13 +516,14 @@ temp50 <- as.data.frame(t(read_excel(temp, sheet=12, range="AL10:AL15", col_name
 temp51 <- as.data.frame(t(read_excel(temp, sheet=12, range="AR10:AR15", col_names=FALSE)))
 temp52 <- as.data.frame(t(read_excel(temp, sheet=12, range="AX10:AX15", col_names=FALSE)))
 temp53 <- as.data.frame(t(read_excel(temp, sheet=12, range="BD10:BD15", col_names=FALSE)))
+temp54 <- as.data.frame(t(read_excel(temp, sheet=12, range="BJ10:BJ15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
-                    temp47, temp48, temp49, temp50, temp51, temp52, temp53) %>% 
+                    temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1137,7 +1138,9 @@ ggplot(plot1)+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
   geom_line(aes(x=date, y=deaths), colour="Red")+
-  scale_x_date(name="")+
+  scale_x_date(name="", breaks=c(as.Date("2020-01-01"), as.Date("2020-04-01"), as.Date("2020-07-01"), 
+                                 as.Date("2020-10-01"), as.Date("2021-01-01")),
+               labels=c("Jan 2020", "Apr 2020", "Jul 2020", "Oct 2020", "Jan 2021"))+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
@@ -1199,14 +1202,16 @@ ggplot(plot2)+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
   geom_line(aes(x=date, y=deaths), colour="Red")+
-  scale_x_date(name="")+
+  scale_x_date(name="", breaks=c(as.Date("2020-01-01"), as.Date("2020-04-01"), as.Date("2020-07-01"), 
+                                 as.Date("2020-10-01"), as.Date("2021-01-01")),
+               labels=c("Jan 2020", "Apr 2020", "Jul 2020", "Oct 2020", "Jan 2021"))+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   facet_wrap(~sex)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Roboto"))+
-  labs(title="Male mortality remains slightly above average",
+  labs(title="Male mortality is (finally) back at average levels",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text2, aes(x=date, y=deaths), label=c(paste0("+", round(EW.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1340,7 +1345,7 @@ plot4 <- data.loc.EW %>%
 
 #Add extra weeks to old data
 plot4 <- plot4 %>% 
-  filter(week<=Eng2021MaxWeek-53) %>% 
+  filter(week<=Eng2021MaxWeek-53 & year==1519) %>% 
   mutate(week=week+53) %>% 
   bind_rows(plot4) %>% 
   mutate(date=as.Date("2020-01-03")+weeks(week-1))
@@ -1373,7 +1378,7 @@ ggplot()+
   geom_col(data=subset(plot5, cause!="netexcess"), aes(x=date, y=deaths, fill=cause))+
   geom_hline(yintercept=0, colour="Grey30")+
   geom_line(data=subset(plot5, cause=="netexcess"), aes(x=date, y=deaths, colour=cause))+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Excess deaths vs. 2015-19 mean")+
   scale_fill_paletteer_d("LaCroixColoR::PinaFraise", name="Cause", labels=c("COVID-19", "Other causes"))+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
@@ -1427,7 +1432,7 @@ ggplot(plot6)+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
   geom_line(aes(x=date, y=deaths), colour="Red")+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
@@ -1489,7 +1494,7 @@ ggplot(plot7)+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
   geom_line(aes(x=date, y=deaths), colour="Red")+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   facet_wrap(~sex)+
   theme_classic()+
@@ -1642,7 +1647,7 @@ agg_tiff("Outputs/NRSWeeklyDeathsExcessxLocation.tiff", units="in", width=12, he
 ggplot(plot9)+
   geom_line(aes(x=date, y=excess, colour=loc))+
   geom_hline(yintercept=0, colour="Grey30")+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Excess deaths compared to 2015-19 average")+
   scale_colour_paletteer_d(name="Place of death", "ggsci::planetexpress_futurama")+
   theme_classic()+
@@ -1845,7 +1850,7 @@ ggplot(plot13)+
   geom_ribbon(aes(x=date, ymin=mean, ymax=deaths), fill="Red", alpha=0.2)+
   geom_line(aes(x=date, y=mean), colour="Grey50", linetype=2)+
   geom_line(aes(x=date, y=deaths), colour="Red")+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Weekly deaths registered", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
@@ -1878,7 +1883,7 @@ ggplot()+
   geom_col(data=subset(plot14, cause!="netexcess"), aes(x=date, y=deaths, fill=cause))+
   geom_hline(yintercept=0, colour="Grey30")+
   geom_line(data=subset(plot14, cause=="netexcess"), aes(x=date, y=deaths, colour=cause))+
-  scale_x_date(name="")+
+  scale_x_date(name="", date_labels="%b-%y")+
   scale_y_continuous(name="Excess deaths vs. 2015-19 mean")+
   scale_fill_paletteer_d("LaCroixColoR::PinaFraise", name="Cause", labels=c("COVID-19", "Other causes"))+
   scale_colour_manual(values="NavyBlue", name="", labels="Net excess deaths")+
