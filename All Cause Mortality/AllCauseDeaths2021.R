@@ -12,7 +12,7 @@ library(extrafont)
 
 #Latest date in the country-specific data
 EWDate <- "19th March"
-ScotDate <- "21st March"
+ScotDate <- "28th March"
 NIDate <- "19th March"
 
 #Locations for 2020/21 data
@@ -21,7 +21,7 @@ NIDate <- "19th March"
 Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek112021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-11.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-12.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
 NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%2019th%20March%202021.XLSX"
@@ -29,7 +29,7 @@ NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
 EngRange <- "M" 
-ScotRange <- "M" 
+ScotRange <- "N" 
 NIRange <- "15" 
 
 ##############################
@@ -1501,7 +1501,7 @@ ggplot(plot7)+
   theme(plot.title=element_markdown(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Roboto"))+
-  labs(title="All-cause deaths in men are still *slightly* higher than average",
+  labs(title="All-cause deaths in both men and women are almost exactly 'average'",
        subtitle=paste0("Weekly deaths in Scotland in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", ScotDate, " 2021."),
        caption="Data from NRS | Plot by @VictimOfMaths")+
   geom_text(data=ann_text7, aes(x=date, y=deaths), label=c(paste0("+", round(S.excess.sex[1,2],0)," excess deaths in 2020/21\nvs. 2010-19 average (+",
@@ -1675,7 +1675,7 @@ ggplot(plot10)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="Scotland is still seeing COVID deaths, but numbers keep falling",
+  labs(title="Scotland is still seeing COVID deaths, but numbers keep falling (slowly)",
        subtitle="Registered deaths by cause in Scotland in 2020/21 compared to the 2015-19 average",
        caption="Data from NRS | Plot by @VictimOfMaths")
 dev.off()
