@@ -15,7 +15,7 @@ library(extrafont)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-1-April-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-8-April-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:O6806", col_names=FALSE) %>% 
