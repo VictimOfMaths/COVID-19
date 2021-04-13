@@ -14,7 +14,7 @@ temp <- tempfile()
 source="https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=cumPeopleVaccinatedFirstDoseByPublishDate&metric=cumPeopleVaccinatedSecondDoseByPublishDate&metric=newPeopleVaccinatedFirstDoseByPublishDate&metric=newPeopleVaccinatedSecondDoseByPublishDate&format=csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 APIdata2 <- read.csv(temp)
-colnames(APIdata2) <- c("date", "type", "code", "name", "cumdose1", "cumdose2", "dose1", "dose2")
+colnames(APIdata2) <- c("code", "name", "type", "date", "cumdose1", "cumdose2", "dose1", "dose2")
 
 #Generate totals
 APIdata2 <- APIdata2 %>% 
@@ -39,7 +39,7 @@ APIdata2 <- APIdata2 %>%
   mutate(dose1rateroll=roll_mean(dose1rate, 7, align="center", fill=NA)) %>% 
   ungroup()
 
-agg_tiff("Outputs/COVIDVaccinationRateDaily.tiff", units="in", width=8, height=6, res=500)
+agg_tiff("Outputs/COVIDVaccinationRateDaily.tiff", units="in", width=9, height=6, res=500)
 APIdata2 %>% 
   filter(name!="UK") %>% 
 ggplot()+
@@ -50,7 +50,7 @@ ggplot()+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="Rates of delivery of 1st vaccine doses have increased in the last few days",
+  labs(title="Rates of delivery of 1st vaccine doses are currently much lower in England",
        subtitle="Rolling 7-day average rates of delivery of 1st COVID-19 vaccine doses by country by publication date",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
