@@ -11,26 +11,26 @@ library(ragg)
 library(extrafont)
 
 #Latest date in the country-specific data
-EWDate <- "26th March"
+EWDate <- "2nd April"
 ScotDate <- "4th April"
-NIDate <- "26th March"
+NIDate <- "2nd April"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek122021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek1320211.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
 Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-13.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%2026th%20March%202021.XLSX"
+NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%202nd%20April%202021.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "N" 
+EngRange <- "O" 
 ScotRange <- "O" 
-NIRange <- "16" 
+NIRange <- "17" 
 
 ##############################
 #Read in English & Welsh data#
@@ -518,13 +518,15 @@ temp52 <- as.data.frame(t(read_excel(temp, sheet=12, range="AX10:AX15", col_name
 temp53 <- as.data.frame(t(read_excel(temp, sheet=12, range="BD10:BD15", col_names=FALSE)))
 temp54 <- as.data.frame(t(read_excel(temp, sheet=12, range="BJ10:BJ15", col_names=FALSE)))
 temp55 <- as.data.frame(t(read_excel(temp, sheet=12, range="BP10:BP15", col_names=FALSE)))
+temp56 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV10:BV15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
                     temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, 
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
-                    temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55) %>% 
+                    temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55,
+                    temp56) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
