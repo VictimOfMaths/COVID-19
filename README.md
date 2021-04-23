@@ -40,5 +40,6 @@ I've also created [a separate app](https://victimofmaths.shinyapps.io/COVID_Reg_
 
 ![Inequality plot](https://github.com/VictimOfMaths/COVID-19/blob/master/Observed%20Inequality/COVIDIneqRate.png)
 
-Suggested citation for any of this analysis:<br>
+Anyone is free to use any of this code for any purpose (except for evil).<br>
+Suggested citation for any of this analysis or associated visualisations:<br>
 Angus, Colin (2020): CoVid Plots and Analysis. The University of Sheffield. Dataset. https://doi.org/10.15131/shef.data.12328226
