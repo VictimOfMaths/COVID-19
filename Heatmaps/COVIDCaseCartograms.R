@@ -1,6 +1,7 @@
 rm(list=ls())
 
 library(tidyverse)
+library(curl)
 library(paletteer)
 library(sf)
 library(ragg)
@@ -38,7 +39,7 @@ ltla <- tempfile()
 source <- ("https://github.com/houseofcommonslibrary/uk-hex-cartograms-noncontiguous/raw/main/geopackages/LocalAuthorities-lowertier.gpkg")
 ltla <- curl_download(url=source, destfile=ltla, quiet=FALSE, mode="wb")
 
-Background <- st_read(ltla, layer="6 Background")
+Background <- st_read(ltla, layer="7 Background")
 
 ltlacases <- st_read(ltla, layer="4 LTLA-2019") %>% 
   left_join(casedata, by="Lacode")
@@ -59,7 +60,7 @@ plot1 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="COVID-19 cases are highest in the Yorkshire and Central Scotland",
+  labs(title="COVID-19 cases are highest in the Yorkshire, Derry and Central Scotland",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
