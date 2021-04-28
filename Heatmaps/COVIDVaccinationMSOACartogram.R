@@ -15,14 +15,14 @@ library(extrafont)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-8-April-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-22-April-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:O6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<50`=`...3`,  `50-54`=`...4`, `55-59`=`...5`, 
-         `60-64`=`...6`, `65-69`=`...7`, 
-         `70-74`=`...8`, `75-79`=`...9`, `80+`=`...10`) %>% 
-  gather(age, vaccinated, c(3:10))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<45`=`...3`,  `45-49`=`...4`, `50-54`=`...5`, 
+         `55-59`=`...6`, `60-64`=`...7`, 
+         `65-69`=`...8`, `70-74`=`...9`, `75-79`=`...10`, `80+`=`...11`) %>% 
+  gather(age, vaccinated, c(3:11))
 
 #Download IMD data
 temp <- tempfile()
@@ -64,18 +64,19 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="O16:Y6806", col_names=FALSE) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="R16:AC6806", col_names=FALSE) %>% 
   select(-c(2)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:10)) %>% 
+  gather(age, pop, c(2:11)) %>% 
   mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<50",
-    age=="...5" ~ "50-54",
-    age=="...6" ~ "55-59",
-    age=="...7" ~ "60-64",
-    age=="...8" ~ "65-69",
-    age=="...9" ~ "70-74",
-    age=="...10" ~ "75-79",
+    age %in% c("...3", "...4") ~ "<45",
+    age=="...5" ~ "45-49",
+    age=="...6" ~ "50-54",
+    age=="...7" ~ "55-59",
+    age=="...8" ~ "60-64",
+    age=="...9" ~ "65-69",
+    age=="...10" ~ "70-74",
+    age=="...11" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -316,7 +317,7 @@ dev.off()
 
 plot8 <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
-  geom_sf(data=MSOA %>% filter(age=="<50"), 
+  geom_sf(data=MSOA %>% filter(age=="45-49"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
@@ -331,15 +332,15 @@ plot8 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
-  labs(title="Vaccination rates in under 50s",
+  labs(title="Vaccination rates in 45-49 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
        caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOAu50Cartogram.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDVaxMSOA4549Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot8
 dev.off()
 
-agg_png("Outputs/COVIDVaxMSOAu50Cartogram.png", units="in", width=10, height=8, res=800)
+agg_png("Outputs/COVIDVaxMSOAu4549Cartogram.png", units="in", width=10, height=8, res=800)
 plot8
 dev.off()
 
@@ -384,26 +385,27 @@ vaxdeciles <- vaxdata %>%
   ungroup()
 
 agg_tiff("Outputs/COVIDVaxMSOASxIMDScatter.tiff", units="in", width=12, height=8, res=800)
-ggplot(vaxdeciles %>% filter(age=="80+"), 
+ggplot(vaxdeciles %>% filter(age=="Total"), 
        aes(x=vaxprop, y=as.factor(decile), colour=vaxprop))+
   geom_jitter(shape=21, alpha=0.6, show.legend=FALSE)+
   geom_segment(aes(x=popmean, xend=popmean, y=Inf, yend=-Inf), colour="Grey20")+
   geom_point(aes(x=decilemean, y=as.factor(decile)), colour="Grey20", fill="Cyan", shape=23, size=2)+
   scale_colour_paletteer_c("viridis::magma", direction=-1)+
-  scale_x_continuous(name="Proportion of 80+ population vaccinated",
+  scale_x_continuous(name="Proportion of adult population vaccinated",
                      labels=label_percent(accuracy=1))+
   scale_y_discrete(name="Index of Multiple Deprivation", labels=c("1 - least deprived", "2", "3", "4", "5", "6", "7", 
                                                                     "8", "9", "10 - most deprived"))+  
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="COVID vaccine uptake is lower in more deprived areas in England",
-       subtitle="Number of people aged 80+ vaccinated by MSOA compared compared to the estimated 80+ population in 2019.",
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Roboto"))+
+  labs(title="COVID vaccination rates are lower in more deprived areas in England",
+       subtitle="Number of adults vaccinated by MSOA compared compared to the estimated 80+ population in 2019.",
        caption="Vaccination data from NHS England, Population data from ONS\nPlot by @VictimOfMaths")+
-  annotate("text", x=0.3, y=9.9, label="Each circle = 1 MSOA", size=3)+
-  annotate("text", x=0.8, y=6.5, label="Population average", size=3)+
-  annotate("text", x=1.05, y=3.5, label="Decile average", size=3)+
-  geom_segment(aes(x=0.88, y=6.5,  xend=0.942, yend=6.5), colour="Grey20")+
-  geom_segment(aes(x=1.05, y=3.55,  xend=0.975, yend=3.95), colour="Grey20")
+  annotate("text", x=0.7, y=9.9, label="Each circle = 1 MSOA", size=3, family="Roboto")+
+  annotate("text", x=0.54, y=6.5, label="Population average", size=3, family="Roboto")+
+  annotate("text", x=0.59, y=3.5, label="Decile average", size=3, family="Roboto")+
+  geom_segment(aes(x=0.434, y=6.5,  xend=0.5, yend=6.5), colour="Grey20")+
+  geom_segment(aes(x=0.56, y=3.55,  xend=0.49, yend=3.95), colour="Grey20")
 dev.off()
 
 agg_tiff("Outputs/COVIDVaxMSOASxIMDRidges.tiff", units="in", width=8, height=6, res=800)
@@ -524,7 +526,7 @@ asvax <- vaxdata %>%
   filter(age!="Total") %>% 
   select(-c(vaccinated, pop)) %>% 
   spread(age, vaxprop) %>% 
-  mutate(asrate=(`<50`*45000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
+  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
                    `75-79`*4000+`80+`*5000)/84000)
 
 MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
