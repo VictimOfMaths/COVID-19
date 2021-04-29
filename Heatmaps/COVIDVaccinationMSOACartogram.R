@@ -11,6 +11,7 @@ library(gtools)
 library(ggridges)
 library(patchwork)
 library(extrafont)
+library(ggrepel)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
@@ -519,6 +520,37 @@ Sheffvax <- map %>% filter(age!="Total" & Laname=="Sheffield") %>%
 
 agg_tiff("Outputs/COVIDVaxMSOASSheffield.tiff", units="in", width=12, height=8, res=800)
 SheffIMD+Sheffvax
+dev.off()
+
+scatterdata <- MSOA %>% 
+  filter(Laname=="Sheffield" & age %in% c("80+", "75-79", "70-74", "65-69", "60-64",
+                                                 "55-59", "50-54")) %>%
+  group_by(msoa11cd, MSOA.name.HCL, IMDrank) %>% 
+  summarise(vaccinated=sum(vaccinated), pop=sum(pop)) %>% 
+  ungroup() %>% 
+  mutate(vaxprop=vaccinated/pop,
+         labels=if_else(vaxprop<0.8, MSOA.name.HCL, "")) 
+
+agg_tiff("Outputs/COVIDVaxMSOASheffieldScatter.tiff", units="in", width=8, height=6, res=800)
+ggplot(scatterdata, aes(x=vaxprop, y=-IMDrank))+
+  geom_point(aes(size=pop), shape=21, colour="DarkRed", fill="tomato", alpha=0.8)+
+  geom_segment(aes(x=1, xend=1, y=-1000, yend=-32000), colour="Grey70")+
+  geom_text_repel(aes(label=labels), family="Roboto", size=rel(3),
+                  box.padding = 0.4)+
+  scale_x_continuous(name="Proportion of population aged 50+ vaccinated", 
+                     labels=label_percent(accuracy=1), limits=c(NA, 1))+
+  scale_y_continuous(name="Index of Multiple Deprivation rank", breaks=c(-1000, -32000),
+                     labels=c("Most deprived", "Least deprived"))+
+  scale_size_continuous(name="Over 50\npopulation")+
+  theme_classic()+
+  theme(axis.ticks.y=element_blank(), text=element_text(family="Roboto"),
+        axis.text.y=element_text(size=rel(1.2), colour="Black"),
+        plot.title.position="plot", plot.title=element_text(face="bold", size=rel(1.4)),
+        plot.subtitle=element_text(colour="Grey50"), plot.caption.position ="plot",
+        plot.caption=element_text(colour="Grey50"))+
+  labs(title="Vaccine delivery is lowest in a small number of deprived areas in Sheffield",
+       subtitle="Proportion of adults aged 50+ who have received at least one dose of COVID-19 vaccine",
+       caption="Data from NHS England, populations from NIMS\nPlot by @VictimOfMaths")
 dev.off()
 
 #Calculate age-standardised vaccination rates
