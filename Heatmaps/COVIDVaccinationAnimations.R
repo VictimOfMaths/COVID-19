@@ -9,6 +9,7 @@ library(ragg)
 library(extrafont)
 library(ggrepel)
 library(gganimate)
+library(paletteer)
 
 #Read in data for vax rates over 50, available since 25th March
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
@@ -303,3 +304,94 @@ Sheffanim <- ggplot(scatterdata, aes(x=vaxprop, y=-IMDrank))+
 animate(Sheffanim, units="in", width=8, height=8*4/5, res=500, 
         renderer=gifski_renderer("Outputs/COVIDVaxSheffScatterAnim.gif"), 
         device="ragg_png", end_pause=5, duration=10, fps=8)
+
+###############################################
+
+#Bring in older vaccination data
+#18th March
+temp7 <- tempfile()
+url7 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-18-March-2021-revised.xlsx"
+temp7 <- curl_download(url=url7, destfile=temp7, quiet=FALSE, mode="wb")
+
+data7 <- read_excel(temp7, sheet="MSOA", range="F16:N6806", col_names=FALSE) %>% 
+  mutate(vaccinated=`...3`+`...4`+`...5`+`...6`+`...7`+`...8`+`...9`,
+         date=as.Date("2021-03-14")) %>% 
+  rename(msoa11cd=`...1`) %>% 
+  select(msoa11cd, vaccinated, date)
+
+pop7 <- read_excel(temp7, sheet="Population estimates (NIMS)", range="N16:X6806", col_names=FALSE) %>% 
+  select(`...1`, `...11`) %>% 
+  rename(msoa11cd=`...1`, pop=`...11`)
+
+data7 <- merge(data7, pop7)
+
+#11th March
+temp8 <- tempfile()
+url8 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-11-March-2021.xlsx"
+temp8 <- curl_download(url=url8, destfile=temp8, quiet=FALSE, mode="wb")
+
+data8 <- read_excel(temp8, sheet="MSOA", range="F16:M6806", col_names=FALSE) %>% 
+  mutate(vaccinated=`...3`+`...4`+`...5`+`...6`+`...7`+`...8`,
+         date=as.Date("2021-03-07")) %>% 
+  rename(msoa11cd=`...1`) %>% 
+  select(msoa11cd, vaccinated, date)
+
+pop8 <- read_excel(temp8, sheet="Population estimates (NIMS)", range="M16:V6806", col_names=FALSE) %>% 
+  select(`...1`, `...10`) %>% 
+  rename(msoa11cd=`...1`, pop=`...10`)
+
+data8 <- merge(data8, pop8)
+
+#4th March
+temp9 <- tempfile()
+url9 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-4-March-2021-1.xlsx"
+temp9 <- curl_download(url=url9, destfile=temp8, quiet=FALSE, mode="wb")
+
+data9 <- read_excel(temp9, sheet="MSOA", range="F16:L6806", col_names=FALSE) %>% 
+  mutate(vaccinated=`...3`+`...4`+`...5`+`...6`+`...7`,
+         date=as.Date("2021-02-28")) %>% 
+  rename(msoa11cd=`...1`) %>% 
+  select(msoa11cd, vaccinated, date)
+
+pop9 <- read_excel(temp9, sheet="Population estimates (NIMS)", range="L16:T6806", col_names=FALSE) %>% 
+  select(`...1`, `...9`) %>% 
+  rename(msoa11cd=`...1`, pop=`...9`)
+
+data9 <- merge(data9, pop9)
+
+#Extract total vaccinated data by MSOA and date
+totaldata <- data %>% 
+  group_by(msoa11cd, date) %>% 
+  summarise(vaccinated=sum(vaccinated), pop=sum(pop)) %>% 
+  ungroup() %>% 
+  bind_rows(totaldata, data7, data8, data9) %>% 
+  mutate(vaxprop=vaccinated/pop)
+
+#Merge into cartogram
+MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(totaldata, by="msoa11cd")
+
+TotalAnim <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA2, 
+          aes(geometry=geom, fill=vaxprop), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Roboto"))+
+  ggtitle("Overall adult vaccination rates by {closest_state}",
+          subtitle="Proportion of adults (aged 16+) vaccinated in England by MSOA")+
+  labs(caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")+
+  transition_states(date, wrap=FALSE)
+
+animate(TotalAnim, duration=18, fps=10, width=2000, height=3000, res=300, renderer=gifski_renderer("Outputs/COVIDVaxRatesMSOAAnim.gif"), 
+        device="ragg_png", end_pause=60)
