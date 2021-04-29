@@ -16,7 +16,7 @@ library(ggrepel)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-22-April-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-29-April-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
@@ -522,6 +522,7 @@ agg_tiff("Outputs/COVIDVaxMSOASSheffield.tiff", units="in", width=12, height=8, 
 SheffIMD+Sheffvax
 dev.off()
 
+#Scatterplot of vax rates by MSOA in Sheffield
 scatterdata <- MSOA %>% 
   filter(Laname=="Sheffield" & age %in% c("80+", "75-79", "70-74", "65-69", "60-64",
                                                  "55-59", "50-54")) %>%
@@ -549,6 +550,38 @@ ggplot(scatterdata, aes(x=vaxprop, y=-IMDrank))+
         plot.subtitle=element_text(colour="Grey50"), plot.caption.position ="plot",
         plot.caption=element_text(colour="Grey50"))+
   labs(title="Vaccine delivery is lowest in a small number of deprived areas in Sheffield",
+       subtitle="Proportion of adults aged 50+ who have received at least one dose of COVID-19 vaccine",
+       caption="Data from NHS England, populations from NIMS\nPlot by @VictimOfMaths")
+dev.off()
+
+#Regional version for Yorkshire
+scatterdata2 <- MSOA %>% 
+  filter(RegionNation=="Yorkshire and The Humber" & age %in% c("80+", "75-79", "70-74", "65-69", 
+                                                               "60-64", "55-59", "50-54")) %>%
+  group_by(msoa11cd, MSOA.name.HCL, IMDrank) %>% 
+  summarise(vaccinated=sum(vaccinated), pop=sum(pop)) %>% 
+  ungroup() %>% 
+  mutate(vaxprop=vaccinated/pop,
+         labels=if_else(vaxprop<0.75, MSOA.name.HCL, "")) 
+
+agg_tiff("Outputs/COVIDVaxMSOAYorksScatter.tiff", units="in", width=8, height=6, res=800)
+ggplot(scatterdata2, aes(x=vaxprop, y=-IMDrank))+
+  geom_point(aes(size=pop), shape=21, colour="DarkRed", fill="tomato", alpha=0.8)+
+  geom_segment(aes(x=1, xend=1, y=-1000, yend=-32000), colour="Grey70")+
+  geom_text_repel(aes(label=labels), family="Roboto", size=rel(2.2),
+                  box.padding = 0.4)+
+  scale_x_continuous(name="Proportion of population aged 50+ vaccinated", 
+                     labels=label_percent(accuracy=1), limits=c(NA, 1))+
+  scale_y_continuous(name="Index of Multiple Deprivation rank", breaks=c(-1000, -32000),
+                     labels=c("Most deprived", "Least deprived"), limits=c(NA, 2000))+
+  scale_size_continuous(name="Over 50\npopulation")+
+  theme_classic()+
+  theme(axis.ticks.y=element_blank(), text=element_text(family="Roboto"),
+        axis.text.y=element_text(size=rel(1.2), colour="Black"),
+        plot.title.position="plot", plot.title=element_text(face="bold", size=rel(1.4)),
+        plot.subtitle=element_text(colour="Grey50"), plot.caption.position ="plot",
+        plot.caption=element_text(colour="Grey50"))+
+  labs(title="Vaccine delivery is lowest in a small number of deprived areas in Yorkshire",
        subtitle="Proportion of adults aged 50+ who have received at least one dose of COVID-19 vaccine",
        caption="Data from NHS England, populations from NIMS\nPlot by @VictimOfMaths")
 dev.off()
