@@ -11,7 +11,7 @@ library(ragg)
 #Read in Scottish and Welsh data, compiled from sources only available in pdf table (thanks folks)
 #Scotland: https://beta.isdscotland.org/find-publications-and-data/population-health/covid-19/covid-19-statistical-report/
 #Wales: http://www2.nphs.wales.nhs.uk:8080/CommunitySurveillanceDocs.nsf/3dc04669c9e1eaa880257062003b246b/e61c928e715ece3180258680003449c3/$FILE/Wales%20COVID-19%20vaccination%20enhanced%20surveillance%20-%20equality%20report.pdf
-swdata <- read_excel("Data/COVIDUKVaxIneq.xlsx", range="A1:G131")
+swdata <- read_excel("Data/COVIDUKVaxIneq.xlsx", range="A1:G201")
 
 #Read in English data
 #MSOA data 1st reported in 25th Feb file
@@ -161,6 +161,46 @@ pop8 <- read_excel(temp, sheet="Population estimates (NIMS)", range="O16:Y6806",
 
 edata8 <- merge(edata8, pop8)
 
+#22nd April file
+url9 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-22-April-2021.xlsx"
+temp <- curl_download(url=url9, destfile=temp, quiet=FALSE, mode="wb")
+
+edata9 <- read_excel(temp, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<45`=`...3`,  `45-49`=`...4`, `50-54`=`...5`, 
+         `55-59`=`...6`, `60-64`=`...7`, 
+         `65-69`=`...8`, `70-74`=`...9`, `75-79`=`...10`, `80+`=`...11`) %>% 
+  gather(Age, Vax, c(3:11)) %>% 
+  mutate(Date=as.Date("2021-04-18"))
+
+pop9 <- read_excel(temp, sheet="Population estimates (NIMS)", range="R16:AC6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, u16=`...3`, `u45`=`...4`, `45-49`=`...5`, `50-54`=`...6`, 
+         `55-59`=`...7`, `60-64`=`...8`, `65-69`=`...9`, `70-74`=`...10`, `75-79`=`...11`,
+         `80+`=`...12`) %>% 
+  gather(Age, Pop, c(3:12)) %>% 
+  select(-"msoa11nm")
+
+edata9 <- merge(edata9, pop9)
+
+#29th April file
+url10 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-29-April-2021-.xlsx"
+temp <- curl_download(url=url10, destfile=temp, quiet=FALSE, mode="wb")
+
+edata10 <- read_excel(temp, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<45`=`...3`,  `45-49`=`...4`, `50-54`=`...5`, 
+         `55-59`=`...6`, `60-64`=`...7`, 
+         `65-69`=`...8`, `70-74`=`...9`, `75-79`=`...10`, `80+`=`...11`) %>% 
+  gather(Age, Vax, c(3:11)) %>% 
+  mutate(Date=as.Date("2021-04-25"))
+
+pop10 <- read_excel(temp, sheet="Population estimates (NIMS)", range="R16:AC6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, u16=`...3`, `u45`=`...4`, `45-49`=`...5`, `50-54`=`...6`, 
+         `55-59`=`...7`, `60-64`=`...8`, `65-69`=`...9`, `70-74`=`...10`, `75-79`=`...11`,
+         `80+`=`...12`) %>% 
+  gather(Age, Pop, c(3:12)) %>% 
+  select(-"msoa11nm")
+
+edata10 <- merge(edata10, pop10)
+
 #Calculate MSOA-level IMD decile
 #Download IMD data
 temp <- tempfile()
@@ -218,7 +258,7 @@ IMD_MSOA <- IMD %>%
   select(MSOA11CD, IMD)
 
 #Bring together
-edata <- bind_rows(edata1, edata2, edata3, edata4, edata5, edata6, edata7, edata8) %>% 
+edata <- bind_rows(edata1, edata2, edata3, edata4, edata5, edata6, edata7, edata8, edata9, edata10) %>% 
   merge(IMD_MSOA, by.x="msoa11cd", by.y="MSOA11CD") %>% 
   group_by(Age, Date, IMD) %>% 
   summarise(Vax=sum(Vax), Pop=sum(Pop)) %>% 
@@ -229,27 +269,33 @@ data <- bind_rows(edata, swdata) %>%
   mutate(IMD=case_when(
     Country=="Wales" ~ IMD*2-0.5,
     TRUE ~ IMD),
-    Age=factor(Age, levels=c("u50", "50-54", "u55", "55-59", "u60", "60-64", "u65", "65-69", "u70",
-                             "70-74", "75-79", "80+")))
+    Age=factor(Age, levels=c("u45", "45-49", "u50", "50-54", "u55", "55-59", "u60", "60-64", "u65", 
+                             "65-69", "u70", "70-74", "75-79", "80+")))
 
 #Full dataset
-data %>% filter(!Age %in% c("u55", "u60", "u65", "u70")) %>% 
-ggplot(aes(x=IMD, y=Vaxprop, group=Date, colour=Date))+
+agg_tiff("Outputs/COVIDVaxIneqGB.tiff", units="in", width=11, height=7, res=800)
+data %>% filter(!Age %in% c("u45", "u50", "u55", "u60", "u65", "u70")) %>% 
+ggplot(aes(x=IMD, y=Vaxprop, group=Date, colour=as.Date(Date)))+
   geom_line()+
   scale_x_continuous(breaks=c(2,9), labels=c("Least\ndeprived", "Most\ndeprived"),
                      name="Deprivation")+
   scale_y_continuous(labels=label_percent(accuracy=1), name="Proportion of adults vaccinated",
                      limits=c(0,1))+
-  #scale_colour_paletteer_c("pals::ocean.tempo")+
+  scale_colour_paletteer_c("viridis::magma", name="Date", direction=-1, trans="date")+
   facet_grid(Country~Age)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        axis.text.x=element_text(size=rel(0.8)))
+        axis.text.x=element_text(size=rel(0.8)), plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="Shifting patterns in vaccination inequality over time",
+       subtitle="Vaccine delivery rates in England, Scotland and Wales by age and deprivation",
+       caption="Data from NHS England, PHS & PHW | Plot by @VictimOfMaths")
+dev.off()
 
 #Compare countries at ~mid-March
-agg_tiff("Outputs/COVIDVaxIneq.tiff", units="in", width=8, height=7, res=800)
+agg_tiff("Outputs/COVIDVaxIneqMarch.tiff", units="in", width=8, height=7, res=800)
 data %>% filter(!Age %in% c("u55", "u60", "u65", "u70")) %>% 
-  filter(Country=="Wales" & Date==as.Date("2021-03-15") | Country=="Scotland" |
+  filter(Country=="Wales" & Date==as.Date("2021-03-15") | 
+           Country=="Scotland" & Date==as.Date("2021-03-17")|
            Country=="England" & Date==as.Date("2021-03-14")) %>% 
   ggplot(aes(x=IMD, y=Vaxprop, group=Country, colour=Country))+
   geom_line()+
@@ -263,14 +309,37 @@ data %>% filter(!Age %in% c("u55", "u60", "u65", "u70")) %>%
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         axis.text.x=element_text(size=rel(1)), text=element_text(family="Roboto"),
         plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="Scotland vaccinated more deprived groups first",
+  labs(title="Scotland vaccinated more deprived groups first...",
        subtitle="Vaccine delivery rates by age and deprivation. Data from mid-March.",
+       caption="Data from NHS England, PHS & PHW | Plot by @VictimOfMaths")
+dev.off()
+
+#Compare countries at ~mid-March
+agg_tiff("Outputs/COVIDVaxIneqApril.tiff", units="in", width=8, height=7, res=800)
+data %>% filter(!Age %in% c("45-49", "u55", "u60", "u65", "u70")) %>% 
+  filter(Country=="Wales" & Date==as.Date("2021-04-15") | 
+           Country=="Scotland" & Date==as.Date("2021-04-21")|
+           Country=="England" & Date==as.Date("2021-04-18")) %>% 
+  ggplot(aes(x=IMD, y=Vaxprop, group=Country, colour=Country))+
+  geom_line()+
+  scale_x_continuous(breaks=c(2,9), labels=c("Least\ndeprived", "Most\ndeprived"),
+                     name="Deprivation")+
+  scale_y_continuous(labels=label_percent(accuracy=1), name="Proportion of adults vaccinated",
+                     limits=c(0,1))+
+  scale_colour_paletteer_d("wesanderson::Darjeeling1")+
+  facet_wrap(~Age)+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        axis.text.x=element_text(size=rel(1)), text=element_text(family="Roboto"),
+        plot.title=element_text(face="bold", size=rel(1.4)))+
+  labs(title="...but inequality reasserted itself as vaccination coverage increased",
+       subtitle="Vaccine delivery rates by age and deprivation. Data from mid-April",
        caption="Data from NHS England, PHS & PHW | Plot by @VictimOfMaths")
 dev.off()
 
 #England only
 agg_tiff("Outputs/COVIDVaxIneqEng.tiff", units="in", width=8, height=7, res=800)
-data %>% filter(Country=="England" & !Age %in% c("u55", "u60", "u65", "u70")) %>% 
+data %>% filter(Country=="England" & !Age %in% c("u50", "u55", "u60", "u65", "u70")) %>% 
   ggplot(aes(x=IMD, y=Vaxprop, group=Date, colour=as.Date(Date)))+
   geom_line()+
   facet_wrap(~Age)+
