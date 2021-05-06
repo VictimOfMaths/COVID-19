@@ -128,6 +128,19 @@ dev.off()
 
 #Animated versions
 #Read in historic data
+
+#Week 16
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982284/Weekly_Influenza_and_COVID19_report_data_w17.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw16 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B13:N23", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw16) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                       "Female_Vax2")
+
 #Week 15
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/979626/Weekly_Influenza_and_COVID19_report_data_w16.xlsx"
 
@@ -148,7 +161,8 @@ dataw14 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B31:N
 colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
                        "Female_Vax2")
 
-mergeddata <- dataw15 %>% mutate(Week=15) %>% 
+mergeddata <- dataw16 %>% mutate(Week=16) %>% 
+  bind_rows(dataw15 %>% mutate(Week=15)) %>% 
   bind_rows( dataw14 %>% mutate(Week=14)) %>% 
   rowwise() %>% 
   mutate(Male_Unvax=Male_Pop-Male_Vax1,
@@ -157,7 +171,7 @@ mergeddata <- dataw15 %>% mutate(Week=15) %>%
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=16))
+  bind_rows(data %>% mutate(Week=17))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
@@ -196,6 +210,6 @@ anim <- ggplot(mergeddata_long, aes(x=Value, y=Age, fill=SexMeasure))+
   ggtitle("Vaccine delivery in England by age and sex up to {closest_state}",
           subtitle="The number of people who are <span style='color:Grey60;'>unvaccinated</span>, men with <span style='color:#be7dff;'>one</span> or <span style='color:#6600cc;'>two</span> doses<br>and women with <span style='color:#7dffdd;'>one</span> or <span style='color:#00cc99;'>two</span> doses")
 
-animate(anim, units="in", width=8, height=5, res=500, 
+animate(anim, units="in", width=8, height=8*4/5, res=250, 
         renderer=gifski_renderer("Outputs/COVIDVaxPyramidAnim.gif"), 
-        device="ragg_png", end_pause=10, duration=5, fps=10)
+        device="ragg_png", end_pause=5, duration=10, fps=8)
