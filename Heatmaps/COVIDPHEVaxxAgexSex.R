@@ -12,7 +12,7 @@ library(gganimate)
 #Download data from PHE surveillance report
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982284/Weekly_Influenza_and_COVID19_report_data_w17.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/983708/Weekly_Influenza_and_COVID19_report_data_w18.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
