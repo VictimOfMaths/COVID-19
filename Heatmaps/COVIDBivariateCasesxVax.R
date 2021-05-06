@@ -1,0 +1,186 @@
+rm(list=ls())
+
+library(tidyverse)
+library(curl)
+library(sf)
+library(gtools)
+library(extrafont)
+library(cowplot)
+library(ragg)
+
+#Read in MSOA-level case data from the dashboard
+caseurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=msoa&metric=newCasesBySpecimenDateRollingSum&format=csv"
+
+cases <- tempfile()
+cases <- curl_download(url=caseurl, destfile=cases, quiet=FALSE, mode="wb")
+casedata <- read.csv(cases) %>% 
+  mutate(date=as.Date(date)) %>% 
+  filter(date==max(date)) %>% 
+  rename(cases=newCasesBySpecimenDateRollingSum, msoa11cd=areaCode) %>% 
+  select(cases, msoa11cd)
+
+#Read in vaccination data
+#Download vaccination data by MSOA
+#https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
+vax <- tempfile()
+vaxurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-06-May-2021.xlsx"
+vax <- curl_download(url=vaxurl, destfile=vax, quiet=FALSE, mode="wb")
+
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<45`=`...3`,  `45-49`=`...4`, `50-54`=`...5`, 
+         `55-59`=`...6`, `60-64`=`...7`, 
+         `65-69`=`...8`, `70-74`=`...9`, `75-79`=`...10`, `80+`=`...11`) %>% 
+  gather(age, vaccinated, c(3:11))
+
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="R16:AC6806", col_names=FALSE) %>% 
+  select(-c(2)) %>% 
+  rename(msoa11cd=`...1`) %>% 
+  gather(age, pop, c(2:11)) %>% 
+  mutate(age=case_when(
+    age %in% c("...3", "...4") ~ "<45",
+    age=="...5" ~ "45-49",
+    age=="...6" ~ "50-54",
+    age=="...7" ~ "55-59",
+    age=="...8" ~ "60-64",
+    age=="...9" ~ "65-69",
+    age=="...10" ~ "70-74",
+    age=="...11" ~ "75-79",
+    TRUE ~ "80+")) %>% 
+  group_by(msoa11cd, age) %>% 
+  summarise(pop=sum(pop)) %>% 
+  ungroup()
+
+#COMBINE and calcualte age-standardised vax rates
+combineddata <- merge(vaxdata, pop2) %>% 
+  mutate(vaxprop=vaccinated/pop) %>% 
+  select(-c(vaccinated, pop)) %>% 
+  spread(age, vaxprop) %>% 
+  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
+                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  merge(casedata, all=TRUE) %>% 
+  merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
+  mutate(caserate=cases*100000/pop)
+
+ggplot(combineddata, aes(x=caserate, y=asrate))+
+  geom_point()
+
+#Download Carl Baker's lovely cartogram
+msoa <- tempfile()
+source <- ("https://github.com/houseofcommonslibrary/uk-hex-cartograms-noncontiguous/raw/main/geopackages/MSOA.gpkg")
+msoa <- curl_download(url=source, destfile=msoa, quiet=FALSE, mode="wb")
+
+BackgroundMSOA <- st_read(msoa, layer="5 Background")
+
+MSOA <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(combineddata, by="msoa11cd")
+
+GroupsMSOA <- st_read(msoa, layer="2 Groups")
+
+Group_labelsMSOA <- st_read(msoa, layer="1 Group labels") %>% 
+  mutate(just=if_else(LabelPosit=="Left", 0, 1))
+
+LAsMSOA <- st_read(msoa, layer="3 Local authority outlines (2019)")
+
+#Option 1
+#Remove missing MSOAs and calculate tertiles
+MSOAv1 <- MSOA %>% 
+  filter(!is.na(caserate)) %>% 
+  mutate(casetert=quantcut(caserate, q=3, labels=FALSE),
+         vaxtert=quantcut(asrate, q=3, labels=FALSE),
+         key=case_when(
+           casetert==1 & vaxtert==1 ~ 1,
+           casetert==1 & vaxtert==2 ~ 2,
+           casetert==1 & vaxtert==3 ~ 3,
+           casetert==2 & vaxtert==1 ~ 4,
+           casetert==2 & vaxtert==2 ~ 5,
+           casetert==2 & vaxtert==3 ~ 6,
+           casetert==3 & vaxtert==1 ~ 7,
+           casetert==3 & vaxtert==2 ~ 8,
+           TRUE ~ 9),
+         fillcolour=case_when(
+           key==1 ~ "#f0f0f0", key==2 ~ "#a0dcdd", key==3 ~ "#00cfc1",
+           key==4 ~ "#ffa2aa", key==5 ~ "#afa7b7", key==6 ~ "#44b4cb",
+           key==7 ~ "#ff3968", key==8 ~ "#c066b2", TRUE ~ "#6d87cc"))
+
+#Option 2
+#Have all missing MSOAs as a single category and calculate tertiles
+temp <- MSOA %>% 
+  filter(is.na(caserate) & RegionNation!="Wales") %>% 
+  mutate(casetert=1)
+
+MSOAv2 <- MSOA %>% 
+  filter(!is.na(caserate)) %>% 
+  mutate(casetert=quantcut(caserate, q=2, labels=FALSE)+1) %>% 
+  bind_rows(temp) %>% 
+  mutate(vaxtert=quantcut(asrate, q=3, labels=FALSE),
+         key=case_when(
+           casetert==1 & vaxtert==1 ~ 1,
+           casetert==1 & vaxtert==2 ~ 2,
+           casetert==1 & vaxtert==3 ~ 3,
+           casetert==2 & vaxtert==1 ~ 4,
+           casetert==2 & vaxtert==2 ~ 5,
+           casetert==2 & vaxtert==3 ~ 6,
+           casetert==3 & vaxtert==1 ~ 7,
+           casetert==3 & vaxtert==2 ~ 8,
+           TRUE ~ 9),
+         fillcolour=case_when(
+           key==1 ~ "#f0f0f0", key==2 ~ "#a0dcdd", key==3 ~ "#00cfc1",
+           key==4 ~ "#ffa2aa", key==5 ~ "#afa7b7", key==6 ~ "#44b4cb",
+           key==7 ~ "#ff3968", key==8 ~ "#c066b2", TRUE ~ "#6d87cc"))
+
+#generate dataframe for key
+keydata <- MSOAv2 %>%
+  filter(!is.na(fillcolour)) %>%
+  group_by(casetert, vaxtert) %>%
+  summarise(RGB=unique(fillcolour))
+
+key <- ggplot(keydata)+
+  geom_tile(aes(x=casetert, y=vaxtert, fill=RGB))+
+  scale_fill_identity()+
+  labs(x = expression("More COVID cases" %->%  ""),
+       y = expression("Higher vaccination rates" %->%  "")) +
+  theme_classic() +
+  # make font small enough
+  theme(
+    axis.title = element_text(size = 9),axis.line=element_blank(), 
+    axis.ticks=element_blank(), axis.text=element_blank(),
+    text=element_text(family="Lato"))+
+  # quadratic tiles
+  coord_fixed()
+
+plot <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOAv2, 
+          aes(geometry=geom, fill=fillcolour), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black", family="Lato")+
+  scale_fill_identity(na.value="Black")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), plot.title.position = "panel")+
+  annotate("text", x=55.5, y=14, label="Fewer cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=53, y=14, xend=47.8, yend=14.5), curvature=0.15)+
+  annotate("text", x=15, y=10, label="Fewer cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=16, y=9, xend=20, yend=5), curvature=0.2)+
+  annotate("text", x=51, y=35, label="More cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=47.5, y=34, xend=39.9, yend=34.5), curvature=-0.2)+
+  annotate("text", x=24, y=54, label="More cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=26, y=52.8, xend=31.3, yend=50.9), curvature=0.1)+
+  labs(title="Comparing COVID-19 case rates and vaccine coverage",
+       subtitle="Rolling 7-day rate of new COVID cases and age-standardised rates of delivery of at least one vaccine dose.\nCase rates are censored for areas with fewer than 3 cases, which currently covers the majority of areas.\nAs a result there are considerably more areas in the lowest category of case rates.",       
+       caption="Data from coronavirus.data.gov.uk and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDBivariateCasesVax.tiff", units="in", width=8, height=10, res=800)
+ggdraw()+
+  draw_plot(plot, 0,0,1,1)+
+  draw_plot(key, 0.66,0.66,0.28,0.28)
+dev.off()
