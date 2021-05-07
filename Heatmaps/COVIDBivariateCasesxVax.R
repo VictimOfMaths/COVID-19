@@ -7,6 +7,8 @@ library(gtools)
 library(extrafont)
 library(cowplot)
 library(ragg)
+library(paletteer)
+library(scales)
 
 #Read in MSOA-level case data from the dashboard
 caseurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=msoa&metric=newCasesBySpecimenDateRollingSum&format=csv"
@@ -184,3 +186,103 @@ ggdraw()+
   draw_plot(plot, 0,0,1,1)+
   draw_plot(key, 0.66,0.66,0.28,0.28)
 dev.off()
+
+#Repeat for cumulative infection rates
+casedata.full <- read.csv(cases) %>% 
+  mutate(date=as.Date(date)) %>% 
+  rename(cases=newCasesBySpecimenDateRollingSum, msoa11cd=areaCode) %>% 
+  select(cases, date, msoa11cd) %>% 
+  group_by(msoa11cd) %>% 
+  summarise(cases=sum(cases)) %>% 
+  ungroup() 
+
+casedata.full <- merge(vaxdata, pop2) %>% 
+  mutate(vaxprop=vaccinated/pop) %>% 
+  select(-c(vaccinated, pop)) %>% 
+  spread(age, vaxprop) %>% 
+  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
+                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  merge(casedata.full, all=TRUE) %>% 
+  merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
+  mutate(caserate=cases*100000/pop,
+         caseprop=cases/pop,
+         casetert=quantcut(caserate, q=3, labels=FALSE),
+         vaxtert=quantcut(asrate, q=3, labels=FALSE),
+         key=case_when(
+           casetert==1 & vaxtert==1 ~ 1,
+           casetert==1 & vaxtert==2 ~ 2,
+           casetert==1 & vaxtert==3 ~ 3,
+           casetert==2 & vaxtert==1 ~ 4,
+           casetert==2 & vaxtert==2 ~ 5,
+           casetert==2 & vaxtert==3 ~ 6,
+           casetert==3 & vaxtert==1 ~ 7,
+           casetert==3 & vaxtert==2 ~ 8,
+           TRUE ~ 9),
+         fillcolour=case_when(
+           key==1 ~ "#f0f0f0", key==2 ~ "#a0dcdd", key==3 ~ "#00cfc1",
+           key==4 ~ "#ffa2aa", key==5 ~ "#afa7b7", key==6 ~ "#44b4cb",
+           key==7 ~ "#ff3968", key==8 ~ "#c066b2", TRUE ~ "#6d87cc"))
+
+MSOA.full <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(casedata.full, by="msoa11cd")
+
+#Plot cumulative attack rates across the pandemic
+agg_tiff("Outputs/COVIDCasesMSOACumul.tiff", units="in", width=8, height=10, res=800)
+ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA.full%>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom, fill=caseprop), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black", family="Roboto")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, name="Cumulative\ninfection rate",
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Merriweather"), plot.margin=margin(0,10,0,10))+
+  labs(title="Cumulative COVID infection rates across the pandemic",
+       subtitle="Total COVID case rates since March 2020 in English Middle Super Output Areas.\nThe case rate figures are conservative as they exclude weeks with low numbers of cases. ",       
+       caption="Data from coronavirus.data.gov.uk and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+dev.off()
+
+plot.full <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA.full, 
+          aes(geometry=geom, fill=fillcolour), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black", family="Lato")+
+  scale_fill_identity(na.value="Black")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), plot.title.position = "panel")+
+  annotate("text", x=55.5, y=14, label="Fewer cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=53, y=14, xend=47.8, yend=14.5), curvature=0.15)+
+  annotate("text", x=15, y=10, label="Fewer cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=16, y=9, xend=20, yend=5), curvature=0.2)+
+  annotate("text", x=51, y=35, label="More cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=47.5, y=34, xend=39.9, yend=34.5), curvature=-0.2)+
+  annotate("text", x=24, y=54, label="More cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=26, y=52.8, xend=31.3, yend=50.9), curvature=0.1)+
+  labs(title="Comparing total COVID-19 case rates across the pandemic with current vaccine coverage",
+       subtitle="Total COVID case rates since March 2020 and age-standardised rates of delivery of at least one vaccine dose.\nThe case rate figures are conservative as they exclude weeks with low numbers of cases. ",       
+       caption="Data from coronavirus.data.gov.uk and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDBivariateCasesVaxFull.tiff", units="in", width=8, height=10, res=800)
+ggdraw()+
+  draw_plot(plot.full, 0,0,1,1)+
+  draw_plot(key, 0.66,0.66,0.28,0.28)
+dev.off()
+
