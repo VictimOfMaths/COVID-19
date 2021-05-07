@@ -266,23 +266,38 @@ plot.full <- ggplot()+
         text=element_text(family="Lato"), plot.title.position = "panel")+
   annotate("text", x=55.5, y=14, label="Fewer cases,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=53, y=14, xend=47.8, yend=14.5), curvature=0.15)+
+  geom_curve(aes(x=53, y=14, xend=43.1, yend=13.6), curvature=0.15)+
   annotate("text", x=15, y=10, label="Fewer cases,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
   geom_curve(aes(x=16, y=9, xend=20, yend=5), curvature=0.2)+
   annotate("text", x=51, y=35, label="More cases,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
   geom_curve(aes(x=47.5, y=34, xend=39.9, yend=34.5), curvature=-0.2)+
-  annotate("text", x=24, y=54, label="More cases,\nfewer vaccinations", size=3,
+  annotate("text", x=19, y=43, label="More cases,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=26, y=52.8, xend=31.3, yend=50.9), curvature=0.1)+
-  labs(title="Comparing total COVID-19 case rates across the pandemic with current vaccine coverage",
-       subtitle="Total COVID case rates since March 2020 and age-standardised rates of delivery of at least one vaccine dose.\nThe case rate figures are conservative as they exclude weeks with low numbers of cases. ",       
+  geom_curve(aes(x=19.5, y=41.5, xend=22.5, yend=35.4), curvature=0.1)+
+  labs(title="Comparing total COVID-19 case rates across the pandemic \nwith current vaccine coverage",
+       subtitle="Total COVID case rates since March 2020 and age-standardised rates of delivery of at least one vaccine dose.\nThe case rate figures are conservative as they exclude weeks with low numbers of cases and cases where\nindividuals did not get tested. This is particularly likely to underestimate case rates during the first wave,\nwhen testing was limited",       
        caption="Data from coronavirus.data.gov.uk and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+key.full <- ggplot(keydata)+
+  geom_tile(aes(x=casetert, y=vaxtert, fill=RGB))+
+  scale_fill_identity()+
+  scale_x_continuous(breaks=c(1,2,3), labels=c("<6%", "6%", ">6%"))+
+  scale_y_continuous(breaks=c(1,2,3), labels=c("<55%", "55-57%", ">57%"))+
+  labs(x = "Overall COVID incidence",
+       y = "Adult vaccination rates") +
+  theme_classic() +
+  # make font small enough
+  theme(
+    axis.title = element_text(size = 9),axis.line=element_blank(), 
+    axis.ticks=element_blank(), text=element_text(family="Lato"))+
+  # quadratic tiles
+  coord_fixed()
 
 agg_tiff("Outputs/COVIDBivariateCasesVaxFull.tiff", units="in", width=8, height=10, res=800)
 ggdraw()+
   draw_plot(plot.full, 0,0,1,1)+
-  draw_plot(key, 0.66,0.66,0.28,0.28)
+  draw_plot(key.full, 0.66,0.64,0.28,0.28)
 dev.off()
 
