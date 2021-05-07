@@ -16,7 +16,7 @@ library(ggrepel)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-weekly-announced-vaccinations-29-April-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-06-May-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
@@ -374,6 +374,29 @@ agg_png("Outputs/COVIDVaxMSOACartogram.png", units="in", width=10, height=8, res
 plot9
 dev.off()
 
+plot10 <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA %>% filter(age=="Total") %>% mutate(flag=if_else(vaxprop>=0.5, 1, 0)), 
+          aes(geometry=geom, fill=as.factor(flag)), colour=NA, show.legend=FALSE)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_d("wesanderson::Darjeeling1")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.8)),
+        text=element_text(family="Roboto"), plot.subtitle=element_markdown())+
+  labs(title="Who is half way there?",
+       subtitle="Neighbourhoods in England where <span style='color:#00A08A;'>over 50% of adults </span>have received at least one dose of COVID vaccine",       
+       caption="Data from NHS England, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOACartogramHalfWay.tiff", units="in", width=10, height=8, res=800)
+plot10
+dev.off()
+
 #Calculate deprivation gradients within IMD deciles
 #Allocate to deciles
 vaxdeciles <- vaxdata %>% 
@@ -562,14 +585,14 @@ scatterdata2 <- MSOA %>%
   summarise(vaccinated=sum(vaccinated), pop=sum(pop)) %>% 
   ungroup() %>% 
   mutate(vaxprop=vaccinated/pop,
-         labels=if_else(vaxprop<0.75, MSOA.name.HCL, "")) 
+         labels=if_else(vaxprop<0.7, MSOA.name.HCL, "")) 
 
 agg_tiff("Outputs/COVIDVaxMSOAYorksScatter.tiff", units="in", width=8, height=6, res=800)
 ggplot(scatterdata2, aes(x=vaxprop, y=-IMDrank))+
   geom_point(aes(size=pop), shape=21, colour="DarkRed", fill="tomato", alpha=0.8)+
   geom_segment(aes(x=1, xend=1, y=-1000, yend=-32000), colour="Grey70")+
   geom_text_repel(aes(label=labels), family="Roboto", size=rel(2.2),
-                  box.padding = 0.4)+
+                  box.padding = 0.4, min.segment.length=0)+
   scale_x_continuous(name="Proportion of population aged 50+ vaccinated", 
                      labels=label_percent(accuracy=1), limits=c(NA, 1))+
   scale_y_continuous(name="Index of Multiple Deprivation rank", breaks=c(-1000, -32000),
