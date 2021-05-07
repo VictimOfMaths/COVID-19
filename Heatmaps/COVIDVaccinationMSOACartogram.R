@@ -646,3 +646,71 @@ MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>%
   agg_tiff("Outputs/COVIDVaxMSOAAgeStdCartogram.tiff", units="in", width=9, height=10, res=800)
   plot10
   dev.off()
+  
+#Bivariate maps of age-standardised vax rate  against deprivation
+  BVmapdata <- MSOA2 %>% 
+    filter(RegionNation!="Wales") %>% 
+    mutate(IMDtert=quantcut(-IMDrank, q=3, labels=FALSE),
+           vaxtert=quantcut(asrate, q=3, labels=FALSE))
+  
+  #Generate key
+  keydata <- data.frame(IMDtert=c(1,2,3,1,2,3,1,2,3), 
+                        vaxtert=c(1,1,1,2,2,2,3,3,3),
+                        RGB=c("#e8e8e8", "#dfb0d6", "#be64ac", 
+                              "#ace4e4", "#a5add3", "#8c62aa", 
+                              "#5ac8c8", "#5698b9", "#3b4994"))
+  
+  
+  #Bring colours into main data for plotting
+  BVmapdata <- left_join(BVmapdata, keydata, by=c("IMDtert", "vaxtert"))
+
+key <- ggplot(keydata)+
+    geom_tile(aes(x=IMDtert, y=vaxtert, fill=RGB))+
+    scale_fill_identity()+
+    labs(x = expression("Greater deprivation" %->%  ""),
+         y = expression("Higher vaccination rates" %->%  "")) +
+    theme_classic() +
+    # make font small enough
+    theme(
+      axis.title = element_text(size = 9),axis.line=element_blank(), 
+      axis.ticks=element_blank(), axis.text=element_blank())+
+    # quadratic tiles
+    coord_fixed()
+    
+BVmap <-  ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=BVmapdata, 
+          aes(geometry=geom, fill=RGB), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+    scale_fill_identity()+
+    theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), plot.title.position = "panel")+
+  annotate("text", x=56.5, y=14, label="Higher deprivation,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=53, y=14, xend=48, yend=14.3), curvature=-0.15)+
+  annotate("text", x=45, y=2, label="Lower deprivation,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=44, y=3.2, xend=42, yend=7.6), curvature=0.2)+
+  annotate("text", x=51, y=35, label="Higher deprivation,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=49, y=34, xend=45.5, yend=31.8), curvature=-0.2)+
+  annotate("text", x=19, y=43, label="Lower deprivation,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=19.5, y=41.5, xend=22.2, yend=38.1), curvature=0.1)+
+  coord_sf(clip="off")+
+  labs(title="Comparing deprivation with current vaccine coverage",
+       subtitle="Age-standardised rates of delivery of at least one vaccine dose and area-level deprivation\nmeasured using the Index of Multiple Deprivation",       
+       caption="Data from MCHLG and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDBivariateIMDxVaxFull.tiff", units="in", width=8, height=10, res=800)
+ggdraw()+
+  draw_plot(BVmap, 0,0,1,1)+
+  draw_plot(key, 0.66,0.66,0.30,0.30)
+dev.off()
