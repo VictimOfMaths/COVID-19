@@ -301,3 +301,123 @@ ggdraw()+
   draw_plot(key.full, 0.66,0.64,0.28,0.28)
 dev.off()
 
+#Read in James Ward's estimated attack rate data
+JWMSOAEst <- read.csv("Data/MSOAAttackRates.csv") %>% 
+  rename(msoa11cd=MSOA.Code, attackrate=Estimated.Attack.Rate.to.8.3.21) %>% 
+  mutate(attackrate=as.numeric(gsub("%", "", attackrate)))
+
+casedata2 <- read.csv(cases) %>% 
+  mutate(date=as.Date(date)) %>% 
+  rename(cases=newCasesBySpecimenDateRollingSum, msoa11cd=areaCode) %>% 
+  select(cases, date, msoa11cd) %>% 
+  filter(date>as.Date("2021-03-10")) %>% 
+  group_by(msoa11cd) %>% 
+  summarise(cases=sum(cases)) %>% 
+  ungroup() %>% 
+  merge(JWMSOAEst, all=TRUE) %>% 
+  mutate(cases=if_else(is.na(cases), 0, as.numeric(cases)))
+
+casedata3 <- merge(vaxdata, pop2) %>% 
+  mutate(vaxprop=vaccinated/pop) %>% 
+  select(-c(vaccinated, pop)) %>% 
+  spread(age, vaxprop) %>% 
+  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
+                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  merge(casedata2, all=TRUE) %>% 
+  merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
+  mutate(caserate=cases/pop,
+         caseprop=caserate+attackrate,
+         casetert=quantcut(caseprop, q=3, labels=FALSE),
+         vaxtert=quantcut(asrate, q=3, labels=FALSE),
+         key=case_when(
+           casetert==1 & vaxtert==1 ~ 1,
+           casetert==1 & vaxtert==2 ~ 2,
+           casetert==1 & vaxtert==3 ~ 3,
+           casetert==2 & vaxtert==1 ~ 4,
+           casetert==2 & vaxtert==2 ~ 5,
+           casetert==2 & vaxtert==3 ~ 6,
+           casetert==3 & vaxtert==1 ~ 7,
+           casetert==3 & vaxtert==2 ~ 8,
+           TRUE ~ 9),
+         fillcolour=case_when(
+           key==1 ~ "#f0f0f0", key==2 ~ "#a0dcdd", key==3 ~ "#00cfc1",
+           key==4 ~ "#ffa2aa", key==5 ~ "#afa7b7", key==6 ~ "#44b4cb",
+           key==7 ~ "#ff3968", key==8 ~ "#c066b2", TRUE ~ "#6d87cc"))
+
+MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(casedata3, by="msoa11cd")
+
+#Plot cumulative attack rates across the pandemic
+agg_tiff("Outputs/COVIDCasesMSOACumulEst.tiff", units="in", width=8, height=10, res=800)
+ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA2%>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom, fill=caseprop/100), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black", family="Roboto")+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, name="Cumulative\ninfection rate",
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), plot.margin=margin(0,10,0,10))+
+  labs(title="Cumulative COVID infection rates across the pandemic",
+       subtitle="Total estimated COVID case rates since March 2020 in English Middle Super Output Areas.\nCase rate figures estimated by James Ward accounting for underreporting in official testing figures.",       
+       caption="Data from James Ward (@JamesWard73), cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+dev.off()
+
+plot.full <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=MSOA2, 
+          aes(geometry=geom, fill=fillcolour), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black", family="Lato")+
+  scale_fill_identity(na.value="Black")+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), plot.title.position = "panel")+
+  annotate("text", x=55.5, y=14, label="Fewer cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=53, y=14, xend=48.5, yend=14.2), curvature=0.15)+
+  annotate("text", x=15, y=10, label="More cases,\nfewer vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=16, y=9, xend=19.9, yend=4.4), curvature=0.2)+
+  annotate("text", x=52, y=33, label="Fewer cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=49.5, y=33.3, xend=45.3, yend=31.8), curvature=0.2)+
+  annotate("text", x=19, y=43, label="More cases,\nmore vaccinations", size=3,
+           fontface="bold", family="Lato")+
+  geom_curve(aes(x=19.5, y=41.5, xend=23, yend=36.6), curvature=0.1)+
+  labs(title="Comparing total COVID-19 infection rates across the pandemic \nwith current vaccine coverage",
+       subtitle="Estimated cumulative COVID infection rates, accounting for underrecording in official testing data\nand how this varied over time, compared against age-standardised rates of delivery of at least one vaccine dose",       
+       caption="Data from James Ward (@JamesWard73), cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+key.full <- ggplot(keydata)+
+  geom_tile(aes(x=casetert, y=vaxtert, fill=RGB))+
+  scale_fill_identity()+
+  scale_x_continuous(breaks=c(1,2,3), labels=c("<19%", "19-26%", ">26%"))+
+  scale_y_continuous(breaks=c(1,2,3), labels=c("<55%", "55-57%", ">57%"))+
+  labs(x = "Overall COVID incidence",
+       y = "Adult vaccination rates") +
+  theme_classic() +
+  # make font small enough
+  theme(
+    axis.title = element_text(size = 9),axis.line=element_blank(), 
+    axis.ticks=element_blank(), text=element_text(family="Lato"))+
+  # quadratic tiles
+  coord_fixed()
+
+agg_tiff("Outputs/COVIDBivariateCasesVaxFullEst.tiff", units="in", width=8, height=10, res=800)
+ggdraw()+
+  draw_plot(plot.full, 0,0,1,1)+
+  draw_plot(key.full, 0.66,0.64,0.28,0.28)
+dev.off()
