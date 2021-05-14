@@ -12,7 +12,7 @@ library(gganimate)
 #Download data from PHE surveillance report
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/983708/Weekly_Influenza_and_COVID19_report_data_w18.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/986164/Weekly_Influenza_and_COVID19_report_data_w19.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
@@ -129,6 +129,18 @@ dev.off()
 #Animated versions
 #Read in historic data
 
+#Week 17
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/983708/Weekly_Influenza_and_COVID19_report_data_w18.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw17 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B13:N23", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw17) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
 #Week 16
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/982284/Weekly_Influenza_and_COVID19_report_data_w17.xlsx"
 
@@ -161,9 +173,10 @@ dataw14 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B31:N
 colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
                        "Female_Vax2")
 
-mergeddata <- dataw16 %>% mutate(Week=16) %>% 
+mergeddata <- dataw17 %>% mutate(Week=17) %>% 
+  bind_rows(dataw16 %>% mutate(Week=16)) %>% 
   bind_rows(dataw15 %>% mutate(Week=15)) %>% 
-  bind_rows( dataw14 %>% mutate(Week=14)) %>% 
+  bind_rows(dataw14 %>% mutate(Week=14)) %>% 
   rowwise() %>% 
   mutate(Male_Unvax=Male_Pop-Male_Vax1,
          Female_Unvax=Female_Pop-Female_Vax1,
@@ -171,7 +184,7 @@ mergeddata <- dataw16 %>% mutate(Week=16) %>%
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=17))
+  bind_rows(data %>% mutate(Week=18))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
