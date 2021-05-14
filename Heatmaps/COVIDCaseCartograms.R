@@ -60,7 +60,7 @@ plot1 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="COVID-19 cases are highest in the Yorkshire, Derry and Central Scotland",
+  labs(title="Current COVID-19 outbreaks are isolated to a small number of areas",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
