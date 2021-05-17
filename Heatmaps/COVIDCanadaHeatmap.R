@@ -8,6 +8,8 @@ library(lubridate)
 library(scales)
 library(grDevices)
 library(paletteer)
+library(extrafont)
+library(ragg)
 
 #Read in Canadian data
 temp <- tempfile()
@@ -69,7 +71,8 @@ casetiles.all <- ggplot(data, aes(x=date, y=fct_reorder(prname, maxcaseday), fil
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the province.\nProvinces are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each province.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Agency of Canada | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+        axis.text.y=element_text(colour="black"), plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Lato"))
 
 casebars.all <- ggplot(subset(data, date==maxcaseday), aes(x=totalcases, y=fct_reorder(prname, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
@@ -77,9 +80,11 @@ casebars.all <- ggplot(subset(data, date==maxcaseday), aes(x=totalcases, y=fct_r
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black", angle=45, hjust=1, vjust=1))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black", angle=45, hjust=1, 
+                                                               vjust=1),
+        text=element_text(family="Lato"))
 
-tiff("Outputs/COVIDCanadaCasesHeatmap.tiff", units="in", width=15, height=5, res=500)
+agg_tiff("Outputs/COVIDCanadaCasesHeatmap.tiff", units="in", width=15, height=5, res=500)
 plot_grid(casetiles.all, casebars.all, align="h", rel_widths=c(1,0.2))
 dev.off()
 
@@ -95,7 +100,8 @@ caseratetiles.all <- ggplot(data, aes(x=date, y=fct_reorder(prname, maxcaseday),
        subtitle=paste0("The heatmap represents the 7-day rolling average of the rate of new confirmed cases per 100,000.\nProvinces are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of each province.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Agency of Canada | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Lato"))
 
 caseratebars.all <- ggplot(subset(data, date==maxcaseday), aes(x=pop/1000000, y=fct_reorder(prname, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
@@ -103,9 +109,10 @@ caseratebars.all <- ggplot(subset(data, date==maxcaseday), aes(x=pop/1000000, y=
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population (millions)")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"),
+        text=element_text(family="Lato"))
 
-tiff("Outputs/COVIDCanadaCaseRatesHeatmap.tiff", units="in", width=15, height=5, res=500)
+agg_tiff("Outputs/COVIDCanadaCaseRatesHeatmap.tiff", units="in", width=15, height=5, res=500)
 plot_grid(caseratetiles.all, caseratebars.all, align="h", rel_widths=c(1,0.2))
 dev.off() 
 
@@ -121,7 +128,8 @@ deathtiles.all <- ggplot(data, aes(x=date, y=fct_reorder(prname, maxdeathday), f
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed deaths from COVID-19, normalised to the maximum value within the province. Provinces with no confirmed deaths are shown as white.\nProvinces are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each province.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Agency of Canada | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Lato"))
 
 deathbars.all <- ggplot(subset(data, date==maxdeathday), aes(x=totaldeaths, y=fct_reorder(prname, maxdeathday), fill=totaldeaths))+
   geom_col(show.legend=FALSE)+
@@ -129,7 +137,9 @@ deathbars.all <- ggplot(subset(data, date==maxdeathday), aes(x=totaldeaths, y=fc
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed deaths")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black", angle=45, hjust=1, vjust=1))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black", angle=45, hjust=1, 
+                                                               vjust=1),
+        text=element_text(family="Lato"))
 
 tiff("Outputs/COVIDCanadaDeathsHeatmap.tiff", units="in", width=15, height=5, res=500)
 plot_grid(deathtiles.all, deathbars.all, align="h", rel_widths=c(1,0.2))
@@ -147,7 +157,8 @@ deathratetiles.all <- ggplot(data, aes(x=date, y=fct_reorder(prname, maxdeathday
        subtitle=paste0("The heatmap represents the 7-day rolling average of the rate of new confirmed deaths from COVID-19 per 100,000. Provinces with no confirmed deaths are shown as white.\nProvinces are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the population of each province.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Public Health Agency of Canada | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.4)),
+        text=element_text(family="Lato"))
 
 deathratebars.all <- ggplot(subset(data, date==maxdeathday), aes(x=pop/1000000, y=fct_reorder(prname, maxdeathday), fill=pop))+
   geom_col(show.legend=FALSE)+
@@ -155,7 +166,8 @@ deathratebars.all <- ggplot(subset(data, date==maxdeathday), aes(x=pop/1000000, 
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population (millions)")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"),
+        text=element_text(family="Lato"))
 
 tiff("Outputs/COVIDCanadaDeathRatesHeatmap.tiff", units="in", width=15, height=5, res=500)
 plot_grid(deathratetiles.all, deathratebars.all, align="h", rel_widths=c(1,0.2))
