@@ -10,14 +10,14 @@ library(sf)
 #Read in vaccination data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/03/COVID-19-weekly-announced-vaccinations-25-March-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-13-May-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:O6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<50`=`...3`,  `50-54`=`...4`, `55-59`=`...5`, 
-         `60-64`=`...6`, `65-69`=`...7`, 
-         `70-74`=`...8`, `75-79`=`...9`, `80+`=`...10`) %>% 
-  gather(age, vaccinated, c(3:10))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:Q6806", col_names=FALSE) %>% 
+  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<40`=`...3`,  `40-44`=`...4`, `45-49`=`...5`, 
+         `50-54`=`...6`, `55-59`=`...7`, `60-64`=`...8`, `65-69`=`...9`, `70-74`=`...10`, 
+         `75-79`=`...11`, `80+`=`...12`) %>% 
+  gather(age, vaccinated, c(3:12))
 
 #Download IMD data
 temp <- tempfile()
@@ -59,18 +59,20 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="O16:Y6806", col_names=FALSE) %>% 
-  select(-c(2)) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="S16:AE6806", col_names=FALSE) %>% 
+  select(-c(2,3)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:10)) %>% 
+  gather(age, pop, c(2:11)) %>% 
   mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<50",
-    age=="...5" ~ "50-54",
-    age=="...6" ~ "55-59",
-    age=="...7" ~ "60-64",
-    age=="...8" ~ "65-69",
-    age=="...9" ~ "70-74",
-    age=="...10" ~ "75-79",
+    age=="...4" ~ "<40", 
+    age=="...5" ~ "40-44",
+    age=="...6" ~ "45-49",
+    age=="...7" ~ "50-54",
+    age=="...8" ~ "55-59",
+    age=="...9" ~ "60-64",
+    age=="...10" ~ "65-69",
+    age=="...11" ~ "70-74",
+    age=="...12" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -81,9 +83,9 @@ vaxdata <- merge(vaxdata, pop2) %>%
   merge(IMD_MSOA %>% select(-pop), by.x="msoa11cd", by.y="MSOA11CD") %>% 
   mutate(vaxprop=vaccinated/pop)
 
-#Split into under and over 50
+#Split into under and over 40
 vaxdata2 <- vaxdata %>% 
-  mutate(age2=if_else(age=="<50", "<50", "50+")) %>%
+  mutate(age2=if_else(age=="<40", "<40", "40+")) %>%
   group_by(msoa11cd, msoa11nm, IMDrank, age2) %>% 
   summarise(vaccinated=sum(vaccinated), pop=sum(pop)) %>% 
   ungroup() %>% 
@@ -111,20 +113,20 @@ LAsMSOA <- st_read(msoa, layer="3 Local authority outlines (2019)")
 
 LAlabels <- data.frame(x=c(34.3, 34, 39, 37, 34.2, 44.6, 44.7, 39.3, 42.7), 
                        y=c(33.5, 40.5, 40.6, 35.7, 36.2, 34.3, 36.8, 36.4, 40.5), 
-                       label=c("Sheffield", "Bradford", "Leeds", "Rotherham", "Kirklees",
+                       label=c("Sheffield", "Bradford", "Leeds", "Barnsley", "Kirklees",
                                "NE Lincs", "Hull", "Wakefield", "York"))
 Arealabels <- data.frame(x=c(41.5, 33.6, 40.3, 44.6), y=c(43, 40, 33.3, 38.3), 
                          label=c("North Yorks", "West Yorks", "South Yorks", "East Yorks\n& Humber"))
 
 plot <- ggplot()+
-  geom_sf(data=MSOA %>% filter(age2=="50+" & RegionNation=="Yorkshire and The Humber"), 
+  geom_sf(data=MSOA %>% filter(age2=="40+" & RegionNation=="Yorkshire and The Humber"), 
           aes(geometry=geom, fill=vaxprop), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation=="Yorkshire and The Humber"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.2)+
   geom_sf(data=GroupsMSOA %>% filter(RegionNation=="Yorkshire and The Humber"), 
           aes(geometry=geom), fill=NA, colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
-                         name="Proportion of adults aged 50+ who have received\nat least one vaccine dose", limits=c(0.4,1),
+                         name="Proportion of adults aged 40+ who have received\nat least one vaccine dose", limits=c(0.4,1),
                          labels=label_percent(accuracy=1))+
   geom_text(data=LAlabels, aes(x=x, y=y, label=label))+
   geom_text(data=Arealabels, aes(x=x, y=y, label=label), fontface="bold")+
@@ -136,21 +138,21 @@ plot <- ggplot()+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                 barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Vaccination rates in Yorkshire\n ",
-       caption="Data from NHS England and ONS, Cartogram from House of Commons Library\nPlot by @VictimOfMaths")+
-  annotate("text", x=44, y=42.2, label="94% of people aged 50+\nin Newby & Scalby\nhave been vaccinated",
+       caption="Data from NHS England\nMap by Colin Angus, University of Sheffield")+
+  annotate("text", x=44, y=42.2, label="95% of people aged 40+\nin Easingwold & Stillington\nhave been vaccinated",
            family="Roboto", colour="Grey50")+
-  annotate("text", x=36, y=41.6, label="46% of people aged 50+\nin Harehills South\nhave been vaccinated",
+  annotate("text", x=36, y=41.6, label="43% of people aged 40+\nin Harehills South\nhave been vaccinated",
            family="Roboto", colour="Grey50")+
   annotate("text", x=44.6, y=39.5, label="Each hexagon represents an area\nof roughly 6,000 people",
            family="Roboto", colour="Grey50")+
-  geom_curve(aes(x=42.8, y=42.2, xend=41.7, yend=42.3), curvature=-0.15, colour="Grey50",
+  geom_curve(aes(x=42.38, y=42.55, xend=41, yend=41.5), curvature=0.2, colour="Grey50",
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   geom_curve(aes(x=37.3, y=41.5, xend=38.85, yend=39.45), curvature=-0.25, colour="Grey50",
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")+
   geom_curve(aes(x=43.7, y=39.1, xend=43.18, yend=38.7), curvature=-0.25, colour="Grey50",
              arrow=arrow(length=unit(0.1, "cm"), type="closed"), lineend="round")
   
-agg_tiff("Outputs/COVIDVaxMSOAYorkshire.tiff", units="in", width=10, height=8.5, res=800)
+agg_png("Outputs/COVIDVaxMSOAYorkshire.png", units="in", width=10, height=8.5, res=800)
 plot
 dev.off()
 
@@ -192,7 +194,7 @@ plot2 <- ggplot()+
        caption="Data from NHS England and ONS, Cartogram from House of Commons Library\nPlot by @VictimOfMaths")+
   annotate("text", x=44, y=42.2, label="97% of people aged 70+\nin Newby & Scalby\nhave been vaccinated",
            family="Roboto", colour="Grey50")+
-  annotate("text", x=36, y=41.6, label="72% of people aged 70+\nin Harehills South\nhave been vaccinated",
+  annotate("text", x=36, y=41.6, label="72% of people aged 70+\nin Leeds Central\nhave been vaccinated",
            family="Roboto", colour="Grey50")+
   annotate("text", x=44.6, y=39.5, label="Each hexagon represents an area\nof roughly 6,000 people",
            family="Roboto", colour="Grey50")+
@@ -326,3 +328,35 @@ plot3 <- ggplot()+
 agg_tiff("Outputs/COVIDVaxMSOAYorkshirev3.tiff", units="in", width=10, height=8.5, res=800)
 plot3
 dev.off()
+
+#Actual Sheffield Map
+#Download shapefile of LA boundaries
+temp <- tempfile()
+temp2 <- tempfile()
+source <- "https://opendata.arcgis.com/datasets/826dc85fb600440889480f4d9dbb1a24_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+unzip(zipfile=temp, exdir=temp2)
+
+#The actual shapefile has a different name each time you download it, so need to fish the name out of the unzipped file
+name <- list.files(temp2, pattern=".shp")
+shapefile <- st_read(file.path(temp2, name))
+
+
+map <- full_join(shapefile, MSOA %>% select(Laname, msoa11cd, IMDrank, vaxprop, pop, age2) %>% as.data.frame(), 
+                 by="msoa11cd", all.y=TRUE)
+
+map %>% 
+  filter(Laname=="Sheffield" & age2=="50+") %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry, fill=vaxprop), colour=NA)+
+  scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
+                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         labels=label_percent(accuracy=1))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)), text=element_text(family="Roboto"))+
+  labs(title="COVID-19 vaccination rates in Sheffield",
+       subtitle="Proportion of adults over 50 who have received at least one vaccine dose",
+       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+ggplot(MSOA %>% filter(age2=="50+" & Laname=="Sheffield"))+
+  geom_point(aes(x=vaxprop, y=IMDrank))
