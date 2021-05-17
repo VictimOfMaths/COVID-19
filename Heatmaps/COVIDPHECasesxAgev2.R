@@ -6,7 +6,7 @@ library(arrow)
 library(readxl)
 library(RcppRoll)
 library(paletteer)
-library(ggstream)
+library(ggstream) #remotes::install_github("davidsjoberg/ggstream")
 library(lubridate)
 library(geofacet)
 library(ggtext)
@@ -129,22 +129,26 @@ data %>% filter(areaType %in% c("ltla", "nation", "region") & date>=as.Date("202
 shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
   write.csv("COVID_Cases_By_Age/shortdata.csv")
 
-plotfrom <- as.Date("2020-09-01")
+plotfrom <- as.Date("2021-04-01")
 
 #England plot
-tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=5, res=500)
+agg_png("Outputs/COVIDCasesxAgeBolton.png", units="in", width=8, height=6, res=800)
 data %>% 
-  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  #filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaName=="Bolton" & !is.na(caserateroll) & date>=plotfrom) %>% 
   ggplot()+
-  geom_tile(aes(x=date, y=age, fill=caserateroll))+
-  scale_fill_paletteer_c("viridis::inferno", name="Daily cases\nper 100,000")+
-  scale_x_date(name="", limits=c(plotfrom, NA))+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000")+
+  scale_x_date(name="")+
   scale_y_discrete(name="Age")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold"))+
-  labs(title="Case rates are falling across all age groups",
-       subtitle="Rolling 7-day average of confirmed new COVID-19 cases in England per 100,000 by age group",
-       caption="Data from Public Health England | Plot by @VictimOfMaths")
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The outbreak in Bolton is largely in unvaccinated age groups",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by Colin Angus")
 dev.off()
 
 tiff("Outputs/COVIDCasesxAgeEngLine.tiff", units="in", width=10, height=8, res=500)
