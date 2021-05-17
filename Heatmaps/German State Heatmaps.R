@@ -7,6 +7,7 @@ library(readxl)
 library(RcppRoll)
 library(zoo)
 library(cowplot)
+library(extrafont)
 
 options(scipen=999999)
 
@@ -117,17 +118,20 @@ casetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reorder
   labs(title="Timelines for COVID-19 cases in German Bundesländer",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
-  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), 
+        plot.title.position="plot",
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.5)),
+        text=element_text(family="Lato"))
 
 casebars <- ggplot(subset(heatmap, date==maxcaseday & measure=="cases"), 
-                   aes(x=totalcases, y=fct_reorder(State, maxcaseday), fill=totalcases))+
+                   aes(x=totalcases/1000, y=fct_reorder(State, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases")+
+  scale_x_continuous(name="Total confirmed cases\n(1000s)")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"),
+        text=element_text(family="Lato"))
 
 tiff("Outputs/COVIDGermanStateCasesHeatmap.tiff", units="in", width=11, height=6, res=500)
 plot_grid(casetiles, casebars, align="h", rel_widths=c(1,0.2))
@@ -144,7 +148,8 @@ caseratetiles <- ggplot(subset(heatmap, measure=="cases"), aes(x=date, y=fct_reo
        subtitle=paste0("The heatmap represents the 7-day rolling average of the rate of new confirmed cases per 100,000 population.\nStates are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the population of each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.5)))
 
 caselegend <- get_legend(
   caseratetiles + theme(legend.box.margin = margin(0, 0, 0, 12))
@@ -157,7 +162,8 @@ caseratebars <- ggplot(subset(heatmap, date==maxcaseday & measure=="cases"),
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population\n(millions)")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"),
+        text=element_text(family="Lato"))
 
 tiff("Outputs/COVIDGermanStateCaseRateHeatmap.tiff", units="in", width=13, height=6, res=500)
 plot <- plot_grid(caseratetiles+theme(legend.position="none"), caseratebars, align="h", rel_widths=c(1,0.2))
@@ -175,7 +181,8 @@ deathtiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_reord
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of confirmed deaths, normalised to the maximum value within the State.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the absolute number of deaths in each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.5)))
 
 deathbars <- ggplot(subset(heatmap, date==maxcaseday & measure=="deaths"), 
                     aes(x=totalcases, y=fct_reorder(State, maxcaseday), fill=totalcases))+
@@ -184,7 +191,8 @@ deathbars <- ggplot(subset(heatmap, date==maxcaseday & measure=="deaths"),
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed deaths")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
+        axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"),
+        text=element_text(family="Lato"))
 
 tiff("Outputs/COVIDGermanStateDeathsHeatmap.tiff", units="in", width=11, height=6, res=500)
 plot_grid(deathtiles, deathbars, align="h", rel_widths=c(1,0.2))
@@ -201,7 +209,8 @@ deatratetiles <- ggplot(subset(heatmap, measure=="deaths"), aes(x=date, y=fct_re
        subtitle=paste0("The heatmap represents the 7-day rolling average of the rate of new confirmed deaths per 100,000 population.\nStates are ordered by the date at which they reached their peak number of deaths. Bars on the right represent the population of each State.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Jan-Philip Gehrcke (https://covid19-germany.appspot.com/) | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"))
+        axis.text.y=element_text(colour="Black"),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.5)))
 
 deathlegend <- get_legend(
   deatratetiles + theme(legend.box.margin = margin(0, 0, 0, 12))
