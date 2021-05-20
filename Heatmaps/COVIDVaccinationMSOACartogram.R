@@ -133,7 +133,7 @@ plot <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in the over 80s",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA80+Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot
@@ -162,7 +162,7 @@ plot2 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 75-79 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA75Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot2
@@ -191,7 +191,7 @@ plot3 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 70-74 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA70Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot3
@@ -220,7 +220,7 @@ plot4 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 65-69 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA65Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot4
@@ -249,7 +249,7 @@ plot5 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 60-64 year olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA6064Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot5
@@ -278,7 +278,7 @@ plot6 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 55-59 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA5559Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot6
@@ -307,7 +307,7 @@ plot7 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 50-54 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA5054Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot7
@@ -336,7 +336,7 @@ plot8 <- ggplot()+
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 45-49 year-olds",
        subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA4549Cartogram.tiff", units="in", width=10, height=8, res=800)
 plot8
@@ -358,14 +358,16 @@ plot9 <- ggplot()+
                aes(geometry=geom, label=Group.labe,
                    hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
-                         name="Proportion of\npopulation\nvaccinated", limits=c(0,1),
+                         name="Proportion of adult population vaccinated", limits=c(0,1),
                          labels=label_percent(accuracy=1))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Roboto"), legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Overall adult vaccination rates",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
-       caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       subtitle="People vaccinated in England by Middle Super Output Area.\n ",       
+       caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
 plot9
@@ -643,7 +645,7 @@ MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>%
     guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                  barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
     labs(title="Vaccination rates are lowest in urban areas even after accounting\nfor the fact that they tend to have younger populations\n \n ",
-         caption="Data from NHS England and ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+         caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
   
   agg_tiff("Outputs/COVIDVaxMSOAAgeStdCartogram.tiff", units="in", width=9, height=10, res=800)
   plot10
