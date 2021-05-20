@@ -185,7 +185,7 @@ dataw14 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B31:N
 colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
                        "Female_Vax2")
 
-mergeddata <- dataw18 %>% mutate(Week=18)
+mergeddata <- dataw18 %>% mutate(Week=18) %>% 
   bind_rows(dataw17 %>% mutate(Week=17)) %>% 
   bind_rows(dataw16 %>% mutate(Week=16)) %>% 
   bind_rows(dataw15 %>% mutate(Week=15)) %>% 
@@ -197,7 +197,7 @@ mergeddata <- dataw18 %>% mutate(Week=18)
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=18))
+  bind_rows(data %>% mutate(Week=19))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
