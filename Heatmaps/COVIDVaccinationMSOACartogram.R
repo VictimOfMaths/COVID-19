@@ -16,7 +16,7 @@ library(ggrepel)
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-13-May-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-20-May-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:Q6806", col_names=FALSE) %>% 
@@ -589,12 +589,12 @@ scatterdata2 <- MSOA %>%
   mutate(vaxprop=vaccinated/pop,
          labels=if_else(vaxprop<0.6, MSOA.name.HCL, "")) 
 
-agg_tiff("Outputs/COVIDVaxMSOAYorksScatter.tiff", units="in", width=8, height=6, res=800)
+agg_png("Outputs/COVIDVaxMSOAYorksScatter.png", units="in", width=8, height=6, res=800)
 ggplot(scatterdata2, aes(x=vaxprop, y=-IMDrank))+
   geom_point(aes(size=pop), shape=21, colour="DarkRed", fill="tomato", alpha=0.8)+
   geom_segment(aes(x=1, xend=1, y=-1000, yend=-32000), colour="Grey70")+
   geom_text_repel(aes(label=labels), family="Roboto", size=rel(2.2),
-                  box.padding = 0.4, min.segment.length=0)+
+                  box.padding = 0.5, min.segment.length=0)+
   scale_x_continuous(name="Proportion of population aged 40+ vaccinated", 
                      labels=label_percent(accuracy=1), limits=c(NA, 1))+
   scale_y_continuous(name="Index of Multiple Deprivation rank", breaks=c(-1000, -32000),
@@ -607,7 +607,7 @@ ggplot(scatterdata2, aes(x=vaxprop, y=-IMDrank))+
         plot.subtitle=element_text(colour="Grey50"), plot.caption.position ="plot",
         plot.caption=element_text(colour="Grey50"))+
   labs(title="Vaccine delivery is lowest in a small number of deprived areas in Yorkshire",
-       subtitle="Proportion of adults aged 50+ who have received at least one dose of COVID-19 vaccine",
+       subtitle="Proportion of adults aged 40+ who have received at least one dose of COVID-19 vaccine",
        caption="Data from NHS England, populations from NIMS\nPlot by @VictimOfMaths")
 dev.off()
 
