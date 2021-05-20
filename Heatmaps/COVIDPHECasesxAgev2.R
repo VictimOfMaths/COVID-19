@@ -11,6 +11,7 @@ library(lubridate)
 library(geofacet)
 library(ggtext)
 library(gghighlight)
+library(ragg)
 
 temp <- tempfile()
 source <- "https://coronavirus.data.gov.uk/downloads/demographic/cases/specimenDate_ageDemographic-stacked.csv"
@@ -131,14 +132,14 @@ shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>%
 
 plotfrom <- as.Date("2021-04-01")
 
-#England plot
-agg_png("Outputs/COVIDCasesxAgeBolton.png", units="in", width=8, height=6, res=800)
+#Bolton plots
+agg_tiff("Outputs/COVIDCasesxAgeBolton.tiff", units="in", width=8, height=6, res=800)
 data %>% 
   #filter(areaType=="nation" & !is.na(caserateroll)) %>%
   filter(areaName=="Bolton" & !is.na(caserateroll) & date>=plotfrom) %>% 
   ggplot()+
   geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
-  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000")+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1520))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
   theme_classic()+
@@ -146,10 +147,51 @@ data %>%
         legend.position="top")+
   guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
                               barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
-  labs(title="The outbreak in Bolton is largely in unvaccinated age groups",
+  labs(title="The current outbreak in Bolton is largely in unvaccinated age groups",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
-       caption="Data from coronavirus.data.gov.uk\nPlot by Colin Angus")
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
 dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgeBolton2.tiff", units="in", width=8, height=6, res=800)
+data %>% 
+  #filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaName=="Bolton" & !is.na(caserateroll) & date>=as.Date("2020-12-15") & 
+           date<=as.Date("2021-01-09")) %>% 
+  ggplot()+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1520))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The age profile of Bolton's December/January cases",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgeBolton3.tiff", units="in", width=8, height=6, res=800)
+data %>% 
+  #filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaName=="Bolton" & !is.na(caserateroll) & date>=as.Date("2020-08-10") & 
+           date<=as.Date("2020-10-23")) %>% 
+  ggplot()+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1520))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The age profile of Bolton's September/October cases",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+dev.off()
+
 
 tiff("Outputs/COVIDCasesxAgeEngLine.tiff", units="in", width=10, height=8, res=500)
 data %>% 
