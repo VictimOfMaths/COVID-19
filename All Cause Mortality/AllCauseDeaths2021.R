@@ -11,26 +11,26 @@ library(ragg)
 library(extrafont)
 
 #Latest date in the country-specific data
-EWDate <- "9th April"
-ScotDate <- "18th April"
-NIDate <- "9th April"
+EWDate <- "7th May"
+ScotDate <- "15th May"
+NIDate <- "14th May"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek142021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales/2021/publishedweek1820211.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-15.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-19.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%209th%20April%202021.XLSX"
+NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%2014th%20May%202021.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "P" 
-ScotRange <- "Q" 
-NIRange <- "18" 
+EngRange <- "T" 
+ScotRange <- "U" 
+NIRange <- "22" 
 
 ##############################
 #Read in English & Welsh data#
@@ -520,6 +520,10 @@ temp54 <- as.data.frame(t(read_excel(temp, sheet=12, range="BJ10:BJ15", col_name
 temp55 <- as.data.frame(t(read_excel(temp, sheet=12, range="BP10:BP15", col_names=FALSE)))
 temp56 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV10:BV15", col_names=FALSE)))
 temp57 <- as.data.frame(t(read_excel(temp, sheet=12, range="CB10:CB15", col_names=FALSE)))
+temp58 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH10:CH15", col_names=FALSE)))
+temp59 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN10:CN15", col_names=FALSE)))
+temp60 <- as.data.frame(t(read_excel(temp, sheet=12, range="CT10:CT15", col_names=FALSE)))
+temp61 <- as.data.frame(t(read_excel(temp, sheet=12, range="CZ10:CZ15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
@@ -527,7 +531,7 @@ data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8
                     temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, 
                     temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46,
                     temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55,
-                    temp56, temp57) %>% 
+                    temp56, temp57, temp58, temp59, temp60, temp60) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
