@@ -25,10 +25,10 @@ casedata <- casedata %>%
   #Take the most recent 2 weeks of data
   group_by(areaName) %>% 
   arrange(date) %>% 
-  slice_tail(n=8) %>% 
+  slice_tail(n=7) %>% 
   ungroup() %>% 
   spread(date, newCasesBySpecimenDateRollingRate) %>% 
-  select(c(1,2,10,11))
+  select(c(1,2,4,10))
 
 colnames(casedata) <- c("Lacode", "areaName", "prev", "latest")
 
