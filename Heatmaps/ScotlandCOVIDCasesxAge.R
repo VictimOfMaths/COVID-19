@@ -13,7 +13,7 @@ library(extrafont)
 #Scottish age data
 #https://www.opendata.nhs.scot/dataset/covid-19-in-scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210329.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210524.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -79,8 +79,8 @@ ggplot(subset(data, Sex!="Total"), aes(x=date, y=cases_avg, fill=AgeGroup))+
   facet_wrap(~Sex)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        text=element_text(family="Roboto"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="Cases in Scotland are rising in the under 15s",
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="Cases in Scotland are rising in the under 45s",
        subtitle="Confirmed new COVID-19 cases in Scotland by sex and age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -94,9 +94,9 @@ ggplot(subset(data, Sex=="Total"), aes(x=date, y=cases_avg, fill=AgeGroup))+
   scale_x_date(name="")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 cases in Scotland are rising in the under 15s",
+        plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 cases in Scotland are rising in the under 45s",
        subtitle="Confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -112,8 +112,8 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   scale_fill_paletteer_c("viridis::magma", name="New cases")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="The number of new COVID-19 cases in the under 15s is rising",
+        text=element_text(family="Lato"))+
+  labs(title="The number of new COVID-19 cases is rising in younger age groups",
        subtitle="Rolling 7-day average of daily confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -126,9 +126,9 @@ CaseratexAge <- ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") &
                    labels=c("Under 15", "15-19", "20-24", "25-44", "45-64", "65-74", "75-84", "85+"))+
   scale_fill_paletteer_c("viridis::magma", name="New cases\nper 100,000")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 case rates have started rising in all ages below 65",
+  theme(plot.title=element_text(face="bold", size=rel(1.5)),
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 case rates are only rising in the under 45s",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 
@@ -145,9 +145,9 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2021-01-01") & date<max(data$d
   scale_y_continuous(name="Daily new cases per 100,000")+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.4)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 case rates have started rising in the under 45s",
+  theme(plot.title=element_text(face="bold", size=rel(1.5)),
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 case rates are only rising in the under 45s",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
