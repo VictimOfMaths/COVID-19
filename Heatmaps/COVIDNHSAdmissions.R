@@ -15,12 +15,12 @@ library(extrafont)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-daily-admissions-and-beds-20210525.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-daily-admissions-and-beds-20210526.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/Weekly-covid-admissions-and-beds-publication-210520-1.xlsx"
 #Increment by one each day
-dailyrange <- "AW"
-dailyoccrange <- "AY"
+dailyrange <- "AX"
+dailyoccrange <- "AZ"
 #Increment by seven each week
 weeklyrange <- "AR"
 
@@ -158,8 +158,19 @@ dev.off()
 weeklydata <- tempfile()
 weeklydata <- curl_download(url=weeklyurl, destfile=weeklydata, quiet=FALSE, mode="wb")
 
+weeklydata.old <- tempfile()
+weeklyurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/Weekly-covid-admissions-and-beds-publication-210429-up-to-210406.xlsx"
+weeklydata.old <- curl_download(url=weeklyurl.old, destfile=weeklydata.old, quiet=FALSE, mode="wb")
+
 weeklyCOVID <- read_excel(weeklydata, sheet="Adult G&A Beds Occupied COVID", 
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="COVID",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyCOVID.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Occupied COVID", 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
@@ -169,6 +180,13 @@ weeklyOther <- read_excel(weeklydata, sheet="Adult G&A Bed Occupied NonCOVID",
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="non-COVID",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyOther.old <- read_excel(weeklydata.old, sheet="Adult G&A Bed Occupied NonCOVID", 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="non-COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
@@ -176,10 +194,18 @@ weeklyEmpty <- read_excel(weeklydata, sheet="Adult G&A Beds Unoccupied",
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="Unoccupied",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyEmpty.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Unoccupied", 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="Unoccupied",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
-weeklydata <- bind_rows(weeklyCOVID, weeklyOther, weeklyEmpty) %>% 
+weeklydata <- bind_rows(weeklyCOVID, weeklyCOVID.old, weeklyOther, weeklyOther.old,
+                        weeklyEmpty, weeklyEmpty.old) %>% 
   mutate(region=case_when(
     trust=="ENGLAND" ~ "Nation", 
     trust %in% c("East of England", "London", "Midlands", "North East and Yorkshire",
@@ -235,7 +261,7 @@ ggplot(subset(natdata, trust=="ENGLAND"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="The number of people in hospital with a positive COVID-19 test is still falling",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate in England for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -260,7 +286,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="COVID-19 bed occupancy is still falling in all regions of England",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -280,7 +306,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="COVID-19 bed occupancy has fallen across London",
      subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
      caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -299,7 +325,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="The number of COVID-19 patients in hospital is falling across the South East",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -318,7 +344,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="COVID-19 bed occupancy is falling across the South West",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -337,7 +363,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="COVID-19 bed occupancy in the Midlands is falling across all NHS trusts",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -356,7 +382,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="The number of COVID-19 patients is falling in hospitals in the East of England",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -375,7 +401,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="The number of COVID-19 patients in hospital is falling across the North West",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
@@ -394,7 +420,7 @@ trustdata %>%
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="COVID-19 patient numbers are falling across North East and Yorkshire",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
