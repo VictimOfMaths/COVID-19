@@ -12,12 +12,12 @@ library(gganimate)
 #Download data from PHE surveillance report
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/988026/Weekly_Influenza_and_COVID19_report_data_w20.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/989842/Weekly_Influenza_and_COVID19_report_data_W21.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-data <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B13:N23", col_names=FALSE) %>% 
+data <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
   select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
 
 colnames(data) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
@@ -37,9 +37,12 @@ data_long <- pivot_longer(data, cols=c(2:7), names_to=c("Sex", "Measure"), names
   mutate(Value=if_else(Sex=="Male", -Value, Value),
          Age=case_when(
            Age=="Under 20 years" ~ "<20",
-           Age=="20 to 29 years" ~ "20-29",
-           Age=="30 to 39 years" ~ "30-39",
-           Age=="40 to 49 years" ~ "40-49",
+           Age=="20 to 24 years" ~ "20-24",
+           Age=="25 to 29 years" ~ "25-29",
+           Age=="30 to 34 years" ~ "30-34",
+           Age=="35 to 39 years" ~ "35-39",
+           Age=="40 to 44 years" ~ "40-44",
+           Age=="45 to 49 years" ~ "45-49",
            Age=="50 to 54 years" ~ "50-54",
            Age=="55 to 59 years" ~ "55-59",
            Age=="60 to 64 years" ~ "60-64",
@@ -47,7 +50,8 @@ data_long <- pivot_longer(data, cols=c(2:7), names_to=c("Sex", "Measure"), names
            Age=="70 to 74 years" ~ "70-74",
            Age=="75 to 79 years" ~ "75-79",
            TRUE ~ "80+"),
-         Age=factor(Age, levels=c("<20", "20-29", "30-39", "40-49", "50-54", "55-59", "60-64",
+         Age=factor(Age, levels=c("<20", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",
+                                  "50-54", "55-59", "60-64",
                                   "65-69", "70-74", "75-79", "80+")),
          SexMeasure=paste0(Sex, Measure))
 
@@ -129,6 +133,19 @@ dev.off()
 #Animated versions
 #Read in historic data
 
+#Week 19
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/988026/Weekly_Influenza_and_COVID19_report_data_w20.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw19 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B13:N23", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw19) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
+
 #Week 18
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/986164/Weekly_Influenza_and_COVID19_report_data_w19.xlsx"
 
@@ -185,7 +202,8 @@ dataw14 <- read_excel(temp, sheet="Figure 58&59 COVID Vac Age Sex", range="B31:N
 colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
                        "Female_Vax2")
 
-mergeddata <- dataw18 %>% mutate(Week=18) %>% 
+mergeddata <- dataw19 %>% mutate(Week=19)
+  bind_rows(dataw18 %>% mutate(Week=18)) %>% 
   bind_rows(dataw17 %>% mutate(Week=17)) %>% 
   bind_rows(dataw16 %>% mutate(Week=16)) %>% 
   bind_rows(dataw15 %>% mutate(Week=15)) %>% 
@@ -197,7 +215,7 @@ mergeddata <- dataw18 %>% mutate(Week=18) %>%
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=19))
+  bind_rows(data %>% mutate(Week=20))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
