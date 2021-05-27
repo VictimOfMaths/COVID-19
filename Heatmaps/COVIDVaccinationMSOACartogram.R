@@ -12,11 +12,14 @@ library(ggridges)
 library(patchwork)
 library(extrafont)
 library(ggrepel)
+library(cowplot)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
+maxdate <- "27th May"
+
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-20-May-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-27-May-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:Q6806", col_names=FALSE) %>% 
@@ -132,7 +135,7 @@ plot <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in the over 80s",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA80+Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -161,7 +164,7 @@ plot2 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 75-79 year olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA75Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -190,7 +193,7 @@ plot3 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 70-74 year olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA70Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -219,7 +222,7 @@ plot4 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 65-69 year olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA65Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -248,7 +251,7 @@ plot5 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 60-64 year olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA6064Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -277,7 +280,7 @@ plot6 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 55-59 year-olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA5559Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -306,7 +309,7 @@ plot7 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 50-54 year-olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA5054Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -335,7 +338,7 @@ plot8 <- ggplot()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Roboto"))+
   labs(title="Vaccination rates in 45-49 year-olds",
-       subtitle="People vaccinated in England by Middle Super Output Area.",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOA4549Cartogram.tiff", units="in", width=10, height=8, res=800)
@@ -366,7 +369,7 @@ plot9 <- ggplot()+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Overall adult vaccination rates",
-       subtitle="People vaccinated in England by Middle Super Output Area.\n ",       
+       subtitle=paste0("People vaccinated in England by Middle Super Output Area.\nData up to ", maxdate, "\n "),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
