@@ -79,7 +79,7 @@ plot2 <- ggplot()+
   geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
                                       hjust=just), size=rel(2.4), colour="Black")+
-  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(casedata$abschange)), 
+  scale_fill_paletteer_c("pals::warmcool", limit=c(-1,1)*max(abs(casedata$abschange)), 
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_void()+
@@ -245,7 +245,7 @@ plot4 <- ggplot()+
   geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
                aes(geometry=geom, label=Group.labe,
                                       hjust=just), size=rel(2.4), colour="Black")+
-  scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(msoacasedata$abschange), na.rm=TRUE), 
+  scale_fill_paletteer_c("pals::warmcool", limit=c(-1,1)*max(abs(msoacasedata$abschange), na.rm=TRUE), 
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_void()+
