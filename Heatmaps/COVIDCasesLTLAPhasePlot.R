@@ -10,6 +10,7 @@ library(scales)
 library(extrafont)
 library(ggrepel)
 library(gganimate)
+library(readxl)
 
 #Start with LA level cases for the whole of the UK
 cases <- tempfile()
