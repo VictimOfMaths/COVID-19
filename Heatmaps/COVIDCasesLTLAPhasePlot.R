@@ -10,7 +10,8 @@ library(scales)
 library(extrafont)
 library(ggrepel)
 library(gganimate)
-library(readxl)
+library(lubridate)
+library(gganimate)
 
 #Start with LA level cases for the whole of the UK
 cases <- tempfile()
@@ -18,26 +19,15 @@ url <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric=newCase
 cases <- curl_download(url=url, destfile=cases, quiet=FALSE, mode="wb")
 
 casedata <- read.csv(cases) %>% 
-  mutate(date=as.Date(date))
-
-maxdate <- max(casedata$date)
-
-casedata <- casedata %>% 
-  #Take the most recent 5 weeks of data
+  mutate(date=as.Date(date)) %>% 
   group_by(areaName) %>% 
   arrange(date) %>% 
-  slice_tail(n=36) %>% 
+  rename(caserate=newCasesBySpecimenDateRollingRate) %>% 
+  mutate(change=caserate-lag(caserate,7)) %>% 
   ungroup() %>% 
-  spread(date, newCasesBySpecimenDateRollingRate) %>% 
-  select(c(1,2,4,11,18,25,32,39)) %>% 
-  set_names("Lacode", "areaName", "week_1", "week_2", "week_3", "week_4", "week_5", "week_6")
-
-casedata <- casedata %>% 
-  mutate(change_2=week_2-week_1, change_3=week_3-week_2, change_4=week_4-week_3,
-         change_5=week_5-week_4, change_6=week_6-week_5) %>% 
-  select(-week_1) %>% 
-  pivot_longer(c(3:12), names_to=c("measure", "time"), names_sep="_", values_to="cases") %>% 
-  spread(measure, cases)
+  rename("Lacode"="areaCode")
+  
+maxdate <- max(casedata$date)
 
 #Bring in region
 temp <- tempfile()
@@ -84,15 +74,15 @@ LApop <- LApop %>%
 
 plotdata <- casedata %>% 
   merge(LApop, by.x="Lacode", by.y="code" , all.x=TRUE) %>% 
-  mutate(time=as.numeric(time)) %>% 
-  arrange(areaName, time)
+  mutate(dayssince=as.integer(maxdate-date)) %>% 
+  arrange(date)
 
 agg_tiff("Outputs/COVIDCasesLTLAChangeScatter.tiff", units="in", width=8, height=7, res=800)
-ggplot(plotdata %>% filter(time==6), aes(x=week, y=change, fill=Country))+
-  geom_point(aes(size=pop), shape=21, alpha=0.7)+
+ggplot(plotdata %>% filter(date==maxdate), aes(x=caserate, y=change, fill=Country))+
   geom_hline(yintercept=0)+
   geom_vline(xintercept=0)+
-  geom_text_repel(aes(label=areaName), size=rel(2.3))+
+  geom_point(aes(size=pop), shape=21, alpha=0.7)+
+  geom_text_repel(aes(label=areaName), size=rel(2.3), box.padding=0.3)+
   scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
   scale_y_continuous(name="Change in case rate compared to the preceding week")+
   scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
@@ -102,20 +92,45 @@ ggplot(plotdata %>% filter(time==6), aes(x=week, y=change, fill=Country))+
         legend.position = "top", plot.title.position="plot",
         plot.title=element_text(face="bold", size=rel(1.6)))+
   labs(title="Recent COVID outbreaks are currently contained to a few areas",
-       subtitle="COVID case rates and how these have changed in the past week in UK Local Authorities\nBubbles are sized by population",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Data up to ",
+       maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=8, height=7, res=800)
-ggplot()+
+plot <- ggplot()+
   geom_hline(yintercept=0)+
   geom_vline(xintercept=0)+
-  geom_path(data=plotdata %>% filter(time>4), aes(x=week, y=change, group=areaName),
-            colour="Grey80", show.legend=FALSE)+
-  geom_point(data=plotdata %>% filter(time==6),
-            aes(x=week, y=change, fill=Country, size=pop), shape=21, alpha=0.7)+
-  geom_text_repel(data=plotdata %>% filter(time==6), 
-                  aes(x=week, y=change, label=areaName), size=rel(2.3))+
+  geom_path(data=plotdata %>% filter(date>=maxdate-days(7)), 
+            aes(x=caserate, y=change, group=areaName, alpha=7-dayssince),
+            colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata %>% filter(date==maxdate),
+            aes(x=caserate, y=change, fill=Country, size=pop), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdata %>% filter(date==maxdate), 
+                  aes(x=caserate, y=change, label=areaName), size=rel(2.3))+
+  scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in case rate compared to the preceding week")+
+  scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  scale_size(guide=FALSE)+
+  theme_classic()+
+  theme(axis.line=element_blank(), text=element_text(family="Lato"),
+        legend.position = "top", plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="Rossendale: 😟, Blackburn & Glasgow: 🤷,\nBolton, Bedford & Clackmannanshire: 👍",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
+                       maxdate),
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=8, height=7, res=800)
+plot
+dev.off()
+
+#Animated version
+anim <- ggplot(plotdata %>% filter(date>=as.Date("2021-04-19")), 
+               aes(x=caserate, y=change, fill=Country))+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_point(aes(size=pop), shape=21, alpha=0.7)+
+  geom_text_repel(aes(label=areaName), size=rel(2.3), box.padding=0.3)+
   scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
   scale_y_continuous(name="Change in case rate compared to the preceding week")+
   scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
@@ -125,6 +140,10 @@ ggplot()+
         legend.position = "top", plot.title.position="plot",
         plot.title=element_text(face="bold", size=rel(1.6)))+
   labs(title="Recent COVID outbreaks are currently contained to a few areas",
-       subtitle="COVID case rates and how these have changed in the past week in UK Local Authorities\nBubbles are sized by population",
-       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
-dev.off()
+       subtitle="COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Data up to {closest_state}",
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")+
+  transition_states(date, transition_length=1, state_length=1)
+
+animate(anim, units="in", width=8, height=8*4/5, res=500, 
+        renderer=gifski_renderer("Outputs/COVIDCasesPhasePlotAnim.gif"), 
+        device="ragg_png", end_pause=5, duration=10, fps=8)
