@@ -88,7 +88,7 @@ MSOArateurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=msoa&metric
 temp <- curl_download(url=MSOArateurl, destfile=temp, quiet=FALSE, mode="wb")
 
 MSOAcases <- read.csv(temp) %>% 
-  filter(date=max(date))
+  filter(date==max(date))
 
 MSOAdata <- msoadata %>% 
   merge(pop, by="code") %>% 
