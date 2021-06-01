@@ -6,6 +6,7 @@ library(paletteer)
 library(extrafont)
 library(geofacet)
 library(scales)
+library(ragg)
 
 url <- "https://covid-surveillance-data.cog.sanger.ac.uk/download/lineages_by_ltla_and_week.tsv"
 
@@ -57,8 +58,8 @@ ggplot(data, aes(x=WeekEndDate, y=Count, fill=strain))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="In absolute terms, the number of cases of the 'Indian' variant is small",
-       subtitle="Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage.",
+  labs(title="There is a lot of regional variation in the number of 'Indian' variant cases being identified",
+       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage. Data up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
@@ -72,8 +73,8 @@ ggplot(data, aes(x=WeekEndDate, y=prop, fill=strain))+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="The 'Indian' variant looks to be becoming dominant in many parts of England",
-       subtitle="Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage.",
+  labs(title="The 'Indian' variant is now dominant across most of England",
+       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage. Data up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
