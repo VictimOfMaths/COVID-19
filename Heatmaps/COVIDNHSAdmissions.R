@@ -15,14 +15,14 @@ library(extrafont)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-daily-admissions-and-beds-20210526.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-daily-admissions-and-beds-20210601.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/Weekly-covid-admissions-and-beds-publication-210520-1.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/Weekly-covid-admissions-and-beds-publication-210527.xlsx"
 #Increment by one each day
-dailyrange <- "AX"
-dailyoccrange <- "AZ"
+dailyrange <- "BD"
+dailyoccrange <- "BF"
 #Increment by seven each week
-weeklyrange <- "AR"
+weeklyrange <- "AY"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -116,7 +116,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="...but patient numbers are starting to rise slightly in the Midlands and the North",
+  labs(title="COVID hospital admissions are rising in the North West and East of England, but stable elsewhere. So far.",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
