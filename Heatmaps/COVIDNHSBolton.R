@@ -3,13 +3,15 @@ rm(list=ls())
 library(tidyverse)
 library(curl)
 library(readxl)
+library(lubridate)
 library(paletteer)
 library(ggtext)
 library(extrafont)
+library(ragg)
 
 newfile <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/Weekly-covid-admissions-and-beds-publication-210527.xlsx"
-maxday="BA"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210603.xlsx"
+maxday="BF"
 
 newfile <- curl_download(url=url, destfile=newfile, quiet=FALSE, mode="wb")
 
@@ -53,6 +55,7 @@ plotdata <- data %>%
   group_by(bedtype) %>% 
   mutate(count=if_else(date==as.Date("2020-11-29"), (lag(count, 1)+lead(count,1))/2,count))
 
+agg_tiff("Outputs/COVIDNHSOccupancyBolton.tiff", units="in", width=8, height=6, res=800)
 ggplot(plotdata, aes(x=date, y=count, fill=fct_rev(bedtype)))+
   geom_area(position="stack", show.legend=FALSE)+
   scale_x_date(name="")+
@@ -62,6 +65,7 @@ ggplot(plotdata, aes(x=date, y=count, fill=fct_rev(bedtype)))+
   theme(plot.title.position="plot", plot.title=element_text(face="bold", size=rel(1.6)),
         text=element_text(family="Lato"), 
         plot.subtitle=element_markdown())+
-  labs(title="Both hospital occupancy and ventilator use has risen in Bolton",
+  labs(title="Hospital occupancy seems to have levelled off in Bolton",
        subtitle="Daily number of patients in <span style='color:#CC3A8E;'>mechanical ventilator</span> and <span style='color:#A5AA99;'>other</span> beds with a positive COVID diagnosis",
        caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
