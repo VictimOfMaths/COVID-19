@@ -12,19 +12,29 @@ library(geofacet)
 library(ggtext)
 library(gghighlight)
 library(ragg)
+library(extrafont)
 
-temp <- tempfile()
-source <- "https://coronavirus.data.gov.uk/downloads/demographic/cases/specimenDate_ageDemographic-stacked.csv"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+temp1 <- tempfile()
+source1 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
 
-data <- read_csv_arrow(temp) %>% 
+temp2 <- tempfile()
+source2 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=region&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
+
+temp3 <- tempfile()
+source3 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp3 <- curl_download(url=source3, destfile=temp3, quiet=FALSE, mode="wb")
+
+data <- read_csv_arrow(temp1) %>% 
+  bind_rows(read_csv_arrow(temp2), read_csv_arrow(temp3)) %>% 
   select(c(1:6)) %>% 
   filter(age!="unassigned") %>% 
-  rename(cases=newCasesBySpecimenDate)
-
-#Tidy up
-data <- data %>% 
-  mutate(age = age %>% str_replace("_", "-") %>%
+  mutate(age=case_when(
+    age=="00_04" ~ "0_4",
+    age=="05_09" ~ "5-9",
+    TRUE ~ age),
+    age = age %>% str_replace("_", "-") %>%
            factor(levels=c("0-4", "5-9", "10-14", "15-19",
                            "20-24", "25-29", "30-34", "35-39", 
                            "40-44", "45-49", "50-54", "55-59", 
@@ -139,7 +149,7 @@ data %>%
   filter(areaName=="Bolton" & !is.na(caserateroll) & date>=plotfrom) %>% 
   ggplot()+
   geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
-  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1520))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1300))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
   theme_classic()+
@@ -149,6 +159,25 @@ data %>%
                               barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
   labs(title="The current outbreak in Bolton is largely in unvaccinated age groups",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgeBlackburn.tiff", units="in", width=8, height=6, res=800)
+data %>% 
+  #filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaName=="Blackburn with Darwen" & !is.na(caserateroll) & date>=plotfrom) %>% 
+  ggplot()+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000", limits=c(0,1300))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The current outbreak in Blackburn is largely in unvaccinated age groups",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Blackburn by age group",
        caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
 dev.off()
 
@@ -195,12 +224,12 @@ dev.off()
 
 tiff("Outputs/COVIDCasesxAgeEngLine.tiff", units="in", width=10, height=8, res=500)
 data %>% 
-  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaType=="nation" & !is.na(caserateroll) & date>=plotfrom) %>%
   ggplot()+
   geom_line(aes(x=date, y=caserateroll, colour=age))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
-  scale_x_date(name="", limits=c(plotfrom, NA))+
-  scale_y_continuous(name="Daily new cases per 100,000")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new cases per 100,000", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold"))+
   labs(title="Case rates are falling across all age groups",
@@ -210,11 +239,11 @@ dev.off()
 
 tiff("Outputs/COVIDCasesOver90.tiff", units="in", width=10, height=8, res=500)
 data %>% 
-  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  filter(areaType=="nation" & !is.na(caserateroll) & date>=plotfrom) %>%
   ggplot()+
   geom_line(aes(x=date, y=caserateroll, colour=age), show.legend=FALSE)+
   scale_colour_manual(values=c(rep("Grey80", times=18), "#FF4E86"))+
-  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_x_date(name="")+
   scale_y_continuous(name="Daily new cases per 100,000")+
   theme_classic()+
   theme(plot.title=element_text(face="bold"), plot.subtitle=element_markdown())+
@@ -232,11 +261,11 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
 
 tiff("Outputs/COVIDCasesxAgeReg.tiff", units="in", width=9, height=11, res=500)
 data %>% 
-  filter(areaType=="region" & !is.na(caserateroll)) %>% 
+  filter(areaType=="region" & !is.na(caserateroll) & date>=plotfrom) %>% 
   ggplot()+
   geom_tile(aes(x=date, y=age, fill=caserateroll))+
   scale_fill_paletteer_c("viridis::magma", name="Daily cases\nper 100,000")+
-  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_x_date(name="")+
   scale_y_discrete(name="Age")+
   facet_geo(~areaName, grid=mygrid)+
   theme_classic()+
@@ -250,12 +279,12 @@ dev.off()
 #Look at age patterns in Blackpool
 tiff("Outputs/COVIDCasesxAgeBlackpool.tiff", units="in", width=12, height=8, res=500)
 data %>% 
-  filter(areaType=="ltla" & !is.na(caserateroll)) %>%
+  filter(areaType=="ltla" & !is.na(caserateroll) & date>=plotfrom) %>%
   mutate(flag=if_else(areaName=="Blackpool", "x", "y")) %>% 
   ggplot()+
   geom_line(aes(x=date, y=caserateroll, group=areaName), colour="Grey80")+
   geom_line(aes(x=date, y=caserateroll, group=areaName, colour=flag), show.legend=FALSE)+
-  scale_x_date(name="", limits=c(plotfrom, NA))+
+  scale_x_date(name="")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_manual(values=c("#FF4E86", "transparent"))+
   facet_wrap(~age)+
