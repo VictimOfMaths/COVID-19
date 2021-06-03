@@ -288,7 +288,7 @@ ggplot(vaxdeciles %>% filter(age=="Total"),
         text=element_text(family="Lato"), plot.title.position="plot",
         plot.caption.position="plot", plot.subtitle=element_markdown())+
   labs(title="Vaccination rates in England are lower in more deprived areas",
-       subtitle="Distribution of MSOA-level <span style='color:#CC6677;'>first</span> and <span style='color:#88CCEE;'>second</span> dose vaccination rates for adults (aged 16+) in England",
+       subtitle="Distribution of MSOA-level <span style='color:#88CCEE;'>first</span> and <span style='color:#CC6677;'>second</span> dose vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
@@ -308,7 +308,7 @@ ggplot(vaxdeciles %>% filter(age!="Total"),
         plot.caption.position="plot", plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Vaccination rates in England are lower in more deprived areas",
-       subtitle="Distribution of MSOA-level <span style='color:#CC6677;'>first</span> and <span style='color:#88CCEE;'>second</span> dose vaccination rates for adults (aged 16+) in England",
+       subtitle="Distribution of MSOA-level <span style='color:#88CCEE;'>first</span> and <span style='color:#CC6677;'>second</span> dose vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
@@ -326,7 +326,7 @@ ggplot(vaxdata %>% filter(age!="Total"), aes(x=vaxprop, y=-IMDrank, colour=dose)
         plot.caption.position="plot", plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Vaccination rates in England are lower in more deprived areas",
-       subtitle="Distribution of MSOA-level <span style='color:#CC6677;'>first</span> and <span style='color:#88CCEE;'>second</span> dose vaccination rates for adults (aged 16+) in England",
+       subtitle="Distribution of MSOA-level <span style='color:#88CCEE;'>first</span> and <span style='color:#CC6677;'>second</span> dose vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
@@ -343,7 +343,7 @@ ggplot(vaxdata %>% filter(age=="Total"), aes(x=vaxprop, y=-IMDrank, colour=dose)
         plot.caption.position="plot", plot.subtitle=element_markdown(),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   labs(title="Vaccination rates in England are lower in more deprived areas",
-       subtitle="Distribution of MSOA-level <span style='color:#CC6677;'>first</span> and <span style='color:#88CCEE;'>second</span> dose vaccination rates for adults (aged 16+) in England",
+       subtitle="Distribution of MSOA-level <span style='color:#88CCEE;'>first</span> and <span style='color:#CC6677;'>second</span> dose vaccination rates for adults (aged 16+) in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
