@@ -2,11 +2,15 @@ rm(list=ls())
 
 library(tidyverse)
 library(curl)
+library(readxl)
 library(lubridate)
 library(extrafont)
 library(paletteer)
 library(RcppRoll)
 library(sf)
+library(snakecase)
+library(ggrepel)
+library(ragg)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -253,10 +257,105 @@ plot2 <- ggplot()+
   scale_size(guide=FALSE)+
   theme_custom()+
   labs(title="Growth in COVID hospital admissions in Bolton is slowing rapidly",
-       subtitle=paste0("Hospital admission rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
+       subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDAdmissionsLTLAChangeScatterPaths.tiff", units="in", width=9, height=7, res=800)
 plot2
+dev.off()
+
+#Trust-level analysis
+#Download PHE's trust  catchment data from and save as a csv.
+#https://app.box.com/s/qh8gzpzeo1firv1ezfxx2e6c4tgtrudl
+catchments <- read_csv("COVID_LA_Plots/2020 Trust Catchment Populations Worksheet.csv") %>% 
+  filter(CatchmentYear==2018) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop=sum(Catchment)) %>% 
+  ungroup()
+
+#Sort out trust mergers/recodes
+#1st lookup for admissions up to 4th October, when RD3 and RDZ merged to form R0D in the admissions (but not deaths) data
+catchments1 <- catchments %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop1=sum(catchpop)) %>% 
+  ungroup() 
+
+#2nd lookup for after 4th October
+catchments2 <- catchments %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop2=sum(catchpop)) %>% 
+  ungroup()
+
+#Merge into admissions data
+trustadm <- admissions %>% 
+  select(code, Region, name, admissions, date) %>%
+  distinct() %>% 
+  merge(catchments1, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
+  merge(catchments2, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
+  rename(trust=name) %>% 
+  group_by(trust) %>% 
+  arrange(date) %>% 
+  mutate(catchpop=if_else(date<=as.Date("2020-10-04"), catchpop1, catchpop2),
+         admrate=admissions*100000/catchpop,
+         adm_roll=roll_mean(admrate, 7, align="center", fill=NA, na.rm=TRUE), 
+         adm_change=adm_roll-lag(adm_roll, 7),
+         trust=str_replace(trust, " NHS TRUST", ""),
+         trust=str_replace(trust, "NHS FOUNDATION TRUST", ""),
+         trust=to_any_case(trust, case="title"),
+         trust=str_replace(trust, "King s", "King's"),
+         trust=str_replace(trust, "Guy s", "Guy's"),
+         trust=str_replace(trust, "George s", "George's"),
+         trust=str_replace(trust, "Women s", "Women's"),
+         trust=str_replace(trust, "Children s", "Children's"),
+         trust=str_replace(trust, "Peter s", "Peter's")) %>% 
+  ungroup()
+
+plotdata3 <-trustadm %>% 
+  filter(date>=adm_max-days(7) & date<=adm_max)
+
+plot3 <- ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdata3,
+            aes(x=adm_roll, y=adm_change, group=trust, alpha=7-as.integer(adm_max-date)),
+            colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata3 %>% filter(date==adm_max),
+             aes(x=adm_roll, y=adm_change, size=catchpop, fill=Region), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdata3 %>% filter(date==adm_max), 
+                  aes(x=adm_roll, y=adm_change, label=trust), size=rel(2.3))+
+  scale_x_continuous(name="Average new admissions per day in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in admission rate compared to the preceding week")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto", name="")+
+  scale_size(guide=FALSE)+
+  theme_custom()+
+  theme(axis.line=element_blank())+
+  labs(title="Growth in COVID hospital admissions in Bolton is slowing rapidly",
+       subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
+                       adm_max),
+       caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDAdmissionsTrustChangeScatterPaths.tiff", units="in", width=9, height=7, res=800)
+plot3
 dev.off()
