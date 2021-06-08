@@ -14,7 +14,7 @@ library(ggrepel)
 
 temp=tempfile()
 url <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
-temp <- temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
 rawdata <- read_csv_arrow(temp) %>% 
   filter(!age %in% c("unassigned", "00_59", "60+")) %>% 
@@ -31,7 +31,7 @@ rawdata <- read_csv_arrow(temp) %>%
                            "80-84", "85-89", "90+"))) 
 
 #Read in CFR data provided by Dan Howdon
-CFRdata <- read_csv_arrow("Data/cfrs_2021_06_01.csv") %>% 
+CFRdata <- read.csv("Data/cfrs_2021_06_07.csv") %>% 
   mutate(age=case_when(
     agegroup==0 ~ "0-4", agegroup==5 ~ "5-9", agegroup==10 ~ "10-14", agegroup==15 ~ "15-19",
     agegroup==20 ~ "20-24", agegroup==25 ~ "25-29", agegroup==30 ~ "30-34", 
@@ -61,6 +61,49 @@ ggplot(CFRdata %>% filter(date>as.Date("2020-06-01")), aes(x=date, y=cfr_month, 
         plot.title.position="plot")+
   labs(title="Case Fatality Rates for COVID have varied a lot over the past year",
        subtitle="Proportion of people testing positive for COVID who die (of any cause) within 28 days, by age group",
+       caption="CFRs calculated by Daniel Howdon\nPlot by @VictimOfMaths")
+dev.off()
+
+ggplot(CFRdata %>% filter(date>as.Date("2021-01-01") & age %in% c("55-59", "60-64",
+                                                                  "65-69", "70-74", "75-79",
+                                                                  "80-84", "85-89", "90+")), 
+       aes(x=date, y=cfr_month, colour=age))+
+  geom_line()+
+  scale_x_date(labels=label_date(format="%b-%Y"), name="")+
+  scale_y_continuous(labels=label_percent(accuracy=1), name="Case Fatality Rate",
+                     limits=c(0,NA))+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
+        plot.title.position="plot")+
+  labs(title="Case Fatality Rates for COVID have varied a lot over the past year",
+       subtitle="Proportion of people testing positive for COVID who die (of any cause) within 28 days, by age group",
+       caption="CFRs calculated by Daniel Howdon\nPlot by @VictimOfMaths")
+
+#Index to CFR on 1st Jan
+CFR2 <- merge(CFRdata, CFRdata %>% 
+  filter(date==as.Date("2021-01-01")) %>% 
+  select(age, cfr_month) %>% 
+  rename(indexcfr=cfr_month), by="age") %>% 
+  mutate(indexed=cfr_month/indexcfr, percchance=(cfr_month-indexcfr)/indexcfr)
+
+agg_tiff("Outputs/COVIDCFRChanges.tiff", units="in", width=10, height=7, res=800)
+ggplot(CFR2 %>% filter(date>=as.Date("2021-01-01") & age %in% c("55-59", "60-64",
+                                                                  "65-69", "70-74", "75-79",
+                                                                  "80-84", "85-89", "90+")), 
+       aes(x=date, y=percchance, colour=age))+
+  geom_hline(yintercept=0, colour="Grey70", linetype=2)+
+  geom_line()+
+  scale_x_date(labels=label_date(format="%b-%Y"), name="")+
+  scale_y_continuous(labels=label_percent(accuracy=1), name="Change in Case Fatality Rate")+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
+        plot.title.position="plot")+
+  labs(title="Case Fatality Rates for COVID have fallen in all age groups in 2021",
+       subtitle="Change in age-specific Case Fatality Rates based on deaths within 28 days of a positive test since 1st January",
        caption="CFRs calculated by Daniel Howdon\nPlot by @VictimOfMaths")
 dev.off()
 
