@@ -25,10 +25,10 @@ casedata <- casedata %>%
   #Take the most recent 2 weeks of data
   group_by(areaName) %>% 
   arrange(date) %>% 
-  slice_tail(n=7) %>% 
+  slice_tail(n=8) %>% 
   ungroup() %>% 
   spread(date, newCasesBySpecimenDateRollingRate) %>% 
-  select(c(1,2,4,10))
+  select(c(1,2,4,11))
 
 colnames(casedata) <- c("Lacode", "areaName", "prev", "latest")
 
@@ -51,7 +51,7 @@ Group_labels <- st_read(ltla, layer="1 Group labels") %>%
   mutate(just=if_else(LabelPosit=="Left", 0, 1))
 
 plot1 <- ggplot()+
-  geom_sf(data=Background, aes(geometry=geom))+
+  geom_sf(data=Background, aes(geometry=geom), fill="White")+
   geom_sf(data=ltlacases, aes(geometry=geom, fill=latest), colour="Black", size=0.1)+
   geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
@@ -60,8 +60,8 @@ plot1 <- ggplot()+
                          name="Cases per\n100,000")+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="Current COVID-19 outbreaks are isolated to a small number of areas",
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 cases are still very concentrated in North West England and Central Scotland",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -74,7 +74,7 @@ plot1
 dev.off()
 
 plot2 <- ggplot()+
-  geom_sf(data=Background, aes(geometry=geom))+
+  geom_sf(data=Background, aes(geometry=geom), fill="White")+
   geom_sf(data=ltlacases, aes(geometry=geom, fill=abschange), colour="Black", size=0.1)+
   geom_sf(data=Groups, aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels, aes(geometry=geom, label=Group.labe,
@@ -84,8 +84,8 @@ plot2 <- ggplot()+
                          na.value="transparent")+
   theme_void()+
   theme(plot.title=element_markdown(face="bold", size=rel(1.5)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 case rates are falling in some areas and rising in others",
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 case rates are rising across most of the UK",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
