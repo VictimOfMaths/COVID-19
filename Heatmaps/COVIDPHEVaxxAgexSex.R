@@ -12,7 +12,7 @@ library(gganimate)
 #Download data from PHE surveillance report
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/991080/Weekly_Influenza_and_COVID19_report_data_w22.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/992616/Weekly_Influenza_and_COVID19_report_data_w23.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
@@ -37,7 +37,7 @@ data_long <- pivot_longer(data, cols=c(2:7), names_to=c("Sex", "Measure"), names
   mutate(Value=if_else(Sex=="Male", -Value, Value),
          Age=case_when(
            Age=="Under 18 years" ~ "<18",
-           Age=="18 to 24 years" ~ "20-24",
+           Age=="18 to 24 years" ~ "18-24",
            Age=="25 to 29 years" ~ "25-29",
            Age=="30 to 34 years" ~ "30-34",
            Age=="35 to 39 years" ~ "35-39",
@@ -50,7 +50,7 @@ data_long <- pivot_longer(data, cols=c(2:7), names_to=c("Sex", "Measure"), names
            Age=="70 to 74 years" ~ "70-74",
            Age=="75 to 79 years" ~ "75-79",
            TRUE ~ "80+"),
-         Age=factor(Age, levels=c("<18", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",
+         Age=factor(Age, levels=c("<18", "18-24", "25-29", "30-34", "35-39", "40-44", "45-49",
                                   "50-54", "55-59", "60-64",
                                   "65-69", "70-74", "75-79", "80+")),
          SexMeasure=paste0(Sex, Measure))
@@ -134,6 +134,18 @@ dev.off()
 
 #Animated versions
 #Read in historic data
+
+#Week 21
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/991080/Weekly_Influenza_and_COVID19_report_data_w22.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw21 <- read_excel(temp, sheet="Figure 55&56 COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw21) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
 
 #Week 20
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/989842/Weekly_Influenza_and_COVID19_report_data_W21.xlsx"
