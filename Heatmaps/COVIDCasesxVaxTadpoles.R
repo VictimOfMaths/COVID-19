@@ -67,19 +67,44 @@ ggplot()+
        caption="Data from coronavirus.data.gov.uk\nInspired by Russ Garrett (@russss)\nPlot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDCasesvsVax2LTLA.tiff", units="in", width=9, height=7, res=800)
+ggplot()+
+  geom_path(data=dashdata %>% filter(date>maxdate-days(7)), 
+            aes(x=caserate, y=Vax2nd, group=name, alpha=7-as.integer(maxdate-date)),
+            show.legend=FALSE)+
+  geom_point(data=dashdata %>% filter(date==maxdate & !is.na(Vax2nd)), 
+             aes(x=caserate, y=Vax2nd, fill=Region, size=NIMSpop), shape=21, alpha=0.7)+
+  geom_text_repel(data=dashdata %>% filter(date==maxdate), 
+                  aes(x=caserate, y=Vax2nd, label=name), size=rel(2.3),
+                  label.padding=1)+
+  scale_fill_manual(name="", values=c("#C70E7B", "#FC6882", "#007BC3", "#54BCD1", "#EF7C12",
+                                      "Black", "#F4B95A", "#009F3F", "#8FDA04", "#AF6125"))+
+  scale_size(guide=FALSE)+
+  scale_y_continuous(name="Proportion of adults who have received two doses",
+                     labels=label_percent(accuracy=1))+
+  scale_x_continuous(name="Cases per 100,000 population in the past week")+
+  theme_classic()+
+  theme(text=element_text(family="Lato"), plot.title.position="plot", plot.caption.position = "plot",
+        plot.title=element_text(face="bold", size=rel(1.5)))+
+  labs(title="Areas with high COVID case rates have fairly average vaccine coverage",
+       subtitle="Rate of new COVID-19 cases in the past week compared to 2nd dose vaccine coverage in English/Scottish Local Authorites.\nBubble size corresponds to area population. Paths represent changes in the past 7 days.",
+       caption="Data from coronavirus.data.gov.uk\nInspired by Russ Garrett (@russss)\nPlot by @VictimOfMaths")
+dev.off()
+
 #MSOA-level version (England only)
 temp <- tempfile()
-vaxurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-27-May-2021.xlsx"
+vaxurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-10-June-2021.xlsx"
 temp <- curl_download(url=vaxurl, destfile=temp, quiet=FALSE, mode="wb")
 
-msoadata <- read_excel(temp, sheet="MSOA", range="B16:Q6806", col_names=FALSE) %>% 
-  mutate(Vax1st=`...7`+`...8`+`...9`+`...10`+`...11`+`...12`+`...13`+`...14`+`...15`+`...16`) %>% 
-  select(c(2,5,6,17)) %>% 
+msoadata <- read_excel(temp, sheet="MSOA", range="B16:S6806", col_names=FALSE) %>% 
+  mutate(Vax1st=`...7`+`...8`+`...9`+`...10`+`...11`+`...12`+`...13`+`...14`+`...15`+`...16`+
+           `...17`+`...18`) %>% 
+  select(c(2,5,6,19)) %>% 
   set_names(c("Region", "code", "name", "Vax1st"))
   
 #NIMS populations
-pop <- read_excel(temp, sheet="Population estimates (NIMS)", range="S16:AF6806", col_names=FALSE) %>% 
-  select(c(1, 14)) %>% 
+pop <- read_excel(temp, sheet="Population estimates (NIMS)", range="U16:AJ6806", col_names=FALSE) %>% 
+  select(c(1, 16)) %>% 
   set_names(c("code", "pop"))
 
 #MSOA-level cases
