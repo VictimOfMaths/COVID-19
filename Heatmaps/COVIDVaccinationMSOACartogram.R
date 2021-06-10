@@ -16,10 +16,10 @@ library(cowplot)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-03-June-2021.xlsx
-maxdate <- "30th May"
+maxdate <- "6th June"
 
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-03-June-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-10-June-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AF6806", col_names=FALSE) %>% 
@@ -201,7 +201,8 @@ plottotal <- ggplot()+
   facet_wrap(~dose)+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.6)),
-        text=element_text(family="Lato"), legend.position="top")+
+        text=element_text(family="Lato"), legend.position="top",
+        strip.text=element_text(face="bold", size=rel(1)))+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Overall adult vaccination rates",
@@ -471,7 +472,7 @@ asvax <- vaxdata %>%
          asrate_2nd=(`<30_2nd`*(0.8*5500+6000+6000)+`30-34_2nd`*6500+
                      `35-39_2nd`*7000+`40-44_2nd`*7000+`45-49_2nd`*7000+`50-54_2nd`*7000+
                      `55-59_2nd`*6500+ `60-64_2nd`*6000+`65-69_2nd`*5500+`70-74_2nd`*5000+
-                     `75-79_2nd`*4000+ `80+_2nd`*5000)/82900) %>% 
+                     `75-79_2nd`*4000+ `80+_2nd`*5000)/82900)
   
 
 MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
@@ -562,7 +563,8 @@ tempdata <- MSOA2 %>%
     theme_void()+
     theme(plot.title=element_text(face="bold", size=rel(1.4)),
           text=element_text(family="Roboto"), legend.position="top",
-          plot.title.position="plot", plot.caption.position="plot")+
+          plot.title.position="plot", plot.caption.position="plot",
+          strip.text=element_text(face="bold", size=rel(1)))+
     guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                  barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
     labs(title="Vaccination rates are lowest in urban areas even after accounting\nfor the fact that they tend to have younger populations\n \n ",
