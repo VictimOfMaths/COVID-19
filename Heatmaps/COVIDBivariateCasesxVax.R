@@ -194,8 +194,10 @@ casedata.full <- merge(vaxdata, pop2) %>%
   mutate(vaxprop=vaccinated/pop) %>% 
   select(-c(vaccinated, pop)) %>% 
   spread(age, vaxprop) %>% 
-  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
-                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  mutate(asrate=(`<30`*(0.8*5500+6000+6000)+`30-34`*6500+
+                   `35-39`*7000+`40-44`*7000+`45-49`*7000+`50-54`*7000+`55-59`*6500+
+                   `60-64`*6000+`65-69`*5500+`70-74`*5000+`75-79`*4000+
+                   `80+`*5000)/82900) %>% 
   merge(casedata.full, all=TRUE) %>% 
   merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
   mutate(caserate=cases*100000/pop,
@@ -315,8 +317,10 @@ casedata3 <- merge(vaxdata, pop2) %>%
   mutate(vaxprop=vaccinated/pop) %>% 
   select(-c(vaccinated, pop)) %>% 
   spread(age, vaxprop) %>% 
-  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
-                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  mutate(asrate=(`<30`*(0.8*5500+6000+6000)+`30-34`*6500+
+                           `35-39`*7000+`40-44`*7000+`45-49`*7000+`50-54`*7000+`55-59`*6500+
+                           `60-64`*6000+`65-69`*5500+`70-74`*5000+`75-79`*4000+
+                           `80+`*5000)/82900) %>% 
   merge(casedata2, all=TRUE) %>% 
   merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
   mutate(caserate=cases/pop,
