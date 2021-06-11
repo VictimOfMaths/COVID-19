@@ -9,6 +9,7 @@ library(cowplot)
 library(ragg)
 library(paletteer)
 library(scales)
+library(readxl)
 
 #Read in MSOA-level case data from the dashboard
 caseurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=msoa&metric=newCasesBySpecimenDateRollingSum&format=csv"
@@ -25,40 +26,32 @@ casedata <- read.csv(cases) %>%
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
 vax <- tempfile()
-vaxurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/05/COVID-19-weekly-announced-vaccinations-06-May-2021.xlsx"
+vaxurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-10-June-2021.xlsx"
 vax <- curl_download(url=vaxurl, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:P6806", col_names=FALSE) %>% 
-  rename(msoa11cd=`...1`, msoa11nm=`...2`, `<45`=`...3`,  `45-49`=`...4`, `50-54`=`...5`, 
-         `55-59`=`...6`, `60-64`=`...7`, 
-         `65-69`=`...8`, `70-74`=`...9`, `75-79`=`...10`, `80+`=`...11`) %>% 
-  gather(age, vaccinated, c(3:11))
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:S6806", col_names=FALSE) %>% 
+  set_names(c("msoa11cd", "msoa11nm", "<30", "30-34", "35-39", "40-44", "45-49", "50-54",
+              "55-59", "60-64", "65-69", "70-74", "75-79", "80+")) %>% 
+  gather(age, vaccinated, c(3:14))
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="R16:AC6806", col_names=FALSE) %>% 
-  select(-c(2)) %>% 
-  rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:11)) %>% 
-  mutate(age=case_when(
-    age %in% c("...3", "...4") ~ "<45",
-    age=="...5" ~ "45-49",
-    age=="...6" ~ "50-54",
-    age=="...7" ~ "55-59",
-    age=="...8" ~ "60-64",
-    age=="...9" ~ "65-69",
-    age=="...10" ~ "70-74",
-    age=="...11" ~ "75-79",
-    TRUE ~ "80+")) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="U16:AI6806", col_names=FALSE) %>% 
+  select(-c(2,3)) %>% 
+  set_names(c("msoa11cd", "<30",  "30-34", "35-39", "40-44", "45-49", "50-54",
+              "55-59", "60-64", "65-69", "70-74", "75-79", "80+")) %>% 
+gather(age, pop, c(2:13)) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
   ungroup()
 
-#COMBINE and calcualte age-standardised vax rates
+#COMBINE and calculate age-standardised vax rates
 combineddata <- merge(vaxdata, pop2) %>% 
   mutate(vaxprop=vaccinated/pop) %>% 
   select(-c(vaccinated, pop)) %>% 
   spread(age, vaxprop) %>% 
-  mutate(asrate=(`<45`*38000+`45-49`*7000+`50-54`*7000+`55-59`*6500+`60-64`*6000+`65-69`*5500+`70-74`*5000+
-                   `75-79`*4000+`80+`*5000)/84000) %>% 
+  mutate(asrate=((`<30`*(0.8*5500+6000+6000)+`30-34`*6500+
+                    `35-39`*7000+`40-44`*7000+`45-49`*7000+`50-54`*7000+`55-59`*6500+
+                    `60-64`*6000+`65-69`*5500+`70-74`*5000+`75-79`*4000+
+                    `80+`*5000)/82900)) %>% 
   merge(casedata, all=TRUE) %>% 
   merge(pop2 %>% group_by(msoa11cd) %>% summarise(pop=sum(pop)) %>%  ungroup()) %>% 
   mutate(caserate=cases*100000/pop)
@@ -170,17 +163,18 @@ plot <- ggplot()+
   geom_curve(aes(x=53, y=14, xend=47.8, yend=14.5), curvature=0.15)+
   annotate("text", x=15, y=10, label="Fewer cases,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=16, y=9, xend=20, yend=5), curvature=0.2)+
+  geom_curve(aes(x=16, y=9, xend=19.7, yend=5), curvature=0.2)+
   annotate("text", x=51, y=35, label="More cases,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=47.5, y=34, xend=39.9, yend=34.5), curvature=-0.2)+
+  geom_curve(aes(x=47.5, y=34, xend=43.8, yend=34.5), curvature=-0.2)+
   annotate("text", x=24, y=54, label="More cases,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=26, y=52.8, xend=31.3, yend=50.9), curvature=0.1)+
+  geom_curve(aes(x=26, y=52.8, xend=31.3, yend=50.4), curvature=0.1)+
   labs(title="Comparing COVID-19 case rates and vaccine coverage",
        subtitle="Rolling 7-day rate of new COVID cases and age-standardised rates of delivery of at least one vaccine dose.\nCase rates are censored for areas with fewer than 3 cases, which currently covers the majority of areas.\nAs a result there are considerably more areas in the lowest category of case rates.",       
        caption="Data from coronavirus.data.gov.uk and NHS England, cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
+#agg_png("Outputs/COVIDBivariateCasesVax.png", units="in", width=8, height=10, res=800)
 agg_tiff("Outputs/COVIDBivariateCasesVax.tiff", units="in", width=8, height=10, res=800)
 ggdraw()+
   draw_plot(plot, 0,0,1,1)+
@@ -385,10 +379,10 @@ plot.full <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.6)),
         text=element_text(family="Lato"), plot.title.position = "panel")+
-  annotate("text", x=55.5, y=14, label="Fewer cases,\nfewer vaccinations", size=3,
+  annotate("text", x=55.5, y=14, label="More cases,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
   geom_curve(aes(x=53, y=14, xend=48.5, yend=14.2), curvature=0.15)+
-  annotate("text", x=15, y=10, label="More cases,\nfewer vaccinations", size=3,
+  annotate("text", x=15, y=10, label="Fewer cases,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
   geom_curve(aes(x=16, y=9, xend=19.9, yend=4.4), curvature=0.2)+
   annotate("text", x=52, y=33, label="Fewer cases,\nmore vaccinations", size=3,
