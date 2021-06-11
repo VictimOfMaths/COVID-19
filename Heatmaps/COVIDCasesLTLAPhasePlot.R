@@ -6,6 +6,7 @@ library(paletteer)
 library(sf)
 library(ragg)
 library(ggtext)
+library(readxl)
 library(scales)
 library(extrafont)
 library(ggrepel)
@@ -114,13 +115,15 @@ plot <- ggplot()+
   theme_classic()+
   theme(axis.line=element_blank(), text=element_text(family="Lato"),
         legend.position = "top", plot.title.position="plot",
-        plot.title=element_text(face="bold", size=rel(1.6)))+
-  labs(title="Rossendale: 😟, Blackburn & Glasgow: 🤷,\nBolton, Bedford & Clackmannanshire: 👍",
+        plot.title=element_text(face="bold", size=rel(1.6)),
+        legend.text = element_text(face="bold", size=rel(1)))+
+  guides(fill=guide_legend(override.aes=list(size=3)))+
+  labs(title="Recent COVID case trends in England & Scotland don't look promising",
        subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=8, height=7, res=800)
+agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=9, height=7, res=800)
 plot
 dev.off()
 
@@ -146,4 +149,4 @@ anim <- ggplot(plotdata %>% filter(date>=as.Date("2021-04-19")),
 
 animate(anim, units="in", width=8, height=8*4/5, res=500, 
         renderer=gifski_renderer("Outputs/COVIDCasesPhasePlotAnim.gif"), 
-        device="ragg_png", end_pause=5, duration=10, fps=8)
+        device="ragg_png", end_pause=5, duration=10, fps=10)
