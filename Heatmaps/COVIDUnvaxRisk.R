@@ -27,10 +27,11 @@ vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AF6806", col_names=FALSE) %>
   select(-blank) %>% 
   pivot_longer(c(3:26), names_to=c("age", "dose"), names_sep="_", values_to="vaccinated")
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="U16:AI6806", col_names=FALSE) %>% 
+#Read in NIMS populations
+pop <- read_excel(vax, sheet="Population estimates (NIMS)", range="U16:AI6806", col_names=FALSE) %>% 
   select(-c(2,3)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:13)) %>% 
+  gather(age, pop.NIMS, c(2:13)) %>% 
   mutate(age=case_when(
     age=="...4" ~ "<30", 
     age=="...5" ~ "30-34",
@@ -45,12 +46,37 @@ pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="U16:AI6806",
     age=="...14" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
-  summarise(pop=sum(pop)) %>% 
+  summarise(pop.NIMS=sum(pop.NIMS)) %>% 
   ungroup()
 
+#Read in ONS populations
+pop2 <- read_excel(vax, sheet="Population estimates (ONS)", range="BW16:CK6806", col_names=FALSE) %>% 
+  select(-c(2,3)) %>% 
+  rename(msoa11cd=`...1`) %>% 
+  gather(age, pop.ONS, c(2:13)) %>% 
+  mutate(age=case_when(
+    age=="...4" ~ "<30", 
+    age=="...5" ~ "30-34",
+    age=="...6" ~ "35-39",
+    age=="...7" ~ "40-44",
+    age=="...8" ~ "45-49",
+    age=="...9" ~ "50-54",
+    age=="...10" ~ "55-59",
+    age=="...11" ~ "60-64",
+    age=="...12" ~ "65-69",
+    age=="...13" ~ "70-74",
+    age=="...14" ~ "75-79",
+    TRUE ~ "80+")) %>% 
+  group_by(msoa11cd, age) %>% 
+  summarise(pop.ONS=sum(pop.ONS)) %>% 
+  ungroup()
+
+
 #COMBINE
-vaxdata <- merge(vaxdata, pop2) %>% 
-  mutate(vaxprop=vaccinated/pop)
+vaxdata <- merge(vaxdata, pop) %>%
+  merge(pop2)
+  mutate(vaxprop.NIMS=vaccinated/pop.NIMS,
+         vaxprop.ONS=vaccinated/pop.ONS)
 
 #Bring in CFRs estimated by Dan Howdon
 CFRdata <- read_csv_arrow("Data/cfrs_2021_06_07.csv") %>% 
@@ -123,11 +149,17 @@ CFRs <- CFRs %>%
   ungroup()
 
 data <- merge(vaxdata, CFRs) %>% 
-  mutate(ex_deaths=(pop-vaccinated)*CFR/100) %>% 
+  rowwise() %>% 
+  mutate(ex_deaths.NIMS=max((pop.NIMS-vaccinated),0)*CFR/100,
+         ex_deaths.ONS=max((pop.ONS-vaccinated),0)*CFR/100) %>% 
   group_by(msoa11nm, msoa11cd, dose) %>% 
-  summarise(ex_deaths=sum(ex_deaths), unvax=sum(pop-vaccinated), pop=sum(pop)) %>% 
+  summarise(ex_deaths.NIMS=sum(ex_deaths.NIMS), ex_deaths.ONS=sum(ex_deaths.ONS),
+            unvax.NIMS=sum(pop.NIMS-vaccinated), pop.NIMS=sum(pop.NIMS),
+            unvax.ONS=sum(max(pop.ONS-vaccinated),0),
+            pop.ONS=sum(pop.ONS)) %>% 
   ungroup() %>% 
-  mutate(ex_deathrate=ex_deaths*100000/pop)
+  mutate(ex_deathrate.NIMS=ex_deaths.NIMS*100000/pop.NIMS,
+         ex_deathrate.ONS=ex_deaths.ONS*100000/pop.ONS)
 
 #Download Carl Baker's lovely cartogram
 msoa <- tempfile()
@@ -146,10 +178,10 @@ Group_labelsMSOA <- st_read(msoa, layer="1 Group labels") %>%
 
 LAsMSOA <- st_read(msoa, layer="3 Local authority outlines (2019)")
 
-Unvaxrisk <- ggplot()+
+Unvaxrisk.NIMS <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom), fill="White")+
   geom_sf(data=MSOA %>% filter(dose=="1st"), 
-          aes(geometry=geom, fill=ex_deathrate), colour=NA)+
+          aes(geometry=geom, fill=ex_deathrate.NIMS), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
   geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
@@ -168,10 +200,38 @@ Unvaxrisk <- ggplot()+
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="London has the highest risk through non-vaccination",
        subtitle=paste0("Expected maximum rate of COVID mortality if every unvaccinated person contracted COVID.\nUsing recent Case Fatality Rates and ignoring immunity acquired through prior infection,\nand assuming that a single dose of vaccine is 100% effective.\nData up to ", maxdate, "\n "),       
-       caption="Data from NHS England, CFRs from Dan Howdon, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Vaccine data from NHS England, Populations from NIMS\nCFRs from Dan Howdon, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRisk.tiff", units="in", width=8, height=9, res=800)
-Unvaxrisk
+agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRiskNIMS.tiff", units="in", width=8, height=9, res=800)
+Unvaxrisk.NIMS
+dev.off()
+
+Unvaxrisk.ONS <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom), fill="White")+
+  geom_sf(data=MSOA %>% filter(dose=="1st"), 
+          aes(geometry=geom, fill=ex_deathrate.ONS), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.amp", 
+                         name="Expected deaths per 100,000 adults",
+                         limits=c(0,500))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), legend.position="top",
+        plot.title.position="plot", plot.caption.position="plot")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="London has the highest risk through non-vaccination",
+       subtitle=paste0("Expected maximum rate of COVID mortality if every unvaccinated person contracted COVID.\nUsing recent Case Fatality Rates and ignoring immunity acquired through prior infection,\nand assuming that a single dose of vaccine is 100% effective.\nData up to ", maxdate, "\n "),       
+       caption="Vaccine data from NHS England, Populations from ONS\nCFRs from Dan Howdon, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRiskONS.tiff", units="in", width=8, height=9, res=800)
+Unvaxrisk.ONS
 dev.off()
 
 #Incorporate estimates of vaccine effectiveness from James Ward (@JamesWard73)
@@ -181,19 +241,29 @@ VE2nd=0.96
 
 #Protection of 1st dose vs. death
 data1 <-  merge(vaxdata, CFRs) %>% 
-  pivot_wider(id_cols=c("age", "msoa11cd", "msoa11nm", "pop", "CFR"), 
+  pivot_wider(id_cols=c("age", "msoa11cd", "msoa11nm", "pop.NIMS", "pop.ONS",
+                        "CFR"), 
               names_from=dose,
               values_from=vaccinated) %>% 
-  mutate(ex_deaths=#unvaccinated risk
-           (pop-`1st`)*CFR/100+
+  rowwise() %>% 
+  mutate(ex_deaths.NIMS=#unvaccinated risk
+           (pop.NIMS-`1st`)*CFR/100+
+           #1st dose onlyrisk
+           (`1st`-`2nd`)*(1-VE1st)*CFR/100+
+           #2nd dose risk
+           `2nd`*(1-VE2nd)*CFR/100,
+         ex_deaths.ONS=#unvaccinated risk
+           max((pop.ONS-`1st`),0)*CFR/100+
            #1st dose onlyrisk
            (`1st`-`2nd`)*(1-VE1st)*CFR/100+
            #2nd dose risk
            `2nd`*(1-VE2nd)*CFR/100) %>% 
   group_by(msoa11nm, msoa11cd) %>% 
-  summarise(ex_deaths=sum(ex_deaths),pop=sum(pop)) %>% 
+  summarise(ex_deaths.NIMS=sum(ex_deaths.NIMS),pop.NIMS=sum(pop.NIMS),
+            ex_deaths.ONS=sum(ex_deaths.ONS),pop.ONS=sum(pop.ONS)) %>% 
   ungroup() %>% 
-  mutate(ex_deathrate=ex_deaths*100000/pop) %>% 
+  mutate(ex_deathrate.NIMS=ex_deaths.NIMS*100000/pop.NIMS,
+         ex_deathrate.ONS=ex_deaths.ONS*100000/pop.ONS) %>% 
   #Remove MSOAs close to the Welsh border with questionable vaccination rates
   filter(!msoa11nm %in% c("Wigmore, Orleton & Brimfield",
                           "Clun & Bucknell",
@@ -210,10 +280,10 @@ data1 <-  merge(vaxdata, CFRs) %>%
 MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
   left_join(data1, by="msoa11cd")
 
-Unvaxrisk2 <- ggplot()+
+Unvaxrisk2.NIMS <- ggplot()+
   geom_sf(data=BackgroundMSOA, aes(geometry=geom), fill="White")+
   geom_sf(data=MSOA2 %>% filter(RegionNation!="Wales"), 
-          aes(geometry=geom, fill=ex_deathrate), colour=NA)+
+          aes(geometry=geom, fill=ex_deathrate.NIMS), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom), fill=NA, colour="White", size=0.1)+
   geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
@@ -222,7 +292,7 @@ Unvaxrisk2 <- ggplot()+
                aes(geometry=geom, label=Group.labe,
                    hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.amp", 
-                         name="Expected deaths per 100,000 adults")+
+                         name="Expected deaths per 100,000 adults", limits=c(0,800))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.6)),
         text=element_text(family="Lato"), legend.position="top",
@@ -231,10 +301,37 @@ Unvaxrisk2 <- ggplot()+
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="London has the highest risk through non-vaccination",
        subtitle=paste0("Expected maximum rate of COVID mortality if every unvaccinated person contracted COVID.\nUsing recent age-specific Case Fatality Rates estimated by Dan Howdon and vaccine\neffectiveness estimates calculated by James Ward. This map ignore immunity acquired\nthrough prior infection. A small number of areas on the Welsh border have been censored\ndue to questionable vaccination data\nData up to ", maxdate, "\n "),       
-       caption="Data from NHS England, CFRs from Dan Howdon and vaccine effectiveness estimates from James Ward\nCartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from NHS England, Populations from NIMS,\nCFRs from Dan Howdon and vaccine effectiveness estimates from James Ward\nCartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRisk2.tiff", units="in", width=7.5, height=9, res=800)
-Unvaxrisk2
+agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRisk2NIMS.tiff", units="in", width=7.5, height=9, res=800)
+Unvaxrisk2.NIMS
+dev.off()
+
+Unvaxrisk2.ONS <- ggplot()+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom), fill="White")+
+  geom_sf(data=MSOA2 %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom, fill=ex_deathrate.ONS), colour=NA)+
+  geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="White", size=0.1)+
+  geom_sf(data=GroupsMSOA %>% filter(RegionNation!="Wales"), 
+          aes(geometry=geom), fill=NA, colour="Black")+
+  geom_sf_text(data=Group_labelsMSOA %>% filter(RegionNation!="Wales"), 
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
+  scale_fill_paletteer_c("pals::ocean.amp", 
+                         name="Expected deaths per 100,000 adults", limits=c(0,800))+
+  theme_void()+
+  theme(plot.title=element_text(face="bold", size=rel(1.6)),
+        text=element_text(family="Lato"), legend.position="top",
+        plot.title.position="plot", plot.caption.position="plot")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="London has the highest risk through non-vaccination",
+       subtitle=paste0("Expected maximum rate of COVID mortality if every unvaccinated person contracted COVID.\nUsing recent age-specific Case Fatality Rates estimated by Dan Howdon and vaccine\neffectiveness estimates calculated by James Ward. This map ignore immunity acquired\nthrough prior infection. A small number of areas on the Welsh border have been censored\ndue to questionable vaccination data\nData up to ", maxdate, "\n "),       
+       caption="Data from NHS England, Populations from ONS,\nCFRs from Dan Howdon and vaccine effectiveness estimates from James Ward\nCartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDVaxMSOACartogramUnVaxRisk2ONS.tiff", units="in", width=7.5, height=9, res=800)
+Unvaxrisk2.ONS
 dev.off()
 
 #Bivariate map of risk vs. case rates
@@ -258,7 +355,7 @@ casedata2 <- casedata %>%
   filter(!is.na(caserate)) %>% 
   mutate(casetert=quantcut(caserate, q=2, labels=FALSE)+1) %>% 
   bind_rows(temp) %>% 
-  mutate(risktert=quantcut(ex_deathrate, q=3, labels=FALSE),
+  mutate(risktert=quantcut(ex_deathrate.NIMS, q=3, labels=FALSE),
          key=case_when(
            casetert==1 & risktert==3 ~ 1,
            casetert==1 & risktert==2 ~ 2,
