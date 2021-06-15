@@ -132,13 +132,18 @@ data <- data %>%
          caserateroll=roll_mean(caserate, n=7, align="center", fill=NA)) %>% 
   ungroup()
 
+
+data1 <- data %>% filter(areaType %in% c("ltla", "nation", "region")) 
+data2 <- data %>% filter(areaType %in% c("ltla", "nation", "region") & 
+                           date>=as.Date("2021-01-01")) 
+data3 <- shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) 
+
 #Save files for the app to use
-data %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
-  write.csv("COVID_Cases_By_Age/data.csv")
-data %>% filter(areaType %in% c("ltla", "nation", "region") & date>=as.Date("2021-01-01")) %>% 
-  write.csv("COVID_Case_Trends_By_Age/data.csv")
-shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
-  write.csv("COVID_Cases_By_Age/shortdata.csv")
+save(data1, data2, data3, file="COVID_Cases_By_Age/Alldata.RData")
+
+data1 %>% write.csv("COVID_Cases_By_Age/data.csv")
+data2 %>% write.csv("COVID_Case_Trends_By_Age/data.csv")
+data3 %>% write.csv("COVID_Cases_By_Age/shortdata.csv")
 
 plotfrom <- as.Date("2021-04-01")
 
@@ -259,7 +264,7 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
-tiff("Outputs/COVIDCasesxAgeReg.tiff", units="in", width=9, height=11, res=500)
+tiff("Outputs/COVIDCasesxAgeReg.tiff", units="in", width=10, height=11, res=800)
 data %>% 
   filter(areaType=="region" & !is.na(caserateroll) & date>=plotfrom) %>% 
   ggplot()+
@@ -269,9 +274,9 @@ data %>%
   scale_y_discrete(name="Age")+
   facet_geo(~areaName, grid=mygrid)+
   theme_classic()+
-  theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
-        strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Cases are still falling across ENgland",
+  theme(plot.title=element_text(face="bold", size=rel(1.6)), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)), text=element_text(family="Late"))+
+  labs(title="Cases are still confined to younger age groups",
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases per 100,000 by age group",
        caption="Data from Public Health England | Plot by @VictimOfMaths")
 dev.off()
