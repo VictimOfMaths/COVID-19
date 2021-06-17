@@ -20,7 +20,7 @@ theme_custom <- function() {
 #Read in CFR data provided by Dan Howdon
 #These estimates are not mine to share, sorry, contact Dan for more info.
 #https://medicinehealth.leeds.ac.uk/medicine/staff/447/dr-dan-howdon
-CFRdata <- read.csv("Data/cfrs_2021_06_07.csv") %>% 
+CFRdata <- read.csv("Data/cfrs_2021_06_16.csv") %>% 
   mutate(age=case_when(
     agegroup==0 ~ "0-4", agegroup==5 ~ "5-9", agegroup==10 ~ "10-14", agegroup==15 ~ "15-19",
     agegroup==20 ~ "20-24", agegroup==25 ~ "25-29", agegroup==30 ~ "30-34", 
@@ -64,7 +64,7 @@ data <- merge(CFRdata , CFRdata %>%
          daysto2nd=as.integer(as.Date(vaxstart2)-as.Date(vaxstart1)))
   
 agg_tiff("Outputs/COVIDCFRChangesLagged.tiff", units="in", width=10, height=7, res=800)
-ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>vaxstart1), 
+ggplot(data %>% filter(!age %in% c("20-24", "25-29", "30-34") & date>vaxstart1), 
        aes(x=dayssince, y=indexed, colour=age))+
   geom_line(show.legend=FALSE)+
   geom_hline(yintercept=1, colour="Grey70", linetype=2)+
@@ -79,10 +79,11 @@ ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>vaxstart1),
   labs(title="Across all age groups, Case Fatality Rates have fallen as vaccine coverage increases",
        subtitle="Changes in age-specific Case Fatality Rates (the % of people with a positive test who die within 28 days) after the date when at least\n1 in 5 of the age group had received at least one vaccine dose",
        caption="CFRs estimated by Daniel Howdon\nVaccination data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDCFRChangesLagged2.tiff", units="in", width=10, height=7, res=800)
-ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>vaxstart1), aes(x=date, y=indexed, colour=age))+
+ggplot(data %>% filter(!age %in% c("20-24", "25-29", "30-34") & date>vaxstart1), aes(x=date, y=indexed, colour=age))+
   geom_line(show.legend=FALSE)+
   geom_hline(yintercept=1, colour="Grey70", linetype=2)+
   #geom_vline(xintercept=as.Date("2021-05-15"))+
@@ -96,10 +97,11 @@ ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>vaxstart1), aes(x=da
   labs(title="Across all age groups, Case Fatality Rates have fallen as vaccine coverage increases",
        subtitle="Changes in age-specific Case Fatality Rates (the % of people with a positive test who die within 28 days) after the date when at least\n1 in 5 of the age group had received at least one vaccine dose",
        caption="CFRs estimated by Daniel Howdon\nVaccination data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+
 dev.off()
   
 agg_tiff("Outputs/COVIDCFRChangesLagged3.tiff", units="in", width=10, height=7, res=800)
-ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>as.Date(vaxstart1)-days(50)), 
+ggplot(data %>% filter(!age %in% c("20-24", "25-29", "30-34") & date>as.Date(vaxstart1)-days(50)), 
        aes(x=dayssince, y=indexed, colour=age))+
   geom_line(show.legend=FALSE)+
   geom_hline(yintercept=1, colour="Grey70", linetype=2)+
@@ -115,4 +117,5 @@ ggplot(data %>% filter(!age %in% c("25-29", "30-34") & date>as.Date(vaxstart1)-d
   labs(title="Across all age groups, Case Fatality Rates have fallen as vaccine coverage increases",
        subtitle="Changes in age-specific Case Fatality Rates (the % of people with a positive test who die within 28 days) after the date when at least\n1 in 5 of the age group had received at least one vaccine dose",
        caption="CFRs estimated by Daniel Howdon\nVaccination data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+
 dev.off()
