@@ -140,6 +140,7 @@ data3 <- shortdata %>% filter(areaType %in% c("ltla", "nation", "region"))
 
 #Save files for the app to use
 save(data1, data2, data3, file="COVID_Cases_By_Age/Alldata.RData")
+save(data1, data2, data3, file="COVID_Case_Trends_By_Age/Alldata.RData")
 
 data1 %>% write.csv("COVID_Cases_By_Age/data.csv")
 data2 %>% write.csv("COVID_Case_Trends_By_Age/data.csv")
@@ -383,4 +384,40 @@ shortdata %>%
   labs(title="COVID-19 case rates continue to fall across England in all age groups",
        subtitle="Rolling 7-day average of confirmed new cases by age",
        caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=6, res=800)
+data %>% 
+  filter(areaType=="nation" & !is.na(caserateroll)) %>%
+  ggplot()+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000")+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The age profile of current COVID cases is very different to\nprevious waves",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in Bolton by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgeEngRecent.tiff", units="in", width=8, height=6, res=800)
+data %>% 
+  filter(areaType=="nation" & !is.na(caserateroll) & date>as.Date("2021-04-01")) %>%
+  ggplot()+
+  geom_tile(aes(x=date, y=age, fill=caserateroll*7))+
+  scale_fill_paletteer_c("viridis::inferno", name="Weekly cases per 100,000")+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)), text=element_text(family="Lato"),
+        legend.position="top")+
+  guides(fill=guide_colourbar(ticks=FALSE, title.position = "top", title.hjust = 0.5,
+                              barwidth=unit(10, "lines"), barheight=unit(0.5, "lines")))+
+  labs(title="The age profile of current COVID cases is very different to\nprevious waves",
+       subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in England by age group",
+       caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
 dev.off()
