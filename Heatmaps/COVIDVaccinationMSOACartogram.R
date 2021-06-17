@@ -15,21 +15,21 @@ library(ggrepel)
 library(cowplot)
 
 #Download vaccination data by MSOA
-#https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-03-June-2021.xlsx
-maxdate <- "6th June"
+#https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
+maxdate <- "13th June"
 
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-10-June-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-17-June-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AF6806", col_names=FALSE) %>% 
-  set_names("msoa11cd", "msoa11nm", "<30_1st", "30-34_1st", "35-39_1st", "40-44_1st", 
+vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AH6806", col_names=FALSE) %>% 
+  set_names("msoa11cd", "msoa11nm", "<25_1st", "25-29_1st", "30-34_1st", "35-39_1st", "40-44_1st", 
             "45-49_1st", "50-54_1st", "55-59_1st", "60-64_1st", "65-69_1st", "70-74_1st", 
-            "75-79_1st", "80+_1st", "blank", "<30_2nd", "30-34_2nd", "35-39_2nd", "40-44_2nd", 
+            "75-79_1st", "80+_1st", "blank", "<25_2nd", "25-29_2nd", "30-34_2nd", "35-39_2nd", "40-44_2nd", 
             "45-49_2nd", "50-54_2nd", "55-59_2nd", "60-64_2nd", "65-69_2nd", "70-74_2nd", 
             "75-79_2nd", "80+_2nd") %>% 
   select(-blank) %>% 
-  pivot_longer(c(3:26), names_to=c("age", "dose"), names_sep="_", values_to="vaccinated")
+  pivot_longer(c(3:28), names_to=c("age", "dose"), names_sep="_", values_to="vaccinated")
     
 #Download IMD data
 temp <- tempfile()
@@ -71,22 +71,23 @@ IMD_MSOA <- IMD %>%
   summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
   ungroup() 
 
-pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="U16:AI6806", col_names=FALSE) %>% 
+pop2 <- read_excel(vax, sheet="Population estimates (NIMS)", range="V16:AK6806", col_names=FALSE) %>% 
   select(-c(2,3)) %>% 
   rename(msoa11cd=`...1`) %>% 
-  gather(age, pop, c(2:13)) %>% 
+  gather(age, pop, c(2:14)) %>% 
   mutate(age=case_when(
-    age=="...4" ~ "<30", 
-    age=="...5" ~ "30-34",
-    age=="...6" ~ "35-39",
-    age=="...7" ~ "40-44",
-    age=="...8" ~ "45-49",
-    age=="...9" ~ "50-54",
-    age=="...10" ~ "55-59",
-    age=="...11" ~ "60-64",
-    age=="...12" ~ "65-69",
-    age=="...13" ~ "70-74",
-    age=="...14" ~ "75-79",
+    age=="...4" ~ "<25",
+    age=="...5" ~ "25-29", 
+    age=="...6" ~ "30-34",
+    age=="...7" ~ "35-39",
+    age=="...8" ~ "40-44",
+    age=="...9" ~ "45-49",
+    age=="...10" ~ "50-54",
+    age=="...11" ~ "55-59",
+    age=="...12" ~ "60-64",
+    age=="...13" ~ "65-69",
+    age=="...14" ~ "70-74",
+    age=="...15" ~ "75-79",
     TRUE ~ "80+")) %>% 
   group_by(msoa11cd, age) %>% 
   summarise(pop=sum(pop)) %>% 
@@ -138,7 +139,8 @@ plottotal1 <- ggplot()+
                          labels=label_percent(accuracy=1))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.6)),
-        text=element_text(family="Lato"), legend.position="top")+
+        text=element_text(family="Lato"), legend.position="top",
+        plot.title.position="plot")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Overall adult 1st dose vaccination rates",
@@ -206,7 +208,7 @@ plottotal <- ggplot()+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Overall adult vaccination rates",
-       subtitle=paste0("People vaccinated with one or two doses in England by Middle Super Output Area.\nData up to ", maxdate, "\n "),       
+       subtitle=paste0("Over 16 year-olds vaccinated with one or two doses in England by Middle Super Output Area.\nData up to ", maxdate, "\n "),       
        caption="Data from NHS England, populations from NIMS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDVaxMSOACartogram.tiff", units="in", width=10, height=8, res=800)
@@ -465,11 +467,11 @@ asvax <- vaxdata %>%
   filter(age!="Total") %>% 
   select(-c(vaccinated, pop)) %>% 
   pivot_wider(names_from=c("age", "dose"), names_sep="_", values_from=vaxprop) %>% 
-  mutate(asrate_1st=(`<30_1st`*(0.8*5500+6000+6000)+`30-34_1st`*6500+
+  mutate(asrate_1st=(`<25_1st`*(0.8*5500+6000)+`25-29_1st`*(6000+6000)+`30-34_1st`*6500+
          `35-39_1st`*7000+`40-44_1st`*7000+`45-49_1st`*7000+`50-54_1st`*7000+`55-59_1st`*6500+
          `60-64_1st`*6000+`65-69_1st`*5500+`70-74_1st`*5000+`75-79_1st`*4000+
          `80+_1st`*5000)/82900,
-         asrate_2nd=(`<30_2nd`*(0.8*5500+6000+6000)+`30-34_2nd`*6500+
+         asrate_2nd=(`<25_2nd`*(0.8*5500+6000)+`25-29_2nd`*(6000+6000)+`30-34_2nd`*6500+
                      `35-39_2nd`*7000+`40-44_2nd`*7000+`45-49_2nd`*7000+`50-54_2nd`*7000+
                      `55-59_2nd`*6500+ `60-64_2nd`*6000+`65-69_2nd`*5500+`70-74_2nd`*5000+
                      `75-79_2nd`*4000+ `80+_2nd`*5000)/82900)
@@ -645,3 +647,24 @@ ggdraw()+
   draw_plot(BVmap, 0,0,1,1)+
   draw_plot(key, 0.66,0.66,0.30,0.30)
 dev.off()
+
+
+#Create tidy dataset
+Yorksdata <- asvax %>% 
+  select(msoa11cd, msoa11nm, IMDrank, asrate_1st, asrate_2nd) %>% 
+  merge(vaxdata %>% filter(age=="Total") %>% 
+          select(msoa11cd, dose, vaxprop) %>% 
+          spread(dose, vaxprop)) %>% 
+  mutate(natdecile=quantcut(-IMDrank, 10, labels=FALSE)) 
+
+MSOA2 <- st_read(msoa, layer="4 MSOA hex") %>% 
+  left_join(Yorksdata, by="msoa11cd")
+
+Yorksdata <- MSOA2 %>% 
+  filter(RegionNation=="Yorkshire and The Humber") %>% 
+  as.data.frame() %>% 
+  select(msoa11cd, msoa11nm.y, Laname, `1st`, `2nd`, asrate_1st, asrate_2nd, 
+         natdecile, IMDrank) %>% 
+  mutate(Yorksdecile=quantcut(-IMDrank, 10, labels=FALSE))
+
+write.csv(Yorksdata, "Data/YorkshireVaxData.csv")
