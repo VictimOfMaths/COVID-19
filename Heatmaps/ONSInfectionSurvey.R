@@ -38,7 +38,7 @@ ggplot(data, aes(x=date, y=age, fill=prevalence))+
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("viridis::inferno", name="Prevalence", labels=scales::label_percent(),
                          limits=c(0,NA))+
-  labs(title="The ONS infection survey shows a sharp rise in cases in 25-34 year olds",
+  labs(title="The ONS infection survey shows a sharp rise in COVID prevalence in 25-34 year olds",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
@@ -50,9 +50,9 @@ agg_tiff("Outputs/ONSInfSurveyxAgeLine.tiff", units="in", width=11, height=4, re
 ggplot(data, aes(x=date, y=prevalence, colour=age))+
   geom_line()+
   scale_x_date(name="")+
-  scale_y_continuous(name="", label=label_percent(accuracy=2), limits=c(0,NA))+
+  scale_y_continuous(name="", label=label_percent(accuracy=0.1), limits=c(0,NA))+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
-  labs(title="The ONS infection survey shows a sharp rise in cases in 25-34 year olds",
+  labs(title="The ONS infection survey shows a sharp rise in COVID prevalence in 25-34 year olds",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
