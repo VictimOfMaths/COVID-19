@@ -11,9 +11,9 @@ library(extrafont)
 #Read in data
 temp <- tempfile()
 #source <- "https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata"
-source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/covid19infectionsurveydatasets20210423eng.xlsx"
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/covid19infectionsurveydatasets20210618england1.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
-rawdata <- read_excel(temp, sheet="1h", range="A8:V49", col_names=FALSE)
+rawdata <- read_excel(temp, sheet="1h", range="A7:V48", col_names=FALSE)
 
 data <- rawdata %>% 
   select(c(1,2,5,8,11,14,17,20)) %>% 
@@ -38,11 +38,12 @@ ggplot(data, aes(x=date, y=age, fill=prevalence))+
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("viridis::inferno", name="Prevalence", labels=scales::label_percent(),
                          limits=c(0,NA))+
-  labs(title="The ONS infection survey shows different patterns in recent weeks by age",
+  labs(title="The ONS infection survey shows a sharp rise in cases in 25-34 year olds",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)), text=element_text(family="Roboto"))
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), 
+        text=element_text(family="Lato"), plot.title.position="plot")
 dev.off()
 
 agg_tiff("Outputs/ONSInfSurveyxAgeLine.tiff", units="in", width=11, height=4, res=500)
@@ -51,9 +52,10 @@ ggplot(data, aes(x=date, y=prevalence, colour=age))+
   scale_x_date(name="")+
   scale_y_continuous(name="", label=label_percent(accuracy=2), limits=c(0,NA))+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
-  labs(title="The ONS infection survey shows different patterns in recent weeks by age",
+  labs(title="The ONS infection survey shows a sharp rise in cases in 25-34 year olds",
        subtitle="Age-specific COVID-19 prevalence estimates from the latest ONS Infection Survey",
        caption="Data from ONS | Plot by @VictimOfMaths")+
   theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)))
+  theme(plot.title=element_text(face="bold", size=rel(1.2)), 
+        text=element_text(family="Lato"), plot.title.position="plot")
 dev.off()
