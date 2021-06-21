@@ -31,7 +31,7 @@ rawdata <- read_csv_arrow(temp) %>%
                            "80-84", "85-89", "90+"))) 
 
 #Read in CFR data provided by Dan Howdon
-CFRdata <- read.csv("Data/cfrs_2021_06_07.csv") %>% 
+CFRdata <- read.csv("Data/cfrs_2021_06_16.csv") %>% 
   mutate(age=case_when(
     agegroup==0 ~ "0-4", agegroup==5 ~ "5-9", agegroup==10 ~ "10-14", agegroup==15 ~ "15-19",
     agegroup==20 ~ "20-24", agegroup==25 ~ "25-29", agegroup==30 ~ "30-34", 
@@ -98,6 +98,25 @@ ggplot(CFR2 %>% filter(date>=as.Date("2021-01-01") & age %in% c("55-59", "60-64"
   scale_x_date(labels=label_date(format="%b-%Y"), name="")+
   scale_y_continuous(labels=label_percent(accuracy=1), name="Change in Case Fatality Rate")+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
+        plot.title.position="plot")+
+  labs(title="Case Fatality Rates for COVID have fallen in all age groups in 2021",
+       subtitle="Change in age-specific Case Fatality Rates based on deaths within 28 days of a positive test since 1st January",
+       caption="CFRs calculated by Daniel Howdon\nPlot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCFRChanges2.tiff", units="in", width=12, height=7, res=800)
+ggplot(CFR2 %>% filter(date>=as.Date("2021-01-01") & !age %in% c("0-4", "5-9", "10-14", "15-19",
+                                                                 "20-24")), 
+       aes(x=date, y=percchance, colour=age))+
+  geom_hline(yintercept=0, colour="Grey70", linetype=2)+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(labels=label_date(format="%b"), name="")+
+  scale_y_continuous(labels=label_percent(accuracy=1), name="Change in Case Fatality Rate")+
+  #scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  facet_wrap(~age)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
@@ -293,13 +312,13 @@ ggplot()+
                      limits=c(0,max(plotdata$casesroll[plotdata$areaName==LA], 
                                     na.rm=TRUE)*1.05))+
   scale_colour_viridis_c(option="rocket", direction=-1)+
-  annotate("text", x=0.015, y=5, angle=-5, label="0.25 deaths/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.04, y=6, angle=-5, label="0.25 deaths/day", colour="SkyBlue", family="Lato",
            size=3)+
-  annotate("text", x=0.022, y=11, angle=-8, label="1 death/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.04, y=19, angle=-12, label="1 death/day", colour="SkyBlue", family="Lato",
            size=3)+
-  annotate("text", x=0.025, y=23, angle=-16, label="2.5 deaths/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.04, y=45, angle=-33, label="2.5 deaths/day", colour="SkyBlue", family="Lato",
            size=3)+
-  annotate("text", x=0.031, y=35, angle=-20, label="5 deaths/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.04, y=88, angle=-52, label="5 deaths/day", colour="SkyBlue", family="Lato",
            size=3)+
   theme_classic()+
   theme(axis.line=element_blank(), text=element_text(family="Lato"), 
@@ -310,15 +329,15 @@ ggplot()+
 
 dev.off()
 
-#newmax=max(plotdata$date[!is.na(plotdata$casesroll)])
-newmax=as.Date("2020-11-10")
-#xmax=max(plotdata$deathsroll[plotdata$date==newmax], na.rm=TRUE)*1.05
-#ymax=max(plotdata$casesroll[plotdata$date==newmax], na.rm=TRUE)*1.05
+newmax=max(plotdata$date[!is.na(plotdata$casesroll)])
+#newmax=as.Date("2020-11-10")
+xmax=max(plotdata$deathsroll[plotdata$date==newmax], na.rm=TRUE)*1.05
+ymax=max(plotdata$casesroll[plotdata$date==newmax], na.rm=TRUE)*1.05
 
 view(plotdata %>% filter(date==newmax))
 
 #ggplot(plotdata %>% filter(date==max(date)-days(3)), 
-agg_tiff("Outputs/COVIDCasevsMortPropIsoAllLTLAs1.tiff", units="in", width=8, height=7, res=800)
+agg_tiff("Outputs/COVIDCasevsMortPropIsoAllLTLAs3.tiff", units="in", width=8, height=7, res=800)
 ggplot()+
   geom_line(data=plotdata, 
             aes(x=deathsroll, y=0.25/deathsroll), colour="SkyBlue")+
@@ -353,7 +372,7 @@ ggplot()+
   theme(axis.line=element_blank(), text=element_text(family="Lato"), 
         plot.title=element_text(face="bold", size=rel(1.4)), plot.title.position = "plot",
         plot.caption.position="plot")+
-  labs(title="In November case rates were lower, but CFRs were higher in some areas",
+  labs(title="Current fatality rates are much lower than in previous waves",
        subtitle=paste0("Centered rolling 7-day average daily case rates compared to the expected proportion of cases which lead to a death\nwithin 28 days, based on age-specific Case Fatality Rates. Data from ", format(newmax,"%d-%b-%Y")),
        caption="Data from coronavirus.data.gov.uk\nCFRs estimated by Daniel Howdon\nPlot by @VictimOfMaths")
 
@@ -377,12 +396,12 @@ ggplot()+
                      labels=label_percent(accuracy=1), #trans="log")+ 
                      limits=c(0,0.03))+
   scale_y_continuous(name="Daily cases per 100,000", #trans="log")+ 
-                     limits=c(0,75))+
+                     limits=c(0,90))+
   scale_fill_paletteer_d("LaCroixColoR::paired")+
   scale_size(guide=FALSE)+
-  annotate("text", x=0.02, y=14, angle=-14, label="0.25 deaths/100,000/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.02, y=15, angle=-12, label="0.25 deaths/100,000/day", colour="SkyBlue", family="Lato",
            size=3)+
-  annotate("text", x=0.023, y=46, angle=-38, label="1 death/100,000/day", colour="SkyBlue", family="Lato",
+  annotate("text", x=0.023, y=46, angle=-32, label="1 death/100,000/day", colour="SkyBlue", family="Lato",
            size=3)+
   #annotate("text", x=0.026, y=67, angle=-44, label="2.5 deaths/day", colour="SkyBlue", family="Lato",
   #         size=3)+
