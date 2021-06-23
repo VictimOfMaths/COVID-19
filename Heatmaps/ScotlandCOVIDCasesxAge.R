@@ -154,7 +154,7 @@ dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210329.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210621.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -176,11 +176,15 @@ ggplot(subset(data.simd, date>=as.Date("2020-07-01") & date<max(data$date)),
   scale_x_date(name="")+
   scale_y_discrete(name="Deprivation quintile",
                    labels=c("1 - most deprived", "2", "3", "4", "5 - least deprived"))+
-  scale_fill_paletteer_c("viridis::magma", name="New cases")+
+  scale_fill_paletteer_c("viridis::magma", name="Daily new cases", limits=c(0,NA))+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
-        text=element_text(family="Roboto"))+
-  labs(title="The most deprived areas in Scotland have the highest rate of new COVID-19 cases",
+        text=element_text(family="Lato"), plot.title.position = "plot",
+        plot.caption.position = "plot" , legend.position = "top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                                barwidth = unit(20, 'lines'), 
+                                barheight = unit(.5, 'lines')))+
+  labs(title="COVID cases are rising across all deprivation groups in Scotland",
        subtitle="Rolling 7-day average of confirmed daily new cases in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -193,7 +197,11 @@ COVIDDeathsHeatmapScotlandxIMD <- ggplot(data.simd, aes(x=date, y=as.factor(SIMD
   scale_fill_paletteer_c("viridis::magma", name="Deaths per day")+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"), plot.title.position = "plot",
+        plot.caption.position = "plot" , legend.position = "top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), 
+                               barheight = unit(.5, 'lines')))+
   labs(title="COVID deaths in both 'waves' have come disproportionately from the most deprived areas",
        subtitle="Rolling 7-day average of confirmed daily deaths in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
