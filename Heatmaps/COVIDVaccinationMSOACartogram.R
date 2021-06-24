@@ -630,10 +630,10 @@ BVmap <-  ggplot()+
   geom_curve(aes(x=53, y=14, xend=48, yend=14.3), curvature=-0.15)+
   annotate("text", x=45, y=2, label="Lower deprivation,\nfewer vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=44, y=3.2, xend=42, yend=7.6), curvature=0.2)+
+  geom_curve(aes(x=44, y=3.2, xend=42, yend=7.55), curvature=0.2)+
   annotate("text", x=51, y=35, label="Higher deprivation,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
-  geom_curve(aes(x=49, y=34, xend=45.5, yend=31.8), curvature=-0.2)+
+  geom_curve(aes(x=49, y=34, xend=45.5, yend=31.7), curvature=-0.2)+
   annotate("text", x=19, y=43, label="Lower deprivation,\nmore vaccinations", size=3,
            fontface="bold", family="Lato")+
   geom_curve(aes(x=19.5, y=41.5, xend=22.2, yend=38.1), curvature=0.1)+
