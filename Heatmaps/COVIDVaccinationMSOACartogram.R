@@ -16,10 +16,10 @@ library(cowplot)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
-maxdate <- "13th June"
+maxdate <- "20th June"
 
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-17-June-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-weekly-announced-vaccinations-24-June-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
 vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AH6806", col_names=FALSE) %>% 
@@ -467,11 +467,11 @@ asvax <- vaxdata %>%
   filter(age!="Total") %>% 
   select(-c(vaccinated, pop)) %>% 
   pivot_wider(names_from=c("age", "dose"), names_sep="_", values_from=vaxprop) %>% 
-  mutate(asrate_1st=(`<25_1st`*(0.8*5500+6000)+`25-29_1st`*(6000+6000)+`30-34_1st`*6500+
+  mutate(asrate_1st=(`<25_1st`*(0.8*5500+6000)+`25-29_1st`*(6000)+`30-34_1st`*6500+
          `35-39_1st`*7000+`40-44_1st`*7000+`45-49_1st`*7000+`50-54_1st`*7000+`55-59_1st`*6500+
          `60-64_1st`*6000+`65-69_1st`*5500+`70-74_1st`*5000+`75-79_1st`*4000+
          `80+_1st`*5000)/82900,
-         asrate_2nd=(`<25_2nd`*(0.8*5500+6000)+`25-29_2nd`*(6000+6000)+`30-34_2nd`*6500+
+         asrate_2nd=(`<25_2nd`*(0.8*5500+6000)+`25-29_2nd`*(6000)+`30-34_2nd`*6500+
                      `35-39_2nd`*7000+`40-44_2nd`*7000+`45-49_2nd`*7000+`50-54_2nd`*7000+
                      `55-59_2nd`*6500+ `60-64_2nd`*6000+`65-69_2nd`*5500+`70-74_2nd`*5000+
                      `75-79_2nd`*4000+ `80+_2nd`*5000)/82900)
@@ -580,11 +580,11 @@ tempdata <- MSOA2 %>%
   plot12
   dev.off()
   
-#Bivariate maps of age-standardised vax rate  against deprivation
+#Bivariate maps of age-standardised 1st dose vax rate against deprivation
   BVmapdata <- MSOA2 %>% 
     filter(RegionNation!="Wales") %>% 
     mutate(IMDtert=quantcut(-IMDrank, q=3, labels=FALSE),
-           vaxtert=quantcut(asrate, q=3, labels=FALSE))
+           vaxtert=quantcut(asrate_1st, q=3, labels=FALSE))
   
   #Generate key
   keydata <- data.frame(IMDtert=c(1,2,3,1,2,3,1,2,3), 
