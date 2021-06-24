@@ -15,14 +15,14 @@ library(extrafont)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-daily-admissions-and-beds-20210621.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-daily-admissions-and-beds-20210624.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210617.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210624.xlsx"
 #Increment by one each day
-dailyrange <- "BX"
-dailyoccrange <- "BZ"
+dailyrange <- "CA"
+dailyoccrange <- "CC"
 #Increment by seven each week
-weeklyrange <- "BV"
+weeklyrange <- "CC"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
