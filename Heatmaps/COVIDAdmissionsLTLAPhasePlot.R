@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210617.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210624.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "BT"
+admrange <- "CA"
 #Set latest date of admissions data
-admdate <- as.Date("2021-06-13")
+admdate <- as.Date("2021-06-20")
 
 #Read in admissions
 #First data up to 6th April
@@ -351,7 +351,7 @@ plot3 <- ggplot()+
   scale_size(guide=FALSE)+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admissions have risen sharply in Bolton in the past week",
+  labs(title="COVID admissions have fallen in Bolton and East Lancashire",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
