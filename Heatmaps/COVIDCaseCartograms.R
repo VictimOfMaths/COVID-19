@@ -61,7 +61,7 @@ plot1 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 cases are still very concentrated in North West England and Central Scotland",
+  labs(title="COVID-19 cases are concentrated in Scotland and the North of England",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -85,7 +85,7 @@ plot2 <- ggplot()+
   theme_void()+
   theme(plot.title=element_markdown(face="bold", size=rel(1.5)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 case rates are rising across most of the UK",
+  labs(title="COVID-19 case rates are rising rapidly in Scotland",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
