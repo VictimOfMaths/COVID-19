@@ -96,7 +96,7 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B21%2BJune%2B2021.xlsx?forceDownload=true"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B28%2BJune%2B2021.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Historic ICU data (using a slightly different definition)
