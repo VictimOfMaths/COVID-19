@@ -291,7 +291,7 @@ Yorkscases <- LAcases %>%
   summarise(cases=sum(newCasesBySpecimenDateRollingSum)/7) %>% 
   ungroup()
 
-agg_png("Outputs/COVIDYorkshireAdmissionsvsOccupancy.png", units="in", width=9, height=6,
+agg_tiff("Outputs/COVIDYorkshireAdmissionsvsOccupancy.tiff", units="in", width=9, height=6,
          res=800)
 ggplot()+
   geom_col(data=Yorkscases %>% filter(date>as.Date("2020-08-01")), 
@@ -311,4 +311,40 @@ ggplot()+
   labs(title="New COVID-19 cases in Yorkshire are rising, but hospital beds have yet to follow",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<br><span style='color:#ff9f55;'> all other</span> beds in Yorkshire",
        caption="Data from NHS England and coronavirus.data.gov.uk | Plot and analysis by Colin Angus")
+dev.off()
+
+#Welsh version
+#Because Wales loves pretty, but not very friendly dashboards, I've had to manually download the data
+#My gratitude to anyone who can work out how to automate this
+#The web page is here: https://statswales.gov.wales/Catalogue/Health-and-Social-Care/NHS-Hospital-Activity/nhs-activity-and-capacity-during-the-coronavirus-pandemic/hospitalisations-by-date-patientype
+
+Walesdata <- read.csv("Data/WalesHospData.csv") %>% 
+  mutate(Date=as.Date(Date, format="%d-%b-%y"))
+
+Walesurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=W92000004&metric=newCasesBySpecimenDateRollingSum&format=csv"
+
+temp <- tempfile()
+temp <- curl_download(url=Walesurl, destfile=temp, quiet=FALSE, mode="wb")
+
+Walescases <- read.csv(temp) %>% 
+  mutate(Date=as.Date(date), cases=newCasesBySpecimenDateRollingSum/7)
+
+agg_tiff("Outputs/COVIDWalesAdmissionsvsOccupancy.tiff", units="in", width=9, height=6,
+         res=800)
+ggplot()+
+  geom_col(data=Walescases, aes(x=Date, y=cases), fill="#47d4ae")+
+  geom_col(data=Walesdata, aes(x=Date, y=-Hospitalisations), fill="#ff9f55")+ 
+  geom_hline(yintercept=0, colour="Black")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="", labels=abs, position = "right")+
+  scale_fill_manual(values=c("#ff9f55", "#ff1437"))+
+  annotate(geom="text", x=as.Date("2020-05-01"), y=800, 
+           label="New cases in the population", hjust=0, family="Lato")+
+  annotate(geom="text", x=as.Date("2020-05-01"), y=-1500, 
+           label="Total patients in hospital", hjust=0, family="Lato")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="New COVID-19 cases in Wales are rising, but hospital beds have yet to follow",
+       subtitle="Rolling 7-day average of daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and the number of <span style='color:#ff9f55;'>patients in hospital </span>with suspected<br>or confirmed COVID-19 in Wales",
+       caption="Data from StatsWales and coronavirus.data.gov.uk | Plot and analysis by @VictimOfMaths")
 dev.off()
