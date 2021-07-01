@@ -18,6 +18,15 @@ library(extrafont)
 
 options(scipen=999)
 
+theme_custom <- function() {
+  theme_classic() %+replace%
+    theme(plot.title.position="plot", plot.caption.position="plot",
+          strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+          plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
+                                  margin=margin(0,0,5.5,0)),
+          text=element_text(family="Lato"))
+}
+
 #Read in data created by COVID_LA_Plots/UnderlyingCode.R, which lives here:
 #https://github.com/VictimOfMaths/COVID_LA_Plots/blob/master/UnderlyingCode.R
 
@@ -55,14 +64,16 @@ casetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), f
   labs(title="Timelines for COVID-19 cases in Local Authorities/Council Areas across the UK",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nLAs are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each LA.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from PHE, PHW, PHS & DoHNI | Plot by @VictimOfMaths")+
-  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+  theme_custom()+
+  theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), 
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(size=rel(1.8)))
 
 casebars.all <- ggplot(subset(data.all, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_classic()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
+  theme_custom()+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -78,7 +89,7 @@ dev.off()
 
 ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -91,7 +102,7 @@ ratetiles.all <- ggplot(data.all, aes(x=date, y=fct_reorder(name, maxcaseday), f
 
 ratebars.all <- ggplot(subset(data.all, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -121,7 +132,7 @@ plotto <- max(data.all.recent$date)
 #Plot case trajectories
 casetiles.all.recent <- ggplot(data.all.recent, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -134,7 +145,7 @@ casetiles.all.recent <- ggplot(data.all.recent, aes(x=date, y=fct_reorder(name, 
 
 casebars.all.recent <- ggplot(subset(data.all.recent, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases", breaks=c(0,5000,10000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -169,7 +180,7 @@ plotadmto <- max(data.e$date[!is.na(data.e$admrate_avg)])
 #Plot case trajectories
 casetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -182,7 +193,7 @@ casetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 casebars.e <- ggplot(subset(data.e, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -198,7 +209,7 @@ dev.off()
 
 ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -211,7 +222,7 @@ ratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 ratebars.e <- ggplot(subset(data.e, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -227,7 +238,7 @@ dev.off()
 
 admtiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=maxadmprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
@@ -242,7 +253,7 @@ admtiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=ma
 admbars.e <- ggplot(subset(data.e, date==maxadmday), aes(x=totaladm, y=fct_reorder(name, maxadmday), 
                                                          fill=totaladm))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed admissions")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -258,7 +269,7 @@ dev.off()
 
 admratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fill=admrate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
@@ -272,7 +283,7 @@ admratetiles.e <- ggplot(data.e, aes(x=date, y=fct_reorder(name, maxadmday), fil
 
 admratebars.e <- ggplot(subset(data.e, date==maxadmday), aes(x=pop, y=fct_reorder(name, maxadmday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -304,7 +315,7 @@ plotto <- max(data.w$date)
 #Plot case trajectories
 casetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -317,7 +328,7 @@ casetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 casebars.w <- ggplot(subset(data.w, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -330,7 +341,7 @@ dev.off()
 agg_tiff("Outputs/COVIDWelshLACaseRidges.tiff", units="in", width=10, height=6, res=500)
 ggplot(data.w, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg, fill=casesroll_avg))+
   geom_density_ridges_gradient(stat="identity")+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
                breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
@@ -341,7 +352,7 @@ dev.off()
 
 ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -354,7 +365,7 @@ ratetiles.w <- ggplot(data.w, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 ratebars.w <- ggplot(subset(data.w, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -382,7 +393,7 @@ plotto <- max(data.s$date)
 #Plot case trajectories
 casetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -395,7 +406,7 @@ casetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 casebars.s <- ggplot(subset(data.s, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -408,7 +419,7 @@ dev.off()
 agg_tiff("Outputs/COVIDScottishCouncilCaseRidges.tiff", units="in", width=10, height=6, res=500)
 ggplot(data.s, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg, fill=casesroll_avg))+
   geom_density_ridges_gradient(stat="identity")+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
                breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
@@ -419,7 +430,7 @@ dev.off()
 
 ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -432,7 +443,7 @@ ratetiles.s <- ggplot(data.s, aes(x=date, y=fct_reorder(name, maxcaseday), fill=
 
 ratebars.s <- ggplot(subset(data.s, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -460,7 +471,7 @@ plotto <- max(data.ni$date)
 #Plot case trajectories
 casetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -473,7 +484,7 @@ casetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fil
 
 casebars.ni <- ggplot(subset(data.ni, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000,2000))+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -486,7 +497,7 @@ dev.off()
 agg_tiff("Outputs/COVIDNILACaseRidges.tiff", units="in", width=10, height=6, res=500)
 ggplot(data.ni, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_avg, fill=casesroll_avg))+
   geom_density_ridges_gradient(stat="identity")+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
                breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
@@ -497,7 +508,7 @@ dev.off()
 
 ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -510,7 +521,7 @@ ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fil
 
 ratebars.ni <- ggplot(subset(data.ni, date==maxcaseday), aes(x=pop, y=fct_reorder(name, maxcaseday), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -575,7 +586,7 @@ HexAnimUK <- ggplot()+
                aes(x=long, y=lat, group=id, fill=casesroll_avg))+
   coord_fixed()+
   scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases (7-day\nrolling avg.)", na.value="white")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
@@ -592,7 +603,7 @@ HexAnimUKrate <- ggplot()+
                aes(x=long, y=lat, group=id, fill=caserate_avg))+
   coord_fixed()+
   scale_fill_distiller(palette="Spectral", name="Daily confirmed\ncases/100,000\n(7-day rolling avg.)", na.value="white")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(),  plot.title=element_text(face="bold"))+
   transition_time(date)+
@@ -641,6 +652,8 @@ names(shapefile)[names(shapefile) == "lad19cd"] <- "code"
 
 simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
 
+#TODO fix Northamptonshire in these maps
+
 map.cases <- full_join(simplemap, data.map, by="code", all.y=TRUE)
 map.cases$date <- as.Date(map.cases$date)
 
@@ -651,7 +664,7 @@ map.cases %>%
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=casesroll_avg), colour=NA)+
   scale_fill_distiller(palette="Spectral", name="Daily cases\n(rolling 7-day avg.)")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Confirmed new COVID-19 cases in the UK",
@@ -665,7 +678,7 @@ map.cases %>%
   ggplot()+
   geom_sf(aes(geometry=geometry, fill=caserate_avg), colour=NA)+
   scale_fill_distiller(palette="Spectral", name="Daily cases\nper 100,000\n(rolling 7-day avg.)")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Rates of confirmed new COVID-19 cases in the UK",
@@ -700,14 +713,19 @@ lat.data <- map.cases %>%
   as.data.frame() %>% 
   select(code, lat) %>% 
   distinct() %>% 
-  filter(!is.na(code))
+  filter(!is.na(code) & !code %in% c("E06000062", "E06000061")) %>% 
+  #Fix Northamptonshire LA changes (use Northampton and Kettering as the latitudes for the new counties)
+  bind_rows(map.cases %>% filter(code %in% c("E07000154", "E07000153")) %>% 
+              as.data.frame() %>% 
+              select(code, lat) %>% 
+              mutate(code=if_else(code=="E07000154", "E06000062", "E06000061")))
 
 data.all2 <- merge(data.all, lat.data)
 
 #Plot case trajectories
 casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -720,7 +738,7 @@ casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=m
 
 casebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, lat), fill=totalcases))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -736,7 +754,7 @@ dev.off()
 
 ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
@@ -749,7 +767,7 @@ ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=c
 
 ratebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -767,7 +785,7 @@ dev.off()
 admtiles.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg)), aes(x=date, y=fct_reorder(name, lat), 
                                                                   fill=admrate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(as.Date("2020-08-03"), plotadmto)), expand=c(0,0), 
@@ -782,7 +800,7 @@ admtiles.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg)), aes(x=date, y=fct_
 admbars.e2 <- ggplot(subset(data.all2, !is.na(admrate_avg) & date==maxadmday), 
                      aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
   geom_col(show.legend=FALSE)+
-  theme_classic()+
+  theme_custom()+
   scale_fill_distiller(palette="Spectral")+
   scale_x_continuous(name="Total population")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
@@ -830,7 +848,7 @@ map.casechange %>%
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.casechange$casechange)), 
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in COVID-19 cases across the UK",
@@ -846,7 +864,7 @@ map.admchange %>%
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(map.admchange$admchange)), 
                          name="Change in admissions\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in COVID-19 hospital admissions across England",
@@ -861,10 +879,8 @@ ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2021-01-01") & as.
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
-  theme_classic()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="The fall in COVID-19 cases has all but stopped",
+  theme_custom()+
+  labs(title="Scotland's rise in cases is, quite something",
        subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -876,7 +892,7 @@ ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2021-01-01") & as.
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  theme_classic()+
+  theme_custom()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         axis.text.x=element_text(angle=45, hjust=1),
         text=element_text(family="Roboto"))+
@@ -896,7 +912,7 @@ ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2020-10-01") & as.
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  theme_classic()+
+  theme_custom()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
   labs(title="COVID-19 case rates and lockdown restrictions in England",
@@ -914,7 +930,7 @@ ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2021-01-01") & as.
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000 (log scale)", trans="log")+
   scale_colour_paletteer_d("LaCroixColoR::paired", name="")+
-  theme_classic()+
+  theme_custom()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
   labs(title="COVID case rates are falling at different speeds in different parts of England",
@@ -936,7 +952,7 @@ ggplot()+
   scale_x_date(name="", 
                breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
   scale_y_continuous(name="Daily new cases")+
-  theme_classic()+
+  theme_custom()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         plot.subtitle=element_markdown(),
         text=element_text(family="Roboto"), axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
@@ -987,7 +1003,7 @@ mortmap.data %>%
   geom_sf(aes(geometry=geometry, fill=mortrate), colour=NA)+
   scale_fill_distiller(palette="Spectral", name="COVID-19 deaths\nper 100,000",
                        na.value="transparent")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.2)))+
   labs(title="Rates of confirmed COVID-19 deaths in Great Britain",
@@ -1004,7 +1020,7 @@ mortmap.data %>%
   scale_fill_paletteer_c("scico::roma", limit=c(-1,1)*max(abs(mortmap.data$mortratechange)), 
                          name="Change in deaths\nper week per 100,000\nvs. the previous week", direction=-1,
                          na.value="transparent")+
-  theme_classic()+
+  theme_custom()+
   theme(axis.line=element_blank(), axis.ticks=element_blank(), axis.text=element_blank(),
         axis.title=element_blank(), plot.title=element_text(face="bold", size=rel(1.5)))+
   labs(title="Changes in confirmed COVID-19 deaths in Great Britain",
