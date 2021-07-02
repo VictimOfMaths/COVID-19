@@ -15,14 +15,14 @@ library(extrafont)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/COVID-19-daily-admissions-and-beds-20210624.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210701.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210624.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210701.xlsx"
 #Increment by one each day
-dailyrange <- "CA"
-dailyoccrange <- "CC"
+dailyrange <- "CH"
+dailyoccrange <- "CJ"
 #Increment by seven each week
-weeklyrange <- "CC"
+weeklyrange <- "CH"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -116,7 +116,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="...But hospitalisations have risen sharply in the North West",
+  labs(title="...But hospitalisations are rising sharply across the North...",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -126,14 +126,14 @@ ggplot(subset(dailydata, date>as.Date("2021-01-01")))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
   scale_y_continuous(name="Rate per 100,000 population (log scale)", trans="log",
-                     labels=label_number(accuracy=1))+
+                     labels=label_number(accuracy=0.1))+
   scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
   facet_wrap(~metric, scales="free_y")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="COVID hospitalisations are rising in the North West of England",
+  labs(title="...and on a log scale it's clear that numbers are rising exponentially everywhere",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -402,7 +402,7 @@ trustdata %>%
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in hospital is falling across the North West",
+  labs(title="The number of COVID-19 patients in hospital is still relatively low across the North West",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
