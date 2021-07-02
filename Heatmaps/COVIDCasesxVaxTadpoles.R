@@ -65,6 +65,7 @@ ggplot()+
   labs(title="Areas with high COVID case rates have fairly average vaccine coverage",
        subtitle="Rate of new COVID-19 cases in the past week compared to 1st dose vaccine coverage in English/Scottish Local Authorites.\nBubble size corresponds to area population. Paths represent changes in the past 7 days.",
        caption="Data from coronavirus.data.gov.uk\nInspired by Russ Garrett (@russss)\nPlot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDCasesvsVax2LTLA.tiff", units="in", width=9, height=7, res=800)
