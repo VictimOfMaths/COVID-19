@@ -91,7 +91,7 @@ data %>% select(date, age, rates_roll, sex) %>%
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210628.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210705.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -133,7 +133,7 @@ ggplot(scotdata %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3) &
   facet_wrap(~AgeGroup)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Scotland's rapid rise in COVID cases is concentrated in young men",
+  labs(title="The big jump in COVID cases in Scottish men seems to be settling down slightly",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in Scotland, by age.",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
