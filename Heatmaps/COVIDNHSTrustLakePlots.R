@@ -18,9 +18,9 @@ theme_custom <- function() {
 }
 
 #NE & Yorkshire version
-latestcol <- "CL"
+latestcol <- "CN"
 
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210705.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210707.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=admurl, destfile=temp, quiet=FALSE, mode="wb")
@@ -310,6 +310,44 @@ ggplot()+
   theme(plot.subtitle=element_markdown())+
   labs(title="New COVID-19 cases in Yorkshire are rising, but hospital beds have yet to follow",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<br><span style='color:#ff9f55;'> all other</span> beds in Yorkshire",
+       caption="Data from NHS England and coronavirus.data.gov.uk | Plot and analysis by Colin Angus")
+dev.off()
+
+#Generic version for any LAs
+plotbeds <- LAadmissions %>% 
+  filter(LAD19NM %in% c("Sheffield")) %>% 
+  group_by(date, type) %>% 
+  summarise(beds=sum(beds)) %>% 
+  ungroup() %>% 
+  mutate(type=factor(type, levels=c("Otherbeds", "MVbeds")))
+
+plotcases <- LAcases %>% 
+  filter(areaName %in% c("Sheffield")) %>% 
+  group_by(date) %>% 
+  summarise(cases=sum(newCasesBySpecimenDateRollingSum)/7) %>% 
+  ungroup()
+
+plotname <- "Sheffield"
+
+agg_tiff(paste0("Outputs/COVIDAdmissionsvsOccupancy", plotname, ".tiff"), units="in", width=9, height=6,
+         res=800)
+ggplot()+
+  geom_col(data=plotcases %>% filter(date>as.Date("2020-08-01")), 
+           aes(x=date, y=cases), fill="#47d4ae")+
+  geom_col(data=plotbeds,
+           aes(x=date, y=-beds, fill=type), position="stack", show.legend=FALSE)+
+  geom_hline(yintercept=0, colour="Black")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="", labels=abs, position = "right")+
+  scale_fill_manual(values=c("#ff9f55", "#ff1437"))+
+  annotate(geom="text", x=as.Date("2021-04-01"), y=400, 
+           label="New cases in the population", hjust=0, family="Lato")+
+  annotate(geom="text", x=as.Date("2021-04-01"), y=-200, 
+           label="Total patients in hospital", hjust=0, family="Lato")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title=paste0("New COVID-19 cases in ", plotname, " are rising, but hospital beds have yet to follow"),
+       subtitle=paste0("Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<br><span style='color:#ff9f55;'> all other</span> beds in ", plotname),
        caption="Data from NHS England and coronavirus.data.gov.uk | Plot and analysis by Colin Angus")
 dev.off()
 
