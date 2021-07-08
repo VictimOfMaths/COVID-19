@@ -12,7 +12,7 @@ library(gganimate)
 #Download data from PHE surveillance report
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/998394/Weekly_Influenza_and_COVID19_report_data_W26.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1000375/Weekly_Influenza_and_COVID19_report_data_w27.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
@@ -137,6 +137,19 @@ dev.off()
 
 #Animated versions
 #Read in historic data
+#Week 25
+
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/998394/Weekly_Influenza_and_COVID19_report_data_W26.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw25 <- read_excel(temp, sheet="Figure 57&58. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw25) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
 
 #Week 24
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/996366/Weekly_Influenza_and_COVID19_report_data_w25.xlsx"
