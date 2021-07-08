@@ -15,14 +15,14 @@ library(extrafont)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210701.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210708.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210701.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210708.xlsx"
 #Increment by one each day
-dailyrange <- "CH"
-dailyoccrange <- "CJ"
+dailyrange <- "CO"
+dailyoccrange <- "CQ"
 #Increment by seven each week
-weeklyrange <- "CH"
+weeklyrange <- "CO"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -99,7 +99,7 @@ ggplot(dailydata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in English hospitals is still relatively low...",
+  labs(title="The number of COVID-19 patients in English hospitals is rising, albeit more slowly than in previous waves",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -116,24 +116,24 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="...But hospitalisations are rising sharply across the North...",
+  labs(title="Hospitalisations have risen sharply in the past week across the whole of England",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 agg_tiff("Outputs/COVIDNHSMetricsxRegLog.tiff", units="in", width=12, height=6, res=500)
-ggplot(subset(dailydata, date>as.Date("2021-01-01")))+
+ggplot(subset(dailydata, date>as.Date("2021-04-01")))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
   scale_y_continuous(name="Rate per 100,000 population (log scale)", trans="log",
-                     labels=label_number(accuracy=0.1))+
+                     labels=label_number(accuracy=0.01))+
   scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
   facet_wrap(~metric, scales="free_y")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="...and on a log scale it's clear that numbers are rising exponentially everywhere",
+  labs(title="On a log scale it's clear that hospital numbers are rising exponentially everywhere",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -149,7 +149,7 @@ ggplot(subset(dailydata, metric=="Admissions"))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="New COVID-19 hospital admissions figures are still low in most regions",
+  labs(title="New COVID-19 hospital admissions figures rising across all regions",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions for patients with a positive COVID-19 diagnosis.\nData up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
