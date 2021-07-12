@@ -182,7 +182,7 @@ msoacasedata <- msoacasedata %>%
   slice_tail(n=2) %>% 
   ungroup() %>% 
   spread(date, newCasesBySpecimenDateRollingRate) %>% 
-  select(c(7,8,23,24))
+  select(c(7,8,34,35))
 
 colnames(msoacasedata) <- c("msoa11cd", "areaName", "prev", "latest")
 
@@ -219,12 +219,12 @@ plot3 <- ggplot()+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, 
                          name="Cases per\n100,000", limits=c(0,NA))+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 cases are highest in Yorkshire and Manchester",
+  theme(plot.title=element_text(face="bold", size=rel(1.5)),
+        text=element_text(family="Lato"))+
+  labs(title="COVID-19 cases are highest in the North of England",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Middle Super Output Area level in England\nData up to ", 
                        maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in grey."),       
-       caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk | Cartogram from the House of Commons Library\nAnalysis and plot by Colin Angus")
 
 agg_tiff("Outputs/COVIDCasesMSOACartogram.tiff", units="in", width=10, height=8, res=800)
 plot3
@@ -235,7 +235,7 @@ plot3
 dev.off()
 
 plot4 <- ggplot()+
-  geom_sf(data=BackgroundMSOA, aes(geometry=geom))+
+  geom_sf(data=BackgroundMSOA, aes(geometry=geom), fill="White")+
   geom_sf(data=MSOA %>% filter(RegionNation!="Wales"), 
           aes(geometry=geom, fill=abschange), colour=NA)+
   geom_sf(data=LAsMSOA %>% filter(RegionNation!="Wales"), 
@@ -249,12 +249,12 @@ plot4 <- ggplot()+
                          name="Change in cases\nper day per 100,000\nin the past week", direction=-1,
                          na.value="transparent")+
   theme_void()+
-  theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID-19 cases are falling in almost all parts of England",
+  theme(plot.title=element_text(face="bold", size=rel(1.5)),
+        text=element_text(family="Lato"), plot.caption.position = "plot")+
+  labs(title="COVID-19 cases are rising fastest in the North East",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Middle Super Output Area level in England\nData up to ", 
-                       maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in grey."),       
-       caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
+                       maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in white"),       
+       caption="Data from coronavirus.data.gov.uk | Cartogram from the House of Commons Library\nAnalysis and plot by Colin Angus")
 
 agg_tiff("Outputs/COVIDCasesMSOAChangeCartogram.tiff", units="in", width=10, height=8, res=800)
 plot4
