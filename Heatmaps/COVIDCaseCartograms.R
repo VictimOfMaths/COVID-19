@@ -182,7 +182,7 @@ msoacasedata <- msoacasedata %>%
   slice_tail(n=2) %>% 
   ungroup() %>% 
   spread(date, newCasesBySpecimenDateRollingRate) %>% 
-  select(c(7,8,34,35))
+  select(c(7,8,ncol(.)-1,ncol(.)))
 
 colnames(msoacasedata) <- c("msoa11cd", "areaName", "prev", "latest")
 
