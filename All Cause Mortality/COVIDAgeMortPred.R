@@ -13,7 +13,7 @@ library(extrafont)
 library(ragg)
 
 #Select start data for analysis
-startdate <- as.Date("2020-09-01")
+startdate <- as.Date("2021-05-01")
 
 #Pull in deaths data
 temp <- tempfile()
@@ -39,25 +39,34 @@ deaths <- bind_rows(deaths1, deaths2, deaths3) %>%
   ungroup()
 
 #Get age-specific data
-temp <- tempfile()
-source <- "https://coronavirus.data.gov.uk/downloads/demographic/cases/specimenDate_ageDemographic-stacked.csv"
-temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+temp1 <- tempfile()
+source1 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp1 <- curl_download(url=source1, destfile=temp1, quiet=FALSE, mode="wb")
 
-data <- read_csv_arrow(temp) %>% 
+temp2 <- tempfile()
+source2 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=region&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
+
+temp3 <- tempfile()
+source3 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=newCasesBySpecimenDateAgeDemographics&format=csv"
+temp3 <- curl_download(url=source3, destfile=temp3, quiet=FALSE, mode="wb")
+
+data <- read_csv_arrow(temp1) %>% 
+  bind_rows(read_csv_arrow(temp2), read_csv_arrow(temp3)) %>% 
   select(c(1:6)) %>% 
   filter(age!="unassigned") %>% 
-  rename(cases=newCasesBySpecimenDate)
-
-#Tidy up
-data <- data %>% 
-  mutate(age = age %>% str_replace("_", "-") %>%
-           factor(levels=c("0-4", "5-9", "10-14", "15-19",
-                           "20-24", "25-29", "30-34", "35-39", 
-                           "40-44", "45-49", "50-54", "55-59", 
-                           "60-64", "65-69", "70-74", "75-79", 
-                           "80-84", "85-89", "90+"))) %>% 
+  mutate(age=case_when(
+    age=="00_04" ~ "0_4",
+    age=="05_09" ~ "5-9",
+    TRUE ~ age),
+    age = age %>% str_replace("_", "-") %>%
+      factor(levels=c("0-4", "5-9", "10-14", "15-19",
+                      "20-24", "25-29", "30-34", "35-39", 
+                      "40-44", "45-49", "50-54", "55-59", 
+                      "60-64", "65-69", "70-74", "75-79", 
+                      "80-84", "85-89", "90+"))) %>% 
   #Remove two bonus age categories that we don't need (0-59 and 60+)
-  filter(!is.na(age))
+  filter(!is.na(age)) 
 
 n.areas=length(unique(data$areaCode))
 n.ages=length(unique(data$age))
@@ -79,6 +88,33 @@ future <- data %>%
   unique() %>% 
   merge(future, by="areaCode")
 
+#Read in CFR data provided by Dan Howdon
+#These estimates are not mine to share, sorry, contact Dan for more info.
+#https://medicinehealth.leeds.ac.uk/medicine/staff/447/dr-dan-howdon
+CFRdata <- read.csv("Data/cfrs_2021_07_07.csv") %>% 
+  mutate(age=case_when(
+    agegroup==0 ~ "0-4", agegroup==5 ~ "5-9", agegroup==10 ~ "10-14", agegroup==15 ~ "15-19",
+    agegroup==20 ~ "20-24", agegroup==25 ~ "25-29", agegroup==30 ~ "30-34", 
+    agegroup==35 ~ "35-39", agegroup==40 ~ "40-44", agegroup==45 ~ "45-49", 
+    agegroup==50 ~ "50-54", agegroup==55 ~ "55-59", agegroup==60 ~ "60-64", 
+    agegroup==65 ~ "65-69", agegroup==70 ~ "70-74", agegroup==75 ~ "75-79",
+    agegroup==80 ~ "80-84", agegroup==85 ~ "85-89", TRUE ~ "90+"),
+    date=as.Date(date, format="%d/%m/%Y"),
+    age = age %>% str_replace("_", "-") %>%
+      factor(levels=c("0-4", "5-9", "10-14", "15-19",
+                      "20-24", "25-29", "30-34", "35-39", 
+                      "40-44", "45-49", "50-54", "55-59", 
+                      "60-64", "65-69", "70-74", "75-79", 
+                      "80-84", "85-89", "90+")))
+
+maxCFRdate <- max(CFRdata$date[!is.na(CFRdata$cfr_month)])
+
+#Just extract the most recent monthly CFRs
+CFRs <- CFRdata %>% 
+  filter(date==maxCFRdate) %>% 
+  mutate(CFR=cfr_month*100) %>% 
+  select(age, CFR)
+
 #Calculate expected deaths by age group based on case numbers and CFRs,
 #assuming an infection to death distribution that is lognormal with location 2.71 and
 #shape 0.56 from Wood 2020 https://arxiv.org/pdf/2005.02090.pdf
@@ -90,44 +126,8 @@ lognorm <- dlnorm(1:70, meanlog=2.71, sdlog=0.56)
 pred.data <- data %>% 
   filter(date>startdate-days(75)) %>% 
   bind_rows(future) %>% 
-  #Bring in latest CFR estimates from Daniel Howden
-  #https://twitter.com/danielhowdon/status/1321369114615664642
-  mutate(CFR=case_when(
-    #age %in% c("0-4", "5-9", "10-14", "15-19") ~ 0,
-    #age=="20-24" ~ 0.004,
-    #age=="25-29" ~ 0.006,
-    #age=="30-34" ~ 0.029,
-    #age=="35-39" ~ 0.034,
-    #age=="40-44" ~ 0.115,
-    #age=="45-49" ~ 0.142,
-    #age=="50-54" ~ 0.256,
-    #age=="55-59" ~ 0.463,
-    #age=="60-64" ~ 1.289,
-    #age=="65-69" ~ 3.358,
-    #age=="70-74" ~ 7.736,
-    #age=="75-79" ~ 14.509,
-    #age=="80-84" ~ 21.438,
-    #age=="85-89" ~ 25.081,
-    #age=="90+" ~ 27.516),
-    #New CFRs from Dan
-    age %in% c("0-4", "5-9", "10-14") ~ 0,
-    age=="15-19" ~ 0,
-    age=="20-24" ~ 0,
-    age=="25-29" ~ 0,
-    age=="30-34" ~ 0,
-    age=="35-39" ~ 0.0219879511860199,
-    age=="40-44" ~ 0.0262285,
-    age=="45-49" ~ 0.1247561,
-    age=="50-54" ~ 0.2722577,
-    age=="55-59" ~ 0.458359,
-    age=="60-64" ~ 0.8949931,
-    age=="65-69" ~ 4.0467128,
-    age=="70-74" ~ 4.6385467,
-    age=="75-79" ~ 5.9203394,
-    age=="80-84" ~ 13.0488619,
-    age=="85-89" ~ 18.1130067,
-    age=="90+" ~ 23.080945),
-    tot.deaths=cases*CFR/100) %>% 
+  merge(CFRs) %>% 
+  mutate(tot.deaths=cases*CFR/100) %>% 
   #Calculate 7-day rolling average of cases
   group_by(areaCode, areaName, areaType, age) %>% 
   arrange(date) %>% 
@@ -226,8 +226,8 @@ area.pred.deaths.total <- pred.data %>%
 #################
 #Compare CFR estimation period with subsequent observed data
 ggplot()+
-  geom_rect(aes(xmin=as.Date("2021-05-04")-days(28), xmax=as.Date("2021-05-04"), ymin=0, ymax=500), 
-            fill="Grey80")+
+  #geom_rect(aes(xmin=as.Date("2021-05-04")-days(28), xmax=as.Date("2021-05-04"), ymin=0, ymax=500), 
+  #          fill="Grey80")+
   geom_col(data=subset(pred.data, areaName=="England" & date>=as.Date("2021-05-04")-days(28)),
          aes(x=as.Date(date), y=exp.deaths), fill="Skyblue")+
   geom_line(data=subset(deaths, date>as.Date("2021-05-04")-days(28) & 
@@ -237,52 +237,55 @@ ggplot()+
   scale_x_date(name="")+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   theme_classic()+
-  annotate("text", x=as.Date("2020-09-25"), y=450, label="CFRs estimated\nusing this data")+
-  annotate("text", x=as.Date("2020-11-25"), y=450, label="Deaths modelled\nfrom estimated CFRs")+
-  annotate("text", x=as.Date("2020-10-25"), y=320, label="Actual deaths")+
-  geom_curve(aes(x=as.Date("2020-11-26"), y=430, 
-                 xend=as.Date("2020-11-30"), yend=300), curvature=-0.30, 
-             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
-  geom_curve(aes(x=as.Date("2020-10-25"), y=300, 
-                 xend=as.Date("2020-10-28"), yend=250), curvature=0.25, 
-             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  #annotate("text", x=as.Date("2020-09-25"), y=450, label="CFRs estimated\nusing this data")+
+  #annotate("text", x=as.Date("2020-11-25"), y=450, label="Deaths modelled\nfrom estimated CFRs")+
+  #annotate("text", x=as.Date("2020-10-25"), y=320, label="Actual deaths")+
+  #geom_curve(aes(x=as.Date("2020-11-26"), y=430, 
+  #               xend=as.Date("2020-11-30"), yend=300), curvature=-0.30, 
+  #           arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  #geom_curve(aes(x=as.Date("2020-10-25"), y=300, 
+  #               xend=as.Date("2020-10-28"), yend=250), curvature=0.25, 
+  #           arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
   labs(title="Case Fatality Rates estimated in October have stood up pretty well",
        subtitle="Actual vs modelled deaths based on age-specific CFRs fitted to data from 05/09 - 16/10",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
 #Plot age-specific forecasts for England
-Englabel <- round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName=="Bolton"],0)
+Englabel <- round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaName=="England"],0)
 
 EngPlot <- ggplot()+
-  geom_col(data=subset(pred.data, areaName=="Bolton" & date>max.date-days(7)),
+  geom_col(data=subset(pred.data, areaName=="England" & date>max.date-days(28)),
            aes(x=as.Date(date), y=exp.deaths, fill=age))+
-  geom_line(data=subset(deaths, date>max.date-days(7) &
-                          areaName=="Bolton"), 
+  geom_line(data=subset(deaths, date>max.date-days(28) &
+                          areaName=="England"), 
             aes(x=as.Date(date), y=deathsroll))+
   geom_vline(xintercept=as.Date(max.date.1), linetype=2)+
   scale_x_date(name="",
                breaks=pretty_breaks(n=interval(as.Date("2020-09-01"), as.Date(max.date.1+days(71)))%/% months(1)))+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
-  #annotate("text", x=as.Date("2020-10-01"), y=120, label="Actual deaths")+
-  #annotate("text", x=as.Date("2021-02-28"), y=140, label="Modelled deaths")+
-  #geom_curve(aes(x=as.Date("2020-10-01"), y=110, 
-  #               xend=as.Date("2020-10-12"), yend=102), curvature=0.15, 
-  #           arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
-  #geom_curve(aes(x=as.Date("2021-02-24"), y=143, 
-  #               xend=as.Date("2021-01-10"), yend=180), curvature=0.25, 
-  #           arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  annotate("text", x=as.Date("2021-06-26"), y=23, label="Actual deaths")+
+  annotate("text", x=as.Date("2021-08-03"), y=20, label="Modelled deaths")+
+  geom_curve(aes(x=as.Date("2021-06-28"), y=22, 
+                 xend=as.Date("2021-07-01"), yend=19.5), curvature=0.15, 
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
+  geom_curve(aes(x=as.Date("2021-08-01"), y=19, 
+                 xend=as.Date("2021-07-20"), yend=12), curvature=-0.25, 
+             arrow=arrow(length=unit(0.1, "cm"), type="closed"))+
   theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.5)),
+        plot.title.position="plot", text=element_text(family="Lato"),
+        plot.caption.position = "plot")+
   labs(title=paste0("Even if COVID-19 disappeared today, we'd still expect ", Englabel, 
                     " more COVID-19 deaths over the coming months"),
        subtitle="Modelled COVID-19 deaths in England based on confirmed cases and the latest age-specific Case Fatality Rates",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
-tiff("Outputs/COVIDDeathForecastEng.tiff", units="in", width=10, height=8, res=500)
+tiff("Outputs/COVIDDeathForecastEng.tiff", units="in", width=12, height=7, res=500)
 EngPlot
 dev.off()
 
-png("Outputs/COVIDDeathForecastEng.png", units="in", width=10, height=8, res=500)
+png("Outputs/COVIDDeathForecastEng.png", units="in", width=12, height=7, res=500)
 EngPlot
 dev.off()
 
@@ -290,7 +293,7 @@ dev.off()
 
 tiff("Outputs/COVIDDeathForecastEngxAge.tiff", units="in", width=10, height=6, res=500)
 area.pred.deathsxage %>% 
-  filter(areaName=="Bolton") %>% 
+  filter(areaName=="England") %>% 
   ggplot()+
   geom_col(aes(x=exp.deaths, y=fct_rev(age), fill=age), show.legend=FALSE)+
   geom_text(aes(x=exp.deaths, y=fct_rev(age), label=round(exp.deaths,0)),
