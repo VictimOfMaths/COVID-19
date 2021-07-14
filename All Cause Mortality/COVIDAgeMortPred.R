@@ -342,33 +342,34 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      code=c(1:9))
 pred.data <- arrange(pred.data, areaName)
 
-reglabs <- data.frame(name=unique(pred.data$areaName[pred.data$areaType=="region"]),
+reglabs <- data.frame(areaName=unique(pred.data$areaName[pred.data$areaType=="region"]),
                       total=round(area.pred.deaths.total$exp.deaths[area.pred.deaths.total$areaType=="region"],0))
-reglabs$label <- if_else(reglabs$name=="North East", paste0(reglabs$total, " Expected\nfuture deaths"), 
+reglabs$label <- if_else(reglabs$areaName=="North East", paste0(reglabs$total, " Expected\nfuture deaths"), 
                          as.character(reglabs$total))
 
 
-tiff("Outputs/COVIDDeathForecastReg.tiff", units="in", width=10, height=10, res=500)
+tiff("Outputs/COVIDDeathForecastReg.tiff", units="in", width=12, height=7, res=500)
 pred.data %>% 
   filter(areaType=="region") %>% 
-  rename(name=areaName) %>% 
   ggplot()+
   geom_col(aes(x=as.Date(date), y=exp.deaths, fill=age))+
   geom_line(data=subset(deaths, areaName %in% c("North East", "North West", "Yorkshire and The Humber",
                                             "West Midlands", "East Midlands", "East of England",
                                             "South West", "London", "South East") & date<=as.Date(max.date.2)),
-            aes(x=as.Date(date), y=deathsroll))+
+            aes(x=as.Date(date), y=deathsroll, group=areaName))+
   geom_vline(xintercept=as.Date(max.date.1), linetype=2)+
-  geom_text(data=reglabs, aes(x=as.Date("2021-01-22"), y=40, label=label))+
+  geom_text(data=reglabs, aes(x=as.Date("2021-05-22"), y=7, label=label))+
   scale_x_date(name="",
                breaks=pretty_breaks(n=interval(as.Date("2020-09-01"), as.Date(max.date.1+days(71)))%/% months(1)))+
   scale_y_continuous(name="Expected daily deaths from COVID-19")+
   scale_fill_paletteer_d("pals::stepped", name="Age")+
-  facet_geo(~name, grid=mygrid)+
+  facet_geo(~areaName, grid=mygrid)+
   theme_classic()+
-  theme(plot.title=element_text(face="bold"), strip.background=element_blank(),
-        strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="Deaths in London and the South East are likely to keep rising",
+  theme(plot.title=element_text(face="bold", size=rel(1.4)), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"),
+        axis.text=element_text(size=rel(0.7)))+
+  labs(title="All regions in England can expect to see a rise in COVID deaths",
        subtitle="Modelled COVID-19 deaths in English regions based on confirmed cases and the latest age-specific Case Fatality Rates\nBlack lines show the rolling 7-day average of observed deaths for each region",
        caption="Data from PHE | CFRs from Daniel Howden | Time to death distribution from Wood 2020 | Analysis and plot by @VictimOfMaths")
 
