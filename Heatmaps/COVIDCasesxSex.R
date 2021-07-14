@@ -61,7 +61,7 @@ ggplot(data %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3)),
   facet_wrap(~age)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="There is an emerging gender gap in COVID cases in younger age groups",
+  labs(title="The gender gap in COVID cases in younger adults in England is growing",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -76,7 +76,7 @@ ggplot(data %>% filter(date<max(date)-days(3)),
   facet_wrap(~age)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="There is an emerging gender gap in COVID cases in younger age groups",
+  labs(title="The gender gap in COVID cases in younger adults in England is growing",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -91,7 +91,7 @@ data %>% select(date, age, rates_roll, sex) %>%
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210707.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210713.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -133,7 +133,7 @@ ggplot(scotdata %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3) &
   facet_wrap(~AgeGroup)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The big jump in COVID cases in Scottish men seems to be settling down slightly",
+  labs(title="The gender gap in Scottish COVID cases has all but disappeared",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in Scotland, by age.",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
