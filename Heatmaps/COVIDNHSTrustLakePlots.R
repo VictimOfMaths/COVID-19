@@ -18,9 +18,9 @@ theme_custom <- function() {
 }
 
 #NE & Yorkshire version
-latestcol <- "CS"
+latestcol <- "CV"
 
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210712.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210715.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=admurl, destfile=temp, quiet=FALSE, mode="wb")
@@ -129,7 +129,7 @@ url.adm.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2
 temp1 <- tempfile()
 temp1 <- curl_download(url=url.adm.old, destfile=temp1, quiet=FALSE, mode="wb")
 
-url.adm.new <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/06/Weekly-covid-admissions-and-beds-publication-210624.xlsx"
+url.adm.new <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210715.xlsx"
 temp2 <- tempfile()
 temp2 <- curl_download(url=url.adm.new, destfile=temp2, quiet=FALSE, mode="wb")
 
@@ -139,7 +139,7 @@ MV.old <- read_excel(temp1, sheet="MV beds COVID", range="C25:IS512",
   mutate(date=as.Date("2020-08-01")+days(as.integer(substr(date, 4, 6))-3)) %>% 
   rename(code=...1, name=...2)
 
-MV.new <- read_excel(temp2, sheet="MV beds COVID", range="C25:CC304", col_names=FALSE) %>% 
+MV.new <- read_excel(temp2, sheet="MV beds COVID", range="C25:CX304", col_names=FALSE) %>% 
   gather(date, MVbeds, c(3:ncol(.))) %>% 
   mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-3)) %>% 
   rename(code=...1, name=...2)
@@ -151,7 +151,7 @@ all.old <- read_excel(temp1, sheet="All beds COVID", range="C25:IS512", col_name
   mutate(date=as.Date("2020-08-01")+days(as.integer(substr(date, 4, 6))-3)) %>% 
   rename(code=...1, name=...2)
 
-all.new <- read_excel(temp2, sheet="All beds COVID", range="C25:CC304", col_names=FALSE) %>% 
+all.new <- read_excel(temp2, sheet="All beds COVID", range="C25:CX304", col_names=FALSE) %>% 
   gather(date, Allbeds, c(3:ncol(.))) %>% 
   mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-3)) %>% 
   rename(code=...1, name=...2)
@@ -283,7 +283,7 @@ Yorksbeds <- LAadmissions %>%
 
 Yorkscases <- LAcases %>% 
   filter(areaName %in% c("Barnsley", "Bradford", "Calderdale", "Doncaster", 
-                        "East Riding of Yorkshire", "Hull", "Kirklees", "Leeds",
+                        "Hull", "Kirklees", "Leeds",
                         "Rotherham", "Sheffield", "Wakefield", "York", "Craven",
                         "Hambleton", "Harrogate", "Richmondshire", "Ryedale",
                         "Scarborough", "Selby")) %>% 
