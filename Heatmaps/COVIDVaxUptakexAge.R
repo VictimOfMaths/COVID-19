@@ -55,18 +55,18 @@ ONSpop_proj <- read_excel(temp, sheet="PERSONS", range="A9:E29", col_names=FALSE
   summarise(pop_ONSproj=sum(`2021`)*1000) %>% 
   ungroup()
 
-#Add in ONS population estimates (mid-2019 figures)
-url <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland/mid2019april2020localauthoritydistrictcodes/ukmidyearestimates20192020ladcodes.xls"
+#Add in ONS population estimates (mid-2020 figures)
+url <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fpopulationandmigration%2fpopulationestimates%2fdatasets%2fpopulationestimatesforukenglandandwalesscotlandandnorthernireland%2fmid2020/ukpopestimatesmid2020on2021geography.xls"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-ONSpop_2019 <- as.data.frame(t(read_excel(temp, sheet="MYE2 - Persons", range="E5:CQ9",
+ONSpop_2020 <- as.data.frame(t(read_excel(temp, sheet="MYE2 - Persons", range="E8:CQ12",
                                           col_names=FALSE))) %>% 
   select(V1, V5) %>% 
-  set_names(c("age", "pop_ONS2019")) %>% 
+  set_names(c("age", "pop_ONS2020")) %>% 
   mutate(age=as.numeric(if_else(age=="90+", "90", age)),
-         pop_ONS2019=as.numeric(pop_ONS2019),
+         pop_ONS2020=as.numeric(pop_ONS2020),
          age=case_when(
            age<18 ~ "u18", age<25 ~ "18-24", age<30 ~ "25-29",
            age<35 ~ "30-34", age<40 ~ "35-39", age<45 ~ "40-44",
@@ -75,34 +75,34 @@ ONSpop_2019 <- as.data.frame(t(read_excel(temp, sheet="MYE2 - Persons", range="E
            age<80 ~ "75-79", age<85 ~ "80-84", age<90 ~ "85-89",
            TRUE ~ "90+")) %>% 
   group_by(age) %>%
-  summarise(pop_ONS2019=sum(pop_ONS2019)) %>% 
+  summarise(pop_ONS2020=sum(pop_ONS2020)) %>% 
   ungroup()
 
 datafull <- data %>% 
   merge(ONSpop_proj) %>% 
-  merge(ONSpop_2019) %>% 
+  merge(ONSpop_2020) %>% 
   mutate(`First dose_ONSproj`=Total1stDoses*100/pop_ONSproj,
          `Second dose_ONSproj`=Total2ndDoses*100/pop_ONSproj,
-         `First dose_ONS2019`=Total1stDoses*100/pop_ONS2019,
-         `Second dose_ONS2019`=Total2ndDoses*100/pop_ONS2019)
+         `First dose_ONS2020`=Total1stDoses*100/pop_ONS2020,
+         `Second dose_ONS2020`=Total2ndDoses*100/pop_ONS2020)
 
 #Calculate total
 datafull <- datafull %>% 
   group_by(date) %>% 
   summarise(pop_NIMS=sum(pop_NIMS), Total1stDoses=sum(Total1stDoses),
             Total2ndDoses=sum(Total2ndDoses), pop_ONSproj=sum(pop_ONSproj),
-            pop_ONS2019=sum(pop_ONS2019)) %>% 
+            pop_ONS2020=sum(pop_ONS2020)) %>% 
   mutate(age="Total", `First dose_NIMS`=Total1stDoses*100/pop_NIMS,
          `Second dose_NIMS`=Total2ndDoses*100/pop_NIMS,
          `First dose_ONSproj`=Total1stDoses*100/pop_ONSproj,
          `Second dose_ONSproj`=Total2ndDoses*100/pop_ONSproj,
-         `First dose_ONS2019`=Total1stDoses*100/pop_ONS2019,
-         `Second dose_ONS2019`=Total2ndDoses*100/pop_ONS2019) %>% 
+         `First dose_ONS2020`=Total1stDoses*100/pop_ONS2020,
+         `Second dose_ONS2020`=Total2ndDoses*100/pop_ONS2020) %>% 
   bind_rows(datafull) %>% 
   #Tidy up
   pivot_longer(c(`First dose_NIMS`, `Second dose_NIMS`,
                  `First dose_ONSproj`, `Second dose_ONSproj`,
-                 `First dose_ONS2019`, `Second dose_ONS2019`),
+                 `First dose_ONS2020`, `Second dose_ONS2020`),
                names_to=c("dose", "source"), names_sep="_",
                values_to="prop") %>% 
   mutate(prop=prop/100, date=as.Date(date))
@@ -121,6 +121,7 @@ ggplot()+
                            name="Age")+
   facet_wrap(~dose)+
   theme_custom()+
+  theme(panel.grid.major.y=element_line(colour="Grey90"))+
   labs(title="Vaccine uptake is lower in younger age groups",
        subtitle="Cumulative proportion of English population vaccinated against COVID with one or two doses by age group.\nThe dotted line represents the overall proportion of all adults (aged 18+) vaccinated",
        caption="Data from coronavirus.data.gov.uk | Population estimates from NIMS | Plot by @VictimOfMaths")
@@ -141,17 +142,18 @@ ggplot()+
                            name="Age")+
   facet_wrap(~dose)+
   theme_custom()+
+  theme(panel.grid.major.y=element_line(colour="Grey90"))+
   labs(title="Vaccine uptake is lower in younger age groups",
        subtitle="Cumulative proportion of English population vaccinated against COVID with one or two doses by age group.\nThe dotted line represents the overall proportion of all adults (aged 18+) vaccinated",
        caption="Data from coronavirus.data.gov.uk | Population data from ONS projections for 2021 | Plot by @VictimOfMaths")
 
 dev.off()
 
-agg_tiff("Outputs/COVIDVaxUptakexAgeONS2019.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDVaxUptakexAgeONS2020.tiff", units="in", width=9, height=6, res=800)
 ggplot()+
-  geom_line(data=datafull %>% filter(age!="Total" & source=="ONS2019"), 
+  geom_line(data=datafull %>% filter(age!="Total" & source=="ONS2020"), 
             aes(x=date, y=prop, colour=age, group=age))+
-  geom_line(data=datafull %>% filter(age=="Total" & source=="ONS2019"),
+  geom_line(data=datafull %>% filter(age=="Total" & source=="ONS2020"),
             aes(x=date, y=prop), colour="Black", linetype=3)+
   geom_hline(yintercept=1, colour="Grey80")+
   scale_x_date(name="")+
@@ -161,9 +163,10 @@ ggplot()+
                            name="Age")+
   facet_wrap(~dose)+
   theme_custom()+
+  theme(panel.grid.major.y=element_line(colour="Grey90"))+
   labs(title="Vaccine uptake is lower in younger age groups",
        subtitle="Cumulative proportion of English population vaccinated against COVID with one or two doses by age group.\nThe dotted line represents the overall proportion of all adults (aged 18+) vaccinated",
-       caption="Data from coronavirus.data.gov.uk | Population data from ONS 2019 estimates | Plot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk | Population data from ONS 2020 estimates | Plot by @VictimOfMaths")
 
 dev.off()
 
@@ -178,7 +181,7 @@ ggplot(datafull %>% filter(dose=="First dose"),
   scale_y_continuous(name="Proportion of age group vaccinated", 
                      labels=label_percent(accuracy=1))+
   scale_colour_paletteer_d("rcartocolor::Safe", name="Population\nsource:",
-                           labels=c("NIMS", "ONS 2019\nestimates",
+                           labels=c("NIMS", "ONS 2020\nestimates",
                                     "ONS 2021\nprojections"))+
   facet_wrap(~age)+
   theme_custom()+
@@ -191,7 +194,7 @@ dev.off()
 #Just the populations
 popdata <- datafull %>% 
   filter(date==max(date) & dose=="First dose" & source=="NIMS") %>% 
-  select(age, pop_NIMS, pop_ONSproj, pop_ONS2019) %>% 
+  select(age, pop_NIMS, pop_ONSproj, pop_ONS2020) %>% 
   gather(source, pop, c(2:4))
 
 agg_tiff("Outputs/EngPopEstimates.tiff", units="in", width=8, height=8, res=800)
@@ -200,7 +203,7 @@ ggplot(popdata %>% filter(age!="Total"), aes(x=pop/1000000, y=age, fill=source))
   scale_x_continuous(name="Estimated population (millions)")+
   scale_y_discrete(name="Age")+
   scale_fill_paletteer_d("rcartocolor::Safe", name="Population\nsource:",
-                         labels=c("NIMS", "ONS 2019\nestimates",
+                         labels=c("NIMS", "ONS 2020\nestimates",
                                   "ONS 2021\nprojections"))+
   theme_custom()+
   theme(legend.position="top")+
