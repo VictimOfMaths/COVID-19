@@ -61,9 +61,13 @@ ggplot(data %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3)),
   facet_wrap(~age)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The gender gap in COVID cases in younger adults in England is growing",
+  labs(title="The gap in COVID case rates between young men and women in England is growing",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
-       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")+
+  #Quarter final
+  geom_vline(xintercept=as.Date("2021-07-03")+days(6), colour="Grey75", linetype=2)
+  #geom_vline(xintercept=as.Date("2021-07-07")+days(6), colour="Grey75", linetype=2)+
+  #geom_vline(xintercept=as.Date("2021-07-11")+days(6), colour="Grey75", linetype=2)
 dev.off()
 
 agg_tiff("Outputs/COVIDCasesxSexFull.tiff", units="in", width=10, height=7, res=800)
