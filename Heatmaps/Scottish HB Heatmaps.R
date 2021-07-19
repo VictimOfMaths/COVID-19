@@ -12,7 +12,7 @@ library(ggridges)
 
 #Read in data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210707.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210719.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp) %>% 
@@ -96,7 +96,7 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B7%2BJuly%2B2021.xlsx?forceDownload=true"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B19%2BJuly%2B2021.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Historic ICU data (using a slightly different definition)
@@ -112,7 +112,7 @@ ICUdata.hist_long$Date <- as.Date(ICUdata.hist_long$Date)
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-ICUdata <- read_excel(temp, sheet=4, range="A3:Q298")
+ICUdata <- read_excel(temp, sheet=4, range="A3:Q315")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:17))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", NA, ICUdata_long$cases))
@@ -169,7 +169,7 @@ Hospdata.hist_long$HB <- if_else(substr(Hospdata.hist_long$HB, 1,3)=="NHS", subs
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-Hospdata <- read_excel(temp, sheet=5, range="A3:Q298")
+Hospdata <- read_excel(temp, sheet=5, range="A3:Q315")
 
 Hospdata_long <- gather(Hospdata, HB, cases, c(2:17))
 Hospdata_long$cases <- as.numeric(ifelse(Hospdata_long$cases=="*", NA, Hospdata_long$cases))
@@ -249,7 +249,7 @@ ggplot(subset(natdata,Date>=as.Date("2020-09-11")))+
   annotate(geom="text", x=as.Date("2020-09-12"), y=-1600, 
            label="Total patients in hospital", hjust=0, family="Lato")+
   #annotate(geom="text", x=as.Date("2020-10-06"), y=-70, label="Patients in ICU", colour="#a80b20")+  
-  labs(title="New COVID-19 cases in Scotland are rising, but hospital beds have yet to follow suit",
+  labs(title="The number of COVID patients in Scottish hospitals seems to have started to fall",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients with recently confirmed COVID-19<br>in <span style='color:#ff9f55;'>Scottish hospitals </span>and <span style='color:#ff1437;'>Intensive Care Units",
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(plot.subtitle=element_markdown(), 
