@@ -51,8 +51,8 @@ data <- bind_rows(data.f, data.m) %>%
                                   "65 to 69", "70 to 74", "75 to 79", "80 to 84",
                                   "85 to 89", "90+")))
 
-agg_tiff("Outputs/COVIDCasesxSex.tiff", units="in", width=10, height=7, res=800)
-ggplot(data %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3)), 
+agg_tiff("Outputs/COVIDCasesxSex.tiff", units="in", width=12, height=7, res=800)
+ggplot(data %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)), 
        aes(x=date, y=rates_roll, colour=sex))+
   geom_line(show.legend=FALSE)+
   scale_x_date(name="")+
@@ -60,13 +60,15 @@ ggplot(data %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3)),
   scale_colour_manual(values=c("#00cc99", "#6600cc"))+
   facet_wrap(~age)+
   theme_custom()+
-  theme(plot.subtitle=element_markdown())+
+  theme(plot.subtitle=element_markdown(), strip.text=element_blank())+
+  geom_text(data=data %>% filter(date==as.Date("2021-06-16") & sex=="Male"),
+            aes(x=date, y=140, label=age), colour="Black", family="Lato", fontface="bold")+
   labs(title="The gap in COVID case rates between young men and women in England is growing",
-       subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
+       subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age. Grey lines represent 5 days after major Euro 2020 matches (the Quarter and Semi-finals).",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")+
   #Quarter final
-  geom_vline(xintercept=as.Date("2021-07-03")+days(6), colour="Grey75", linetype=2)
-  #geom_vline(xintercept=as.Date("2021-07-07")+days(6), colour="Grey75", linetype=2)+
+  geom_vline(xintercept=as.Date("2021-07-03")+days(5), colour="Grey75", linetype=2)+
+  geom_vline(xintercept=as.Date("2021-07-07")+days(5), colour="Grey75", linetype=2)
   #geom_vline(xintercept=as.Date("2021-07-11")+days(6), colour="Grey75", linetype=2)
 dev.off()
 
@@ -95,7 +97,7 @@ data %>% select(date, age, rates_roll, sex) %>%
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210713.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210719.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -137,7 +139,7 @@ ggplot(scotdata %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3) &
   facet_wrap(~AgeGroup)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The gender gap in Scottish COVID cases has all but disappeared",
+  labs(title="The male/female gap in Scottish COVID cases has all but disappeared",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in Scotland, by age.",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
