@@ -49,7 +49,8 @@ data <- rawdata %>%
           ungroup() %>% 
           select(code, startdatew2), by="code", all.x=TRUE) %>% 
   mutate(dayssincew2=as.integer(if_else(date-startdatew2>=0, date-startdatew2, NA_real_)),
-         dayssincew4=as.integer(if_else(date-startdatew4>=0, date-startdatew4, NA_real_)))
+         dayssincew4=as.integer(if_else(date-startdatew4>=0, date-startdatew4, NA_real_))) %>% 
+  arrange(date)
 
 cases <- ggplot()+
   geom_line(data=data %>% filter(dayssincew2<threshold),
@@ -102,10 +103,75 @@ agg_tiff("Outputs/COVIDWaveComparisons.tiff", units="in", width=10, height=7, re
 plot
 dev.off()
 
+
+agg_tiff("Outputs/COVIDWaveComparisonsPathScotland.tiff", units="in", width=10, height=7, res=800)
 ggplot()+
-  geom_path(data=data %>% filter(dayssincew2<threshold),
-            aes(x=cases, y=admissions, colour=dayssincew2))+
-  geom_path(data=data %>% filter(!is.na(dayssincew4)),
-            aes(x=cases, y=admissions, colour=dayssincew4))+
-  facet_wrap(~name)+
-  theme_custom()
+  geom_path(data=data %>% filter(dayssincew2<threshold & name=="Scotland"),
+            aes(x=cases, y=admissions), colour="Grey70", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  geom_path(data=data %>% filter(!is.na(dayssincew4) & name=="Scotland"),
+            aes(x=cases, y=admissions), colour="#FF4E86", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  scale_x_continuous(name="Cases per 100,000 people per week", limits=c(0,NA))+
+  scale_y_continuous(name="Admissions per 100,000 people per week", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The relationship between COVID cases and admissions in Scotland has changed significantly",
+       subtitle=paste0("Trajectories of cases, admissions and deaths in <span style='color:#FF4E86;'>the current wave</span> compared to the first 100 days of <span style='color:Grey70;'>the second, autumn wave</span>.<br>The start of each wave is defined as the point at which cases first exceeded ", 
+                       threshold, " per 100,000 people per week."),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDWaveComparisonsPathEngland.tiff", units="in", width=10, height=7, res=800)
+ggplot()+
+  geom_path(data=data %>% filter(dayssincew2<threshold & name=="England"),
+            aes(x=cases, y=admissions), colour="Grey70", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  geom_path(data=data %>% filter(!is.na(dayssincew4) & name=="England"),
+            aes(x=cases, y=admissions), colour="#FF4E86", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  scale_x_continuous(name="Cases per 100,000 people per week", limits=c(0,NA))+
+  scale_y_continuous(name="Admissions per 100,000 people per week", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The relationship between COVID cases and admissions in England has changed significantly",
+       subtitle=paste0("Trajectories of cases, admissions and deaths in <span style='color:#FF4E86;'>the current wave</span> compared to the first 100 days of <span style='color:Grey70;'>the second, autumn wave</span>.<br>The start of each wave is defined as the point at which cases first exceeded ", 
+                       threshold, " per 100,000 people per week."),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDWaveComparisonsPathNI.tiff", units="in", width=10, height=7, res=800)
+ggplot()+
+  geom_path(data=data %>% filter(dayssincew2<threshold & name=="Northern Ireland"),
+            aes(x=cases, y=admissions), colour="Grey70", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  geom_path(data=data %>% filter(!is.na(dayssincew4) & name=="Northern Ireland"),
+            aes(x=cases, y=admissions), colour="#FF4E86", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  scale_x_continuous(name="Cases per 100,000 people per week", limits=c(0,NA))+
+  scale_y_continuous(name="Admissions per 100,000 people per week", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The relationship between COVID cases and admissions in Northern Ireland has changed",
+       subtitle=paste0("Trajectories of cases, admissions and deaths in <span style='color:#FF4E86;'>the current wave</span> compared to the first 100 days of <span style='color:Grey70;'>the second, autumn wave</span>.<br>The start of each wave is defined as the point at which cases first exceeded ", 
+                       threshold, " per 100,000 people per week."),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDWaveComparisonsPathWales.tiff", units="in", width=10, height=7, res=800)
+ggplot()+
+  geom_path(data=data %>% filter(dayssincew2<threshold & name=="Wales"),
+            aes(x=cases, y=admissions), colour="Grey70", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  geom_path(data=data %>% filter(!is.na(dayssincew4) & name=="Wales"),
+            aes(x=cases, y=admissions), colour="#FF4E86", show.legend=FALSE,
+            arrow = arrow(type = "closed", angle = 30, length = unit(0.05, "inches")))+
+  scale_x_continuous(name="Cases per 100,000 people per week", limits=c(0,NA))+
+  scale_y_continuous(name="Admissions per 100,000 people per week", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The relationship between COVID cases and admissions in Wales has changed substantially",
+       subtitle=paste0("Trajectories of cases, admissions and deaths in <span style='color:#FF4E86;'>the current wave</span> compared to the first 100 days of <span style='color:Grey70;'>the second, autumn wave</span>.<br>The start of each wave is defined as the point at which cases first exceeded ", 
+                       threshold, " per 100,000 people per week."),
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
