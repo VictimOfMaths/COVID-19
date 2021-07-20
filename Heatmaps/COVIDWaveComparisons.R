@@ -21,7 +21,7 @@ theme_custom <- function() {
 
 source <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=newAdmissionsRollingRate&metric=newCasesBySpecimenDateRollingRate&metric=newDeaths28DaysByDeathDateRollingRate&format=csv"
 
-threshold <- 50
+threshold <- 100
 
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
@@ -57,7 +57,7 @@ cases <- ggplot()+
   geom_line(data=data %>% filter(!is.na(dayssincew4)),
             aes(x=dayssincew4, y=cases), colour="#FF4E86")+
   scale_x_continuous(name="", limits=c(0,50))+
-  scale_y_continuous(name="Weekly cases per 100,000")+
+  scale_y_continuous(name="Weekly cases per 100,000", limits=c(0,NA))+
   facet_wrap(~name, ncol=1)+
   theme_custom()+
   theme(plot.title=element_text(face="plain"))+
@@ -70,7 +70,7 @@ admissions <- ggplot()+
             aes(x=dayssincew4, y=admissions), colour="#FF4E86")+
   scale_x_continuous(name="Days since start of wave", 
                      limits=c(0,50))+
-  scale_y_continuous(name="Weekly admissions per 100,000")+
+  scale_y_continuous(name="Weekly admissions per 100,000", limits=c(0,NA))+
   facet_wrap(~name, ncol=1)+
   theme_custom()+
   theme(plot.title=element_text(face="plain"))+
@@ -82,11 +82,10 @@ deaths <- ggplot()+
   geom_line(data=data %>% filter(!is.na(dayssincew4)),
             aes(x=dayssincew4, y=deaths), colour="#FF4E86")+
   scale_x_continuous(name="", limits=c(0,50))+
-  scale_y_continuous(name="Weekly deaths per 100,000")+
+  scale_y_continuous(name="Weekly deaths per 100,000", limits=c(0,NA))+
   facet_wrap(~name, ncol=1)+
   theme_custom()+
   theme(plot.title=element_text(face="plain"))+
-
   labs(title="Deaths")
 
 plot <- cases+admissions+deaths+
@@ -102,3 +101,11 @@ plot <- cases+admissions+deaths+
 agg_tiff("Outputs/COVIDWaveComparisons.tiff", units="in", width=10, height=7, res=800)
 plot
 dev.off()
+
+ggplot()+
+  geom_path(data=data %>% filter(dayssincew2<threshold),
+            aes(x=cases, y=admissions, colour=dayssincew2))+
+  geom_path(data=data %>% filter(!is.na(dayssincew4)),
+            aes(x=cases, y=admissions, colour=dayssincew4))+
+  facet_wrap(~name)+
+  theme_custom()
