@@ -18,9 +18,9 @@ theme_custom <- function() {
 }
 
 #NE & Yorkshire version
-latestcol <- "CV"
+latestcol <- "CZ"
 
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210715.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210719.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=admurl, destfile=temp, quiet=FALSE, mode="wb")
