@@ -475,18 +475,19 @@ casetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fil
   scale_fill_distiller(palette="Spectral")+
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
-               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(2)))+
   labs(title="Timelines for COVID-19 cases in Northern Irish Local Authoritiess",
        subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Local Authority.\nAuthorities are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Local Authority.\nData updated to ", plotto, ". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
-       caption="Data from Department of Health NI | Plot by @VictimOfMaths")+
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
-        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
+        axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)),
+        axis.text.x=element_text(colour="Black"))
 
 casebars.ni <- ggplot(subset(data.ni, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, maxcaseday), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_custom()+
   scale_fill_distiller(palette="Spectral")+
-  scale_x_continuous(name="Total confirmed cases", breaks=c(0,1000,2000))+
+  scale_x_continuous(name="Total confirmed cases")+
   theme(axis.title.y=element_blank(), axis.line.y=element_blank(), axis.text.y=element_blank(),
         axis.ticks.y=element_blank(), axis.text.x=element_text(colour="Black"))
 
@@ -500,10 +501,10 @@ ggplot(data.ni, aes(x=date, y=fct_reorder(name, totalcases), height=casesroll_av
   theme_custom()+
   scale_fill_distiller(palette="Spectral", name="Cases per day\n7-day rolling avg.")+
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0), 
-               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(1)))+
+               breaks=pretty_breaks(n=interval(as.Date(plotfrom), plotto)%/% months(2)))+
   scale_y_discrete(name="")+
   labs(title="Timelines of confirmed COVID-19 cases in Northern Irish Local Authorities",
-       caption="Data from Department of Health NI | Plot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 ratetiles.ni <- ggplot(data.ni, aes(x=date, y=fct_reorder(name, maxcaseday), fill=caserate_avg))+
