@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210715.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210722.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "CV"
+admrange <- "DC"
 #Set latest date of admissions data
-admdate <- as.Date("2021-07-11")
+admdate <- as.Date("2021-07-18")
 
 #Read in admissions
 #First data up to 6th April
