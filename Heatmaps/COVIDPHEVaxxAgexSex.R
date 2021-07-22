@@ -13,12 +13,12 @@ library(gganimate)
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
 
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1002563/Weekly_Influenza_and_COVID19_report_data_w28.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1005058/Weekly_Influenza_and_COVID19_report_data_W29.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-data <- read_excel(temp, sheet="Figure 61&62. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+data <- read_excel(temp, sheet="Figure 62&63. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
   select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
 
 colnames(data) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
@@ -142,6 +142,19 @@ dev.off()
 
 #Animated versions
 #Read in historic data
+#Week 27
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1002563/Weekly_Influenza_and_COVID19_report_data_w28.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw27 <- read_excel(temp, sheet="Figure 61&62. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw27) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
+
 #Week 26
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1000375/Weekly_Influenza_and_COVID19_report_data_w27.xlsx"
 
@@ -300,7 +313,8 @@ colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax
 
 #Data for weeks prior to 21 uses different age bands. Aligning them is a project for the interested reader...
 
-mergeddata <- dataw26 %>% mutate(Week=26) %>% 
+mergeddata <- dataw27 %>% mutate(Week=27) %>% 
+  bind_rows(dataw26 %>% mutate(Week=26)) %>% 
   bind_rows(dataw25 %>% mutate(Week=25)) %>% 
   bind_rows(dataw24 %>% mutate(Week=24)) %>% 
   bind_rows(dataw23 %>% mutate(Week=23)) %>% 
@@ -313,7 +327,7 @@ mergeddata <- dataw26 %>% mutate(Week=26) %>%
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=27))
+  bind_rows(data %>% mutate(Week=28))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
@@ -337,7 +351,8 @@ mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Meas
                                   "50-54", "55-59", "60-64",
                                   "65-69", "70-74", "75-79", "80+")),
          SexMeasure=paste0(Sex, Measure),
-         date=as.Date("2021-04-11")+weeks(Week-14))
+         date=as.Date("2021-04-11")+weeks(Week-14)) %>% 
+  arrange(Week)
 
 anim <- ggplot(mergeddata_long, aes(x=Value, y=Age, fill=SexMeasure))+
   geom_col(position="stack", show.legend=FALSE)+
