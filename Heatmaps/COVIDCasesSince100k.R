@@ -64,3 +64,25 @@ ggplot()+
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDCasesSince100kxTime.tiff",  units="in", width=9, height=7, res=800)
+ggplot()+
+  geom_line(data=data %>% filter(dayssince>=0), aes(x=date, y=caserate, group=areaName), colour="Grey80")+
+  geom_line(data=data %>% filter(dayssince>=0 & areaName %in% c("Bolton", "Blackburn with Darwen")), 
+            aes(x=date, y=caserate, group=areaName, colour=areaName))+
+  #geom_point(data=data %>% filter(date==max(date)), 
+  #           aes(x=date, y=caserate, fill=country, size=pop),
+  #           shape=21, alpha=0.7)+
+  #geom_text_repel(data=data %>% filter(date==max(date)),
+  #                aes(x=date, y=caserate, label=areaName), size=rel(2.3),
+  #                box.padding=0.5)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Weekly cases per 100,000 people")+
+  scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  scale_size(guide=FALSE)+
+  theme_custom()+
+  theme(legend.position="top")+
+  labs(title="The Delta wave in Bolton and Blackburn is far from over",
+       subtitle=paste0("Rolling 7-day average of new COVID case rates in UK Local Authorities since the date that cases within that area\nfirst exceeded 100/100,000 in the current wave. Date up to ",
+                       max(data$date)), 
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
