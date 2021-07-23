@@ -17,19 +17,27 @@ library(ggtext)
 
 #Download vaccination data by MSOA
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-vaccinations/
-maxdate <- "4th July"
+maxdate <- "18th July"
 
 vax <- tempfile()
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-weekly-announced-vaccinations-08-July-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-weekly-announced-vaccinations-22-July-2021.xlsx"
 vax <- curl_download(url=url, destfile=vax, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(vax, sheet="MSOA", range="F16:AH6806", col_names=FALSE) %>% 
-  set_names("msoa11cd", "msoa11nm", "<25_1st", "25-29_1st", "30-34_1st", "35-39_1st", "40-44_1st", 
+vaxdata <- read_excel(vax, sheet="MSOA", range="F15:AK6805", col_names=FALSE) %>% 
+  set_names("msoa11cd", "msoa11nm", "<18_1st", "18-24_1st", "25-29_1st", "30-34_1st", "35-39_1st", "40-44_1st", 
             "45-49_1st", "50-54_1st", "55-59_1st", "60-64_1st", "65-69_1st", "70-74_1st", 
             "75-79_1st", "80+_1st", "blank", "<25_2nd", "25-29_2nd", "30-34_2nd", "35-39_2nd", "40-44_2nd", 
             "45-49_2nd", "50-54_2nd", "55-59_2nd", "60-64_2nd", "65-69_2nd", "70-74_2nd", 
-            "75-79_2nd", "80+_2nd") %>% 
-  select(-blank) %>% 
+            "75-79_2nd", "80+_2nd", "blank2", "Total") %>% 
+  mutate(`<18_1st`=as.numeric(`<18_1st`),
+         `18-24_1st`=as.numeric(`18-24_1st`),
+    `<25_1st`=case_when(
+    is.na(`<18_1st`) ~ Total-`25-29_1st`-`30-34_1st`-`35-39_1st`-`40-44_1st`-`45-49_1st`-`50-54_1st`-
+      `55-59_1st`-`60-64_1st`-`65-69_1st`-`70-74_1st`-`75-79_1st`-`80+_1st`-`<25_2nd`-`25-29_2nd`-
+      `30-34_2nd`-`35-39_2nd`-`40-44_2nd`-`45-49_2nd`-`50-54_2nd`-
+      `55-59_2nd`-`60-64_2nd`-`65-69_2nd`-`70-74_2nd`-`75-79_2nd`-`80+_2nd`,
+    TRUE ~ `<18_1st`+`18-24_1st`)) %>% 
+  select(-c(blank, blank2, `<18_1st`, `18-24_1st`, Total)) %>% 
   pivot_longer(c(3:28), names_to=c("age", "dose"), names_sep="_", values_to="vaccinated")
     
 #Download IMD data
@@ -669,3 +677,7 @@ Yorksdata <- MSOA2 %>%
   mutate(Yorksdecile=quantcut(-IMDrank, 10, labels=FALSE))
 
 write.csv(Yorksdata, "Data/YorkshireVaxData.csv")
+
+
+#########################
+working <- vaxdata %>% filter(age=="Total")
