@@ -12,7 +12,6 @@ library(extrafont)
 library(ggrepel)
 library(gganimate)
 library(lubridate)
-library(gganimate)
 
 #Start with LA level cases for the whole of the UK
 cases <- tempfile()
@@ -118,7 +117,7 @@ plot <- ggplot()+
         plot.title=element_text(face="bold", size=rel(1.6)),
         legend.text = element_text(face="bold", size=rel(1)))+
   guides(fill=guide_legend(override.aes=list(size=3)))+
-  labs(title="Recent COVID case trends in England & Scotland don't look promising",
+  labs(title="COVID case rates are falling across almost the entire UK",
        subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
@@ -127,7 +126,8 @@ agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=9, h
 plot
 dev.off()
 
-#Animated version
+#Animated version (to be honest, this needs tweaking, it looks pretty rubbish with
+#these settings)
 anim <- ggplot(plotdata %>% filter(date>=as.Date("2021-04-19")), 
                aes(x=caserate, y=change, fill=Country))+
   geom_hline(yintercept=0)+
