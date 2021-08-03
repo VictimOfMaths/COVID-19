@@ -12,17 +12,18 @@ library(snakecase)
 library(forcats)
 library(ragg)
 library(extrafont)
+library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210708.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/COVID-19-daily-admissions-and-beds-20210802.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210708.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210715.xlsx"
 #Increment by one each day
-dailyrange <- "CO"
-dailyoccrange <- "CQ"
+dailyrange <- "DN"
+dailyoccrange <- "DP"
 #Increment by seven each week
-weeklyrange <- "CO"
+weeklyrange <- "DJ"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -99,7 +100,7 @@ ggplot(dailydata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in English hospitals is rising, albeit more slowly than in previous waves",
+  labs(title="New COVID admissions seem to have turned a corner across all English regions",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -116,7 +117,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="Hospitalisations have risen sharply in the past week across the whole of England",
+  labs(title="New COVID admissions seem to have turned a corner across all English regions",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
