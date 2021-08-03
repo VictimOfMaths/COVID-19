@@ -18,9 +18,9 @@ theme_custom <- function() {
 }
 
 #NE & Yorkshire version
-latestcol <- "CZ"
+latestcol <- "DN"
 
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/COVID-19-daily-admissions-and-beds-20210719.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/COVID-19-daily-admissions-and-beds-20210802.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=admurl, destfile=temp, quiet=FALSE, mode="wb")
@@ -91,7 +91,7 @@ ggplot()+
   facet_wrap(~Region)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="COVID beds in hospitals follow COVID cases, but the link looks weaker in this latest wave",
+  labs(title="One of these waves is not like the others...",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<span style='color:#ff9f55;'> all other</span> beds",
        caption="Data from NHS England and coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -116,7 +116,7 @@ ggplot()+
            label="Total patients in hospital", hjust=0, family="Lato")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="COVID beds in hospitals follow COVID cases, but the link looks weaker in this latest wave",
+  labs(title="As COVID cases in England fall, the number of COVID patients in hospital has plateaued",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<span style='color:#ff9f55;'> all other</span> beds in England",
        caption="Data from NHS England and coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
