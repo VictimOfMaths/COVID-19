@@ -63,13 +63,9 @@ ggplot(data %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)),
   theme(plot.subtitle=element_markdown(), strip.text=element_blank())+
   geom_text(data=data %>% filter(date==as.Date("2021-06-16") & sex=="Male"),
             aes(x=date, y=140, label=age), colour="Black", family="Lato", fontface="bold")+
-  labs(title="The gap in COVID case rates between young men and women in England is growing",
-       subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age. Grey lines represent 5 days after major Euro 2020 matches (the Quarter and Semi-finals).",
-       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")+
-  #Quarter final
-  geom_vline(xintercept=as.Date("2021-07-03")+days(5), colour="Grey75", linetype=2)+
-  geom_vline(xintercept=as.Date("2021-07-07")+days(5), colour="Grey75", linetype=2)
-  #geom_vline(xintercept=as.Date("2021-07-11")+days(6), colour="Grey75", linetype=2)
+  labs(title="The sex gap in COVID case rates has disappeared in most age groups",
+       subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 agg_tiff("Outputs/COVIDCasesxSexFull.tiff", units="in", width=10, height=7, res=800)
@@ -94,6 +90,46 @@ data %>% select(date, age, rates_roll, sex) %>%
   ggplot(aes(x=date, y=ratio, colour=age, group=age))+
   geom_line()+
   theme_custom()
+
+heatmapdata <- data %>% 
+  select(sex, rates_roll, age, date) %>% 
+  spread(sex, rates_roll) %>% 
+  mutate(maleprop=Male/(Male+Female))
+
+agg_tiff("Outputs/COVIDCasesxSexHeatmap.tiff", units="in", width=10, height=7, res=800)
+ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)))+
+  geom_tile(aes(x=date, y=age, fill=maleprop))+
+  theme_custom()+
+  scale_fill_distiller(palette="PRGn", limits=c(0.33,0.67), name="", breaks=c(0.33,0.5,0.67),
+                       labels=c("More\nfemale\ncases", "Equal male\nand female\ncases", "More\nmale\ncases"))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme(legend.position = "top", plot.subtitle=element_markdown())+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="The Euros had a big impact on the male/female ratio of COVID cases",
+       subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
+       caption="Date from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxSexHeatmapU60s.tiff", units="in", width=10, height=6, res=800)
+ggplot(temp<-heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3) &
+         age %in% c("0 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24",
+                    "25 to 29", "30 to 34", "35 to 39", "40 to 44", 
+                    "45 to 49", "50 to 54", "55 to 59")))+
+  geom_tile(aes(x=date, y=age, fill=maleprop))+
+  theme_custom()+
+  scale_fill_distiller(palette="PRGn", limits=c(0.41,0.59), name="", breaks=c(0.41,0.5,0.59),
+                       labels=c("More\nfemale\ncases", "Equal male\nand female\ncases", "More\nmale\ncases"))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme(legend.position = "top", plot.subtitle=element_markdown())+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="The Euros had a big impact on the male/female ratio of COVID cases",
+       subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
+       caption="Date from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
 
 #Scotland
 temp <- tempfile()
