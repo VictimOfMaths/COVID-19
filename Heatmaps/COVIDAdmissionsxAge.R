@@ -21,15 +21,16 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Covid-Publication-08-07-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Covid-Publication-05-08-2021-Supplementary-Dataagebands.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:JI22", col_names=FALSE) %>% 
-  mutate(age=c("0-5", "6-17", "18-54", "55-64", "65-74", "75-84", "85+")) %>% 
+rawdata <- read_excel(temp, range="D16:KK25", col_names=FALSE) %>% 
+  mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
-         age=factor(age, levels=c("0-5", "6-17", "18-54", "55-64", "65-74", "75-84", "85+")))
+         age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
+                                  "75-84", "85+")))
 
 agg_tiff("Outputs/COVIDAdmissionsHeatmap.tiff", units="in", width=9, height=6, res=800)
 ggplot(rawdata, aes(x=date, y=age, fill=admissions))+
@@ -41,7 +42,7 @@ ggplot(rawdata, aes(x=date, y=age, fill=admissions))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID hospital admissions are largely confined to 18-54 year olds",
+  labs(title="COVID admission rates have been much lower and younger in the latest wave",
        subtitle="Number of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -57,7 +58,10 @@ pop <- as.data.frame(t(read_excel(temp1, sheet="MYE2 - Persons", range="E12:CQ12
          age=case_when(
            age<6 ~ "0-5",
            age<18 ~ "6-17",
-           age<55 ~ "18-54",
+           age<25 ~ "18-24",
+           age<35 ~ "25-34",
+           age<45 ~ "35-44",
+           age<55 ~ "45-54",
            age<65 ~ "55-64",
            age<75 ~ "65-74",
            age<85 ~ "75-84",
@@ -80,7 +84,7 @@ ggplot(data, aes(x=date, y=age, fill=admrate))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID hospital admissions are nothing like previous waves (yet)",
+  labs(title="COVID admission rates have been much lower and younger in the latest wave",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -99,14 +103,17 @@ casedata <- read.csv(temp2) %>%
   rowwise() %>% 
   mutate(`0-5`=`00_04`+0.2*`05_09`,
          `6-17`=0.8*`05_09`+`10_14`+0.6*`15_19`,
-         `18-54`=0.4*`15_19`+`20_24`+`25_29`+`30_34`+`35_39`+`40_44`+`45_49`+`50_54`,
+         `18-24`=0.4*`15_19`+`20_24`,
+         `25-34`=`25_29`+`30_34`,
+         `35-44`=`35_39`+`40_44`,
+         `45-54`=`45_49`+`50_54`,
          `55-64`=`55_59`+`60_64`,
          `65-74`=`65_69`+`70_74`,
          `75-84`=`75_79`+`80_84`,
          `85+`=`85_89`+`90+`) %>% 
   ungroup() %>% 
-  select(date, `0-5`, `6-17`, `18-54`, `55-64`, `65-74`, `75-84`, `85+`) %>% 
-  gather(age, cases, c(2:8))
+  select(date, `0-5`, `6-17`, `18-24`, `25-34`, `35-44`, `45-54`, `55-64`, `65-74`, `75-84`, `85+`) %>% 
+  gather(age, cases, c(2:11))
 
 #Bring it all together
 alldata <- data %>% 
@@ -130,7 +137,8 @@ alldata <- data %>%
          lagcaserateroll=lag(caserateroll, 8)) %>% 
   ungroup() %>% 
   mutate(CHR=admrateroll/lagcaserateroll,
-         age=factor(age, levels=c("0-5", "6-17", "18-54", "55-64", "65-74", "75-84", "85+", "Total")))
+         age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
+                                  "75-84", "85+", "Total")))
 
 agg_tiff("Outputs/COVIDCHROverall.tiff", units="in", width=9, height=6, res=800)
 ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
@@ -149,8 +157,8 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
   geom_line()+
   scale_x_date(name="")+
   scale_y_continuous(name="Proportion of cases admitted to hospital",
-                     labels=label_percent(accuracy=1), limits=c(0,0.1))+
-  scale_colour_paletteer_d("LaCroixColoR::Tangerine", name="Age")+
+                     labels=label_percent(accuracy=1), limits=c(0,NA))+
+  scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
   theme_custom()+
   labs(title="The proportion of COVID cases being admitted to hospital varies a lot with age",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
@@ -163,9 +171,10 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
   geom_stream()+
   scale_x_date(name="")+
   scale_y_continuous(name="Daily new hospital admissions", labels=abs)+
-  scale_fill_paletteer_d("awtools::a_palette", name="Age")+
+  scale_fill_paletteer_d("ggsci::default_gsea", name="Age")+
   theme_custom()+
   labs(title="COVID patients being admitted to hospital are younger than in previous waves",
        subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
+
