@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/07/Weekly-covid-admissions-and-beds-publication-210729.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Weekly-covid-admissions-and-beds-publication-210805.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "DJ"
+admrange <- "DQ"
 #Set latest date of admissions data
-admdate <- as.Date("2021-07-25")
+admdate <- as.Date("2021-08-01")
 
 #Read in admissions
 #First data up to 6th April
@@ -256,7 +256,7 @@ plot2 <- ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
   scale_size(guide=FALSE)+
   theme_custom()+
-  labs(title="Rises in COVID hospital admissions have slowed, but they are still rising in most of England",
+  labs(title="COVID hospital admissions are now falling across much of England",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
@@ -351,7 +351,7 @@ plot3 <- ggplot()+
   scale_size(guide=FALSE)+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admissions are still rising, albeit more slowly, across much of the country",
+  labs(title="COVID admissions are now falling across much of the country",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
