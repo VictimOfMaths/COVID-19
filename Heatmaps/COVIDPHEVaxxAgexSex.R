@@ -13,7 +13,7 @@ library(gganimate)
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
 
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1005058/Weekly_Influenza_and_COVID19_report_data_W29.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1008860/Weekly_Influenza_and_COVID19_report_data_W31.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
@@ -142,6 +142,30 @@ dev.off()
 
 #Animated versions
 #Read in historic data
+#Week 29
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1007253/Weekly_Influenza_and_COVID19_report_data_W30.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw29 <- read_excel(temp, sheet="Figure 62&63. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw29) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
+#Week 28
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1005058/Weekly_Influenza_and_COVID19_report_data_W29.xlsx"
+
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+dataw28 <- read_excel(temp, sheet="Figure 62&63. COVID Vac Age Sex", range="B13:N26", col_names=FALSE) %>% 
+  select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
+
+colnames(dataw28) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
+                    "Female_Vax2")
+
 #Week 27
 url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1002563/Weekly_Influenza_and_COVID19_report_data_w28.xlsx"
 
@@ -313,7 +337,9 @@ colnames(dataw14) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax
 
 #Data for weeks prior to 21 uses different age bands. Aligning them is a project for the interested reader...
 
-mergeddata <- dataw27 %>% mutate(Week=27) %>% 
+mergeddata <- dataw29 %>% mutate(Week=29) %>% 
+  bind_rows(dataw28 %>% mutate(Week=28)) %>% 
+  bind_rows(dataw27 %>% mutate(Week=27)) %>% 
   bind_rows(dataw26 %>% mutate(Week=26)) %>% 
   bind_rows(dataw25 %>% mutate(Week=25)) %>% 
   bind_rows(dataw24 %>% mutate(Week=24)) %>% 
@@ -327,7 +353,7 @@ mergeddata <- dataw27 %>% mutate(Week=27) %>%
          Female_Vax1Only=Female_Vax1-Female_Vax2) %>% 
   ungroup() %>% 
   select(Age, Week, Male_Unvax, Female_Unvax, Male_Vax1Only, Female_Vax1Only, Male_Vax2, Female_Vax2) %>% 
-  bind_rows(data %>% mutate(Week=28))
+  bind_rows(data %>% mutate(Week=30))
 
 mergeddata_long <- pivot_longer(mergeddata, cols=c(3:8), names_to=c("Sex", "Measure"), names_sep="_", 
                           values_to="Value") %>% 
