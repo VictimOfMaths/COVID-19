@@ -83,7 +83,7 @@ ggplot()+
   scale_y_continuous(name="Age", limits=c(0,100))+
   theme_custom()+
   theme(plot.title=element_markdown(), plot.subtitle=element_markdown())+
-  labs(title="<span style='color:navyblue;'>The US</span> has vaccinated fewer of its older population against COVID than <span style='color:darkred;'>the UK",
+  labs(title="<span style='color:navyblue;'>The US</span> has vaccinated fewer of its older population against COVID than <span style='color:darkred;'>England",
        subtitle="The number of people in each country who are <span style='color:Grey70;'>unvaccinated</span>, have received <span style='color:royalblue;'>one </span><span style='color:tomato;'>dose </span>or are <span style='color:navyblue;'>fully </span><span style='color:darkred;'>vaccinated</span>.",
        caption="Data from CDC, NHS England and ONS\nPlot by @VictimOfMaths")
 dev.off()
@@ -102,7 +102,7 @@ ggplot()+
   scale_y_continuous(name="Age", limits=c(0,100))+
   theme_custom()+
   theme(plot.title=element_markdown(), plot.subtitle=element_markdown())+
-  labs(title="<span style='color:navyblue;'>The US</span> has vaccinated fewer of its older population against COVID than <span style='color:darkred;'>the UK",
+  labs(title="<span style='color:navyblue;'>The US</span> has vaccinated fewer of its older population against COVID than <span style='color:darkred;'>England",
        subtitle="The number of people in each country who are <span style='color:Grey70;'>unvaccinated</span>, have received <span style='color:royalblue;'>one </span><span style='color:tomato;'>dose </span>or are <span style='color:navyblue;'>fully </span><span style='color:darkred;'>vaccinated</span>.<br>Areas are scaled to imply equal populations, so the x-axis scales on the left- and right- of the centre are different.",
        caption="Data from CDC, NHS England and ONS\nPlot by @VictimOfMaths")
 dev.off()
