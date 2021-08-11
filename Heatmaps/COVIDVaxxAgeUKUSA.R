@@ -5,6 +5,8 @@ library(curl)
 library(extrafont)
 library(ggtext)
 library(scales)
+library(readxl)
+
 
 theme_custom <- function() {
   theme_classic() %+replace%
