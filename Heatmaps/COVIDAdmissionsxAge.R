@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Covid-Publication-05-08-2021-Supplementary-Dataagebands.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Covid-Publication-12-08-2021-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:KK25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:KR25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -147,9 +147,9 @@ ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
   scale_y_continuous(name="Proportion of cases admitted to hospital",
                      labels=label_percent(accuracy=1), limits=c(0,NA))+
   theme_custom()+
-  labs(title="The proportion of COVID cases being admitted to hospital has fallen in recent months",
+  labs(title="The proportion of COVID cases being admitted to hospital has risen in recent days",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
-       caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
+       caption="Data from NHS England and coronavirues.data.gov.uk | Plot and analysis by Colin Angus")
 dev.off()
 
 agg_tiff("Outputs/COVIDCHRxAge.tiff", units="in", width=9, height=6, res=800)
@@ -161,6 +161,20 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
   scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
   theme_custom()+
   labs(title="The proportion of COVID cases being admitted to hospital varies a lot with age",
+       subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
+       caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCHRxAgeFacets.tiff", units="in", width=9, height=6, res=800)
+ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour=age))+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of cases admitted to hospital",
+                     labels=label_percent(accuracy=1), limits=c(0,NA))+
+  scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
+  facet_wrap(~age, scales="free_y")+
+  theme_custom()+
+  labs(title="The proportion of COVID cases being admitted to hospital has risen in all age groups",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -177,4 +191,3 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
        subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
-
