@@ -191,3 +191,30 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
        subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
+
+#Calculate admission rate ratios
+admratios <- alldata %>% 
+  group_by(age) %>% 
+  arrange(date) %>% 
+  mutate(ratio=admroll/lag(admroll, 7)) %>% 
+  filter(age!="Total" & !is.na(ratio))
+
+agg_tiff("Outputs/COVIDAdmissionRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
+ggplot(admratios %>% filter(date>as.Date("2021-05-01")))+
+  geom_tile(aes(x=date, y=age, fill=ratio))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  scale_fill_paletteer_c("pals::warmcool", limit=c(0.249,4), direction=-1 ,
+                         trans="log", breaks=c(0.25, 0.5, 1, 2, 4), 
+                         labels=c("-75%", "-50%", "No change", "+100%", "+300%"),
+                         name="Change in cases in the past week")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID hospital admissions have fallen in all age groups",
+       subtitle="Weekly change in the rolling 7-day average number of new admissions with a positive COVID test, or people testing positive in hospital in England",
+       caption="Data from NHS England | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
+dev.off()
+
