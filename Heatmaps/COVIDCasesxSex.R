@@ -116,9 +116,9 @@ dev.off()
 
 agg_tiff("Outputs/COVIDCasesxSexHeatmapU60s.tiff", units="in", width=10, height=6, res=800)
 ggplot(temp<-heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3) &
-         age %in% c("0 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24",
-                    "25 to 29", "30 to 34", "35 to 39", "40 to 44", 
-                    "45 to 49", "50 to 54", "55 to 59")))+
+                                      age %in% c("0 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24",
+                                                 "25 to 29", "30 to 34", "35 to 39", "40 to 44", 
+                                                 "45 to 49", "50 to 54", "55 to 59")))+
   geom_tile(aes(x=date, y=age, fill=maleprop))+
   theme_custom()+
   scale_fill_distiller(palette="PRGn", limits=c(0.41,0.59), name="", breaks=c(0.41,0.5,0.59),
@@ -149,7 +149,7 @@ caseratios <- data %>%
 
 #Whole population
 popheatmap <- caseratios %>% 
-  filter(sex=="Total" & date>as.Date("2020-04-01")) 
+  filter(sex=="Total" & date>as.Date("2020-04-01") & date<max(date)) 
 
 agg_tiff("Outputs/COVIDCaseRatioHeatmap.tiff", units="in", width=10, height=6, res=800)
 ggplot(popheatmap)+
@@ -167,6 +167,7 @@ ggplot(popheatmap)+
   labs(title="Generally COVID case numbers have risen or fallen across all age groups at once",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
@@ -182,11 +183,12 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-05-01")))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The recent collapse in COVID case numbers stalled in 15-24 year olds first",
+  labs(title="Recent trends in English COVID case numbers vary widely by age",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
 dev.off()
-  
+
 popheatmapxsex <- caseratios %>% 
   filter(sex!="Total" & date>as.Date("2020-04-01")) 
 
@@ -230,7 +232,7 @@ dev.off()
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210808.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210817.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -276,3 +278,61 @@ ggplot(scotdata %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3) &
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in Scotland, by age.",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
+
+#Calculate case rate ratios
+caseratios.scot <- scotdata %>% 
+  group_by(AgeGroup, date) %>% 
+  summarise(cases_roll=sum(cases_roll)) %>% 
+  mutate(Sex="Total") %>%
+  ungroup() %>% 
+  bind_rows(data) %>% 
+  filter(!is.na(cases_roll)) %>% 
+  select(AgeGroup, Sex, date, cases_roll) %>% 
+  group_by(AgeGroup, Sex) %>% 
+  mutate(caseratio=cases_roll/lag(cases_roll, 7)) %>% 
+  ungroup()
+
+#Whole population
+popheatmap.scot <- caseratios.scot %>% 
+  filter(Sex=="Total" & date>as.Date("2020-04-01")) 
+
+agg_tiff("Outputs/COVIDCaseRatioHeatmapScot.tiff", units="in", width=10, height=6, res=800)
+ggplot(popheatmap.scot)+
+  geom_tile(aes(x=date, y=AgeGroup, fill=caseratio))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  scale_fill_paletteer_c("pals::warmcool", limit=c(0.249,4), direction=-1 ,
+                         trans="log", breaks=c(0.25, 0.5, 1, 2, 4), 
+                         labels=c("-75%", "-50%", "No change", "+100%", "+300%"),
+                         name="Change in cases in the past week")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="Generally COVID case numbers have risen or fallen across all age groups at once",
+       subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDCaseRatioHeatmapRecentScot.tiff", units="in", width=10, height=6, res=800)
+ggplot(popheatmap.scot %>% filter(date>as.Date("2021-05-01")))+
+  geom_tile(aes(x=date, y=AgeGroup, fill=caseratio))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  scale_fill_paletteer_c("pals::warmcool", limit=c(0.249,4), direction=-1 ,
+                         trans="log", breaks=c(0.25, 0.5, 1, 2, 4), 
+                         labels=c("-75%", "-50%", "No change", "+100%", "+300%"),
+                         name="Change in cases in the past week")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="Recent trends in Scottish COVID case numbers are more consistent across age groups",
+       subtitle="Weekly change in the rolling 7-day average number of new COVID cases in Scotland, by age group",
+       caption="Data from NHS Scotland | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
+dev.off()
+
+
+
