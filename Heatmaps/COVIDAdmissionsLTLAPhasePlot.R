@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Weekly-covid-admissions-and-beds-publication-210805.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Weekly-covid-admissions-and-beds-publication-210826.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "DQ"
+admrange <- "EL"
 #Set latest date of admissions data
-admdate <- as.Date("2021-08-01")
+admdate <- as.Date("2021-08-22")
 
 #Read in admissions
 #First data up to 6th April
@@ -133,8 +133,8 @@ admissions <- merge(admissions, trust.lookup, by.x="code", by.y="code", all=TRUE
 #aggregate up to LTLA level
 LAadmissions <- admissions %>% 
   mutate(LA.admissions=case_when(
-           date<=as.Date("2020-10-04") ~ admissions*popprop1,
-           TRUE ~ admissions*popprop2)) %>% 
+    date<=as.Date("2020-10-04") ~ admissions*popprop1,
+    TRUE ~ admissions*popprop2)) %>% 
   group_by(LAD19CD, date, LAD19NM) %>% 
   summarise(admissions=sum(LA.admissions, na.rm=TRUE)) %>% 
   ungroup() %>% 
@@ -220,8 +220,8 @@ plot1 <- ggplot()+
           aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels %>% filter(!RegionNation %in% c("Scotland", "Wales", 
                                                                  "Northern Ireland")), 
-                                            aes(geometry=geom, label=Group.labe,
-                                      hjust=just), size=rel(2.4), colour="Black")+
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, limits=c(0,NA),
                          name="Admissions per day\nper 100,000")+
   theme_void()+
@@ -230,7 +230,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates are still highest in the North East",
+  labs(title="COVID admission rates are still highest in the North of England",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -256,7 +256,7 @@ plot2 <- ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
   scale_size(guide=FALSE)+
   theme_custom()+
-  labs(title="COVID hospital admissions are now falling across much of England",
+  labs(title="COVID hospital admissions are a very mixed picture in England",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
@@ -351,7 +351,7 @@ plot3 <- ggplot()+
   scale_size(guide=FALSE)+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admissions are now falling across much of the country",
+  labs(title="COVID admissions are a mixed picture across England",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
