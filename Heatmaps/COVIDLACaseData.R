@@ -641,7 +641,7 @@ data.map <- bind_rows(data.map, temp, temp1, temp2)
 
 temp <- tempfile()
 temp2 <- tempfile()
-source <- "https://opendata.arcgis.com/datasets/1d78d47c87df4212b79fe2323aae8e08_0.zip?outSR=%7B%22latestWkid%22%3A27700%2C%22wkid%22%3A27700%7D"
+source <- "https://t.co/GwVCSDNThM?amp=1"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 unzip(zipfile=temp, exdir=temp2)
 
@@ -649,7 +649,7 @@ unzip(zipfile=temp, exdir=temp2)
 name <- list.files(temp2, pattern=".shp")
 shapefile <- st_read(file.path(temp2, name))
 
-names(shapefile)[names(shapefile) == "lad19cd"] <- "code"
+names(shapefile)[names(shapefile) == "LAD19CD"] <- "code"
 
 simplemap <- ms_simplify(shapefile, keep=0.2, keep_shapes = TRUE)
 
@@ -710,21 +710,21 @@ dev.off()
 ###########################
 #UKLTLA heatmap ordered from S->N
 lat.data <- map.cases %>% 
-  select(code, lat) %>% 
+  select(code, LAT) %>% 
   as.data.frame() %>% 
-  select(code, lat) %>% 
+  select(code, LAT) %>% 
   distinct() %>% 
   filter(!is.na(code) & !code %in% c("E06000062", "E06000061")) %>% 
   #Fix Northamptonshire LA changes (use Northampton and Kettering as the latitudes for the new counties)
   bind_rows(map.cases %>% filter(code %in% c("E07000154", "E07000153")) %>% 
               as.data.frame() %>% 
-              select(code, lat) %>% 
+              select(code, LAT) %>% 
               mutate(code=if_else(code=="E07000154", "E06000062", "E06000061")))
 
 data.all2 <- merge(data.all, lat.data)
 
 #Plot case trajectories
-casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=maxcaseprop))+
+casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, LAT), fill=maxcaseprop))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_custom()+
   scale_fill_distiller(palette="Spectral")+
@@ -737,7 +737,7 @@ casetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=m
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(1.6)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(2.5)))
 
-casebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, lat), fill=totalcases))+
+casebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=totalcases, y=fct_reorder(name, LAT), fill=totalcases))+
   geom_col(show.legend=FALSE)+
   theme_custom()+
   scale_fill_distiller(palette="Spectral")+
@@ -753,7 +753,7 @@ agg_png("Outputs/COVIDLTLACasesHeatmapUKOrdered.png", units="in", width=25, heig
 plot_grid(casetiles.all2, casebars.all2, align="h", rel_widths=c(1,0.2))
 dev.off()
 
-ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=caserate_avg))+
+ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, LAT), fill=caserate_avg))+
   geom_tile(colour="White", show.legend=FALSE)+
   theme_custom()+
   scale_fill_distiller(palette="Spectral")+
@@ -766,7 +766,7 @@ ratetiles.all2 <- ggplot(data.all2, aes(x=date, y=fct_reorder(name, lat), fill=c
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), plot.title.position="plot",
         axis.text.y=element_text(colour="Black"), plot.title=element_text(face="bold", size=rel(1.2)))
 
-ratebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=pop, y=fct_reorder(name, lat), fill=pop))+
+ratebars.all2 <- ggplot(subset(data.all2, date==maxcaseday), aes(x=pop, y=fct_reorder(name, LAT), fill=pop))+
   geom_col(show.legend=FALSE)+
   theme_custom()+
   scale_fill_distiller(palette="Spectral")+
@@ -875,20 +875,20 @@ dev.off()
 
 #Line chart of cases by country
 agg_tiff("Outputs/COVIDCaserateUK.tiff", units="in", width=12, height=6, res=500)
-ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2021-01-01") & as.Date(date)<plotto-days(1)))+
+ggplot(subset(data, Region=="Nation" & as.Date(date)>as.Date("2021-05-01") & as.Date(date)<plotto-days(1)))+
   geom_line(aes(x=as.Date(date), y=caserate_avg, colour=country, group=country))+
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
   scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
   theme_custom()+
-  labs(title="Scotland's rise in cases is, quite something",
+  labs(title="The delta wave isn't over in any of the UK nations",
        subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 #Line chart of cases by region
 agg_tiff("Outputs/COVIDCaseRateReg.tiff", units="in", width=12, height=6, res=500)
-ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2021-01-01") & as.Date(date)<plotto-days(1)))+
+ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2021-05-01") & as.Date(date)<plotto-days(1)))+
   geom_line(aes(x=as.Date(date), y=caserate_avg, colour=name, group=name))+
   scale_x_date(name="", date_breaks="1 week", date_labels="%d %b")+
   scale_y_continuous(name="Daily cases per 100,000")+
@@ -896,8 +896,8 @@ ggplot(subset(data, Region=="Region" & as.Date(date)>as.Date("2021-01-01") & as.
   theme_custom()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         axis.text.x=element_text(angle=45, hjust=1),
-        text=element_text(family="Roboto"))+
-  labs(title="COVID case rates in England have separated into regional groups. Again.",
+        text=element_text(family="Lato"))+
+  labs(title="All English regions have seen similar case trajectories, but at very different levels",
        subtitle="Rolling 7-day average of daily confirmed new cases per 100,000",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
