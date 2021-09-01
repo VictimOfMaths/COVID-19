@@ -13,7 +13,7 @@ library(extrafont)
 #Scottish age data
 #https://www.opendata.nhs.scot/dataset/covid-19-in-scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210621.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210831.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp)
@@ -96,7 +96,7 @@ ggplot(subset(data, Sex=="Total"), aes(x=date, y=cases_avg, fill=AgeGroup))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.6)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 cases in Scotland are rising in the under 45s",
+  labs(title="COVID-19 cases in Scotland have risen across all age groups",
        subtitle="Confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -113,7 +113,7 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2020-07-01") & date<max(data$d
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="The number of new COVID-19 cases is rising in younger age groups",
+  labs(title="There are more COVID cases in adults than children in Scotland",
        subtitle="Rolling 7-day average of daily confirmed new cases in Scotland by age",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -147,14 +147,14 @@ ggplot(subset(data, Sex=="Total" & date>=as.Date("2021-01-01") & date<max(data$d
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.5)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 case rates are only rising in the under 45s",
+  labs(title="COVID-19 case rates are highest in 15-24 year olds",
        subtitle="Confirmed daily new COVID-19 case rates per 100,000 in Scotland by age",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
 #By deprivation
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210621.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/a38a4c21-7c75-4ecd-a511-3f83e0e8f0c3/download/trend_simd_20210831.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data.simd <- read.csv(temp)
@@ -184,7 +184,7 @@ ggplot(subset(data.simd, date>=as.Date("2020-07-01") & date<max(data$date)),
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                 barwidth = unit(20, 'lines'), 
                                 barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases are rising across all deprivation groups in Scotland",
+  labs(title="COVID cases are highest in the most deprived areas in Scotland",
        subtitle="Rolling 7-day average of confirmed daily new cases in Scotland by quintiles of the Scottish Index of Multiple Deprivation",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -220,3 +220,4 @@ library(rayrender)
 
 plot_gg(CaseratexAge, width=10, height=3, multicore = TRUE, windowsize = c(1000, 600), 
         zoom = 0.65, phi = 35, theta = 40, sunangle = 225, soliddepth = -100) 
+
