@@ -12,7 +12,7 @@ library(ggridges)
 
 #Read in data
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210719.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/2dd8534b-0a6f-4744-9253-9565d62f96c2/download/trend_hb_20210831.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 data <- read.csv(temp) %>% 
@@ -46,7 +46,7 @@ casetiles <- ggplot(heatmap, aes(x=date, y=fct_reorder(HBName, maxcaseday),
   scale_x_date(name="Date", limits=as.Date(c(plotfrom, plotto)), expand=c(0,0))+
   coord_cartesian(clip = 'off')+
   labs(title="Timelines for COVID-19 cases in Scottish Health Boards",
-       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData prior to 15th June (denoted with an asterisk) excluded community (Pillar 2) testing.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the 7-day rolling average of the number of new confirmed cases, normalised to the maximum value within the Health Board.\nBoards are ordered by the date at which they reached their peak number of new cases. Bars on the right represent the absolute number of cases in each Health Board.\nData prior to 15th June 2020(denoted with an asterisk) excluded community (Pillar 2) testing.\nData updated to ", plotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), 
         plot.title.position="plot",
@@ -96,7 +96,7 @@ ggplot(heatmap)+
 
 #Download ICU data from https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 temp <- tempfile()
-source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B19%2BJuly%2B2021.xlsx?forceDownload=true"
+source <- "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B31%2BAugust%2B2021.xlsx?forceDownload=true"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 #Historic ICU data (using a slightly different definition)
@@ -112,7 +112,7 @@ ICUdata.hist_long$Date <- as.Date(ICUdata.hist_long$Date)
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-ICUdata <- read_excel(temp, sheet=4, range="A3:Q315")
+ICUdata <- read_excel(temp, sheet=4, range="A3:Q358")
 
 ICUdata_long <- gather(ICUdata, HB, cases, c(2:17))
 ICUdata_long$cases <- as.numeric(ifelse(ICUdata_long$cases=="*", NA, ICUdata_long$cases))
@@ -146,7 +146,7 @@ ICUcasetiles <- ggplot(subset(ICUheatmap, HB!="Scotland" & !is.na(maxcases)),
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
   labs(title="We haven't (yet) seen a rise in COVID patients in Scottish Intensive Care Units this wave",
-       subtitle=paste0("The heatmap represents the number of ICU inpatients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of ICU cases. The definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the number of ICU inpatients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of ICU cases. The definition of a COVID-19 patient was revised to a stricter definition after 10th September 2020 (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), 
         plot.title.position="plot",
@@ -169,7 +169,7 @@ Hospdata.hist_long$HB <- if_else(substr(Hospdata.hist_long$HB, 1,3)=="NHS", subs
 
 #Recent ICU data
 #Need to manually increment the numbers at the end of this range: 24 = 1st October
-Hospdata <- read_excel(temp, sheet=5, range="A3:Q315")
+Hospdata <- read_excel(temp, sheet=5, range="A3:Q358")
 
 Hospdata_long <- gather(Hospdata, HB, cases, c(2:17))
 Hospdata_long$cases <- as.numeric(ifelse(Hospdata_long$cases=="*", NA, Hospdata_long$cases))
@@ -200,7 +200,7 @@ Hospcasetiles <- ggplot(subset(Hospheatmap, HB!="Scotland" & !is.na(maxcases)),
   scale_y_discrete(name="", expand=c(0,0))+
   scale_x_date(name="Date", limits=as.Date(c(ICUplotfrom, ICUplotto)), expand=c(0,0))+
   labs(title="The number of COVID-19 patients in Scottish hospitals is still low",
-       subtitle=paste0("The heatmap represents the number of hospital patients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of hospital patients. The definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
+       subtitle=paste0("The heatmap represents the number of hospital patients with confirmed COVID-19 in each Health Board. Numbers below 5 are censored and appear white. Health Boards with no non-missing days are excluded\nBoards are ordered by the date at which they reached their peak number of hospital patients. The definition of a COVID-19 patient was revised to a stricter definition after 10th September 2020 (denoted by the vertical line).\nData updated to ", ICUplotto,". Data for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(axis.line.y=element_blank(), plot.subtitle=element_text(size=rel(0.78)), 
         plot.title.position="plot",
@@ -249,7 +249,7 @@ ggplot(subset(natdata,Date>=as.Date("2020-09-11")))+
   annotate(geom="text", x=as.Date("2020-09-12"), y=-1600, 
            label="Total patients in hospital", hjust=0, family="Lato")+
   #annotate(geom="text", x=as.Date("2020-10-06"), y=-70, label="Patients in ICU", colour="#a80b20")+  
-  labs(title="The number of COVID patients in Scottish hospitals seems to have started to fall",
+  labs(title="Scottish COVID cases are at a record high. Hospital patients are not.",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients with recently confirmed COVID-19<br>in <span style='color:#ff9f55;'>Scottish hospitals </span>and <span style='color:#ff1437;'>Intensive Care Units",
        caption="Data from Scottish Government | Plot by @VictimOfMaths")+
   theme(plot.subtitle=element_markdown(), 
@@ -270,8 +270,8 @@ ggplot(natdata)+
   theme(plot.title=element_text(face="bold", size=rel(1.4)),
         plot.title.position = "plot",
         text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in Intensive Care in Scotland is holding fairly steady",
-       subtitle=paste0("Hospital patients in Intensive Care Units with confirmed COVID-19.\nThe definition of a COVID-19 patient was revised to a stricter definition after 10th September (denoted by the vertical line).\nData for most recent days is provisional and may be revised upwards as additional tests are processed."),
+  labs(title="The number of COVID-19 patients in Intensive Care in Scotland is rising",
+       subtitle=paste0("Hospital patients in Intensive Care Units with confirmed COVID-19.\nThe definition of a COVID-19 patient was revised to a stricter definition after 10th September 2020 (denoted by the vertical line).\nData for most recent days is provisional and may be revised upwards as additional tests are processed."),
        caption="Data from Scottish Government | Plot by @VictimOfMaths")
 
 dev.off()
