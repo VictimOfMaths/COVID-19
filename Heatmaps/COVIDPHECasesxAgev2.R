@@ -132,15 +132,18 @@ data <- data %>%
          caserateroll=roll_mean(caserate, n=7, align="center", fill=NA)) %>% 
   ungroup()
 
-
-data1 <- data %>% filter(areaType %in% c("ltla", "nation", "region")) 
+data1 <- data %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
+  select(areaName, areaType, date, age, casesroll, caserateroll, pop, cases)
+data1b <- data %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
+  select(areaName, areaType, date, age, casesroll, caserateroll)
 data2 <- data %>% filter(areaType %in% c("ltla", "nation", "region") & 
                            date>=as.Date("2021-01-01")) 
-data3 <- shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) 
+data3 <- shortdata %>% filter(areaType %in% c("ltla", "nation", "region")) %>% 
+  select(areaName, areaType, date, ageband, casesroll, caserateroll)
 
 #Save files for the app to use
-save(data1, data2, data3, file="COVID_Cases_By_Age/Alldata.RData")
-save(data1, data2, data3, file="COVID_Case_Trends_By_Age/Alldata.RData")
+save(data1b, data3, file="COVID_Cases_By_Age/Alldata.RData")
+save(data1, data3, file="COVID_Case_Trends_By_Age/Alldata.RData")
 
 data1 %>% write.csv("COVID_Cases_By_Age/data.csv")
 data2 %>% write.csv("COVID_Case_Trends_By_Age/data.csv")
@@ -386,6 +389,22 @@ shortdata %>%
        caption="Data from PHE | Plot by @VictimOfMaths")
 dev.off()
 
+tiff("Outputs/COVIDCasesxAgeEngStream.tiff", units="in", width=9, height=6, res=500)
+shortdata %>% 
+  filter(areaType=="nation" & date>=plotfrom) %>% 
+  ggplot()+
+  geom_stream(aes(x=date, y=caserateroll, fill=ageband))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000", labels=abs)+
+  scale_fill_paletteer_d("awtools::a_palette", name="Age")+
+  theme_classic()+
+  theme(plot.title=element_text(face="bold", size=rel(1.4)), strip.background=element_blank(),
+        strip.text=element_text(face="bold", size=rel(1)), text=element_text(family="Lato"))+
+  labs(title="COVID-19 cases have been getting older in recent months",
+       subtitle="Rolling 7-day average of confirmed new cases in England by age",
+       caption="Data from PHE | Plot by @VictimOfMaths")
+dev.off()
+
 agg_tiff("Outputs/COVIDCasesxAgeEng.tiff", units="in", width=8, height=6, res=800)
 data %>% 
   filter(areaType=="nation" & !is.na(caserateroll)) %>%
@@ -421,3 +440,15 @@ data %>%
        subtitle="Rolling 7-day average of confirmed new COVID-19 cases rates in England by age group",
        caption="Data from coronavirus.data.gov.uk\nPlot by @VictimOfMaths")
 dev.off()
+
+temp <- data %>% filter(areaType=="nation") %>% 
+  mutate(flag=case_when(
+    age %in% c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44",
+               "45-49") ~ "<50",
+    TRUE ~ ">50")) %>% 
+  group_by(date, flag) %>%
+  summarise(cases=sum(cases)) %>%
+  group_by(date) %>% 
+  mutate(total=sum(cases),
+         caseprop=cases*100/total) %>% 
+  ungroup()
