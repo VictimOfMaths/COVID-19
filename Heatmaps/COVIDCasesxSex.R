@@ -182,7 +182,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-05-01")))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The recent collapse in COVID case numbers stalled in 15-24 year olds first",
+  labs(title="COVID cases are now falling across all age groups in England",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 dev.off()
@@ -230,7 +230,7 @@ dev.off()
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210907.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210915.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -326,9 +326,8 @@ ggplot(popheatmap.scot %>% filter(date>as.Date("2021-05-01")))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The recent rise in COVID cases in Scotland didn't start in school children",
+  labs(title="COVID case rates in Scotland are falling across all age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in Scotland, by age group",
        caption="Data from NHS Scotland | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
 dev.off()
-
