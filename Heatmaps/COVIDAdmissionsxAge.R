@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/08/Covid-Publication-12-08-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/Covid-Publication-09-09-2021-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:KR25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:LT25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -43,6 +43,22 @@ ggplot(rawdata, aes(x=date, y=age, fill=admissions))+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="COVID admission rates have been much lower and younger in the latest wave",
+       subtitle="Number of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Version of Delta wave only
+agg_tiff("Outputs/COVIDAdmissionsHeatmapRecent.tiff", units="in", width=9, height=6, res=800)
+ggplot(rawdata %>% filter(date>as.Date("2021-06-01")), aes(x=date, y=age, fill=admissions))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age group")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="In recent weeks, COVID hospital admissions have been highest in older ages",
        subtitle="Number of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -85,6 +101,21 @@ ggplot(data, aes(x=date, y=age, fill=admrate))+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="COVID admission rates have been much lower and younger in the latest wave",
+       subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsHeatmapRateRecent.tiff", units="in", width=9, height=6, res=800)
+ggplot(data %>% filter(date>as.Date("2021-06-01")), aes(x=date, y=age, fill=admrate))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age group")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions per 100,000")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID admission rates have been rising in older age groups",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -147,7 +178,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
   scale_y_continuous(name="Proportion of cases admitted to hospital",
                      labels=label_percent(accuracy=1), limits=c(0,NA))+
   theme_custom()+
-  labs(title="The proportion of COVID cases being admitted to hospital has risen in recent days",
+  labs(title="The proportion of COVID cases being admitted to hospital has been fairly steady in recent weeks",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot and analysis by Colin Angus")
 dev.off()
@@ -174,7 +205,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
   scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
   facet_wrap(~age, scales="free_y")+
   theme_custom()+
-  labs(title="The proportion of COVID cases being admitted to hospital has risen in all age groups",
+  labs(title="The proportion of COVID cases being admitted to hospital has fallen in older age groups",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -187,7 +218,20 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
   scale_y_continuous(name="Daily new hospital admissions", labels=abs)+
   scale_fill_paletteer_d("ggsci::default_gsea", name="Age")+
   theme_custom()+
-  labs(title="COVID patients being admitted to hospital are younger than in previous waves",
+  labs(title="The average age of COVID patients admitted to hospital has risen since July",
+       subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsStreamgraphRecent.tiff", units="in", width=9, height=6, res=800)
+ggplot(alldata %>% filter(!is.na(admroll) & age!="Total" & date>as.Date("2021-04-01")),
+       aes(x=date, y=admroll, fill=age))+
+  geom_stream()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new hospital admissions", labels=abs)+
+  scale_fill_paletteer_d("ggsci::default_gsea", name="Age")+
+  theme_custom()+
+  labs(title="The average age of COVID patients admitted to hospital has risen since July",
        subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -217,4 +261,3 @@ ggplot(admratios %>% filter(date>as.Date("2021-05-01")))+
        caption="Data from NHS England | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
 dev.off()
-
