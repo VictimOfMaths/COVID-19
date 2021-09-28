@@ -11,26 +11,26 @@ library(ragg)
 library(extrafont)
 
 #Latest date in the country-specific data
-EWDate <- "10th September"
-ScotDate <- "12th September"
-NIDate <- "10th September"
+EWDate <- "17th September"
+ScotDate <- "19th September"
+NIDate <- "17th September"
 
 #Locations for 2020/21 data
 #England, released at 9:30 on Tuesday mornings 
 #https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales
-Eng2021 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2021/publishedweek362021.xlsx"
+Eng2021 <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fbirthsdeathsandmarriages%2fdeaths%2fdatasets%2fweeklyprovisionalfiguresondeathsregisteredinenglandandwales%2f2021/publishedweek372021.xlsx"
 #Scotland, released at noon on Wednesdays
 #https://www.nrscotland.gov.uk/covid19stats
-Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-36.xlsx"
+Scot2021 <- "https://www.nrscotland.gov.uk/files//statistics/covid19/covid-deaths-21-data-week-37.xlsx"
 #Northern Ireland, released on Fridays
 #https://www.nisra.gov.uk/publications/weekly-deaths
-NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly_Deaths%20-%20w%20e%2010th%20September%202021.XLSX"
+NI2021 <- "https://www.nisra.gov.uk/system/files/statistics/Weekly-Deaths-we-17-September-2021.XLSX"
 
 #Stupid Excel range controls
 #These need to be incremented by one letter each week
-EngRange <- "AL" 
-ScotRange <- "AL" 
-NIRange <- "36" 
+EngRange <- "AM" 
+ScotRange <- "AM" 
+NIRange <- "37" 
 
 ##############################
 #Read in English & Welsh data#
@@ -506,42 +506,43 @@ temp43 <- as.data.frame(t(read_excel(temp, sheet=11, range="IT9:IT14", col_names
 temp <- tempfile()
 temp <- curl_download(url=Eng2021, destfile=temp, quiet=FALSE, mode="wb")
 
-temp44 <- as.data.frame(t(read_excel(temp, sheet=12, range="B10:B15", col_names=FALSE)))
-temp45 <- as.data.frame(t(read_excel(temp, sheet=12, range="H10:H15", col_names=FALSE)))
-temp46 <- as.data.frame(t(read_excel(temp, sheet=12, range="N10:N15", col_names=FALSE)))
-temp47 <- as.data.frame(t(read_excel(temp, sheet=12, range="T10:T15", col_names=FALSE)))
-temp48 <- as.data.frame(t(read_excel(temp, sheet=12, range="Z10:Z15", col_names=FALSE)))
-temp49 <- as.data.frame(t(read_excel(temp, sheet=12, range="AF10:AF15", col_names=FALSE)))
-temp50 <- as.data.frame(t(read_excel(temp, sheet=12, range="AL10:AL15", col_names=FALSE)))
-temp51 <- as.data.frame(t(read_excel(temp, sheet=12, range="AR10:AR15", col_names=FALSE)))
-temp52 <- as.data.frame(t(read_excel(temp, sheet=12, range="AX10:AX15", col_names=FALSE)))
-temp53 <- as.data.frame(t(read_excel(temp, sheet=12, range="BD10:BD15", col_names=FALSE)))
-temp54 <- as.data.frame(t(read_excel(temp, sheet=12, range="BJ10:BJ15", col_names=FALSE)))
-temp55 <- as.data.frame(t(read_excel(temp, sheet=12, range="BP10:BP15", col_names=FALSE)))
-temp56 <- as.data.frame(t(read_excel(temp, sheet=12, range="BV10:BV15", col_names=FALSE)))
-temp57 <- as.data.frame(t(read_excel(temp, sheet=12, range="CB10:CB15", col_names=FALSE)))
-temp58 <- as.data.frame(t(read_excel(temp, sheet=12, range="CH10:CH15", col_names=FALSE)))
-temp59 <- as.data.frame(t(read_excel(temp, sheet=12, range="CN10:CN15", col_names=FALSE)))
-temp60 <- as.data.frame(t(read_excel(temp, sheet=12, range="CT10:CT15", col_names=FALSE)))
-temp61 <- as.data.frame(t(read_excel(temp, sheet=12, range="CZ10:CZ15", col_names=FALSE)))
-temp62 <- as.data.frame(t(read_excel(temp, sheet=12, range="DF10:DF15", col_names=FALSE)))
-temp63 <- as.data.frame(t(read_excel(temp, sheet=12, range="DL10:DL15", col_names=FALSE)))
-temp64 <- as.data.frame(t(read_excel(temp, sheet=12, range="DR10:DR15", col_names=FALSE)))
-temp65 <- as.data.frame(t(read_excel(temp, sheet=12, range="DX10:DX15", col_names=FALSE)))
-temp66 <- as.data.frame(t(read_excel(temp, sheet=12, range="ED10:ED15", col_names=FALSE)))
-temp67 <- as.data.frame(t(read_excel(temp, sheet=12, range="EJ10:EJ15", col_names=FALSE)))
-temp68 <- as.data.frame(t(read_excel(temp, sheet=12, range="EP10:EP15", col_names=FALSE)))
-temp69 <- as.data.frame(t(read_excel(temp, sheet=12, range="EV10:EV15", col_names=FALSE)))
-temp70 <- as.data.frame(t(read_excel(temp, sheet=12, range="FB10:FB15", col_names=FALSE)))
-temp71 <- as.data.frame(t(read_excel(temp, sheet=12, range="FH10:FH15", col_names=FALSE)))
-temp72 <- as.data.frame(t(read_excel(temp, sheet=12, range="FN10:FN15", col_names=FALSE)))
-temp73 <- as.data.frame(t(read_excel(temp, sheet=12, range="FT10:FT15", col_names=FALSE)))
-temp74 <- as.data.frame(t(read_excel(temp, sheet=12, range="FZ10:FZ15", col_names=FALSE)))
-temp75 <- as.data.frame(t(read_excel(temp, sheet=12, range="GF10:GF15", col_names=FALSE)))
-temp76 <- as.data.frame(t(read_excel(temp, sheet=12, range="GL10:GL15", col_names=FALSE)))
-temp77 <- as.data.frame(t(read_excel(temp, sheet=12, range="GR10:GR15", col_names=FALSE)))
-temp78 <- as.data.frame(t(read_excel(temp, sheet=12, range="GX10:GX15", col_names=FALSE)))
-temp79 <- as.data.frame(t(read_excel(temp, sheet=12, range="HD10:HD15", col_names=FALSE)))
+temp44 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="B10:B15", col_names=FALSE)))
+temp45 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="H10:H15", col_names=FALSE)))
+temp46 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="N10:N15", col_names=FALSE)))
+temp47 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="T10:T15", col_names=FALSE)))
+temp48 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="Z10:Z15", col_names=FALSE)))
+temp49 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="AF10:AF15", col_names=FALSE)))
+temp50 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="AL10:AL15", col_names=FALSE)))
+temp51 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="AR10:AR15", col_names=FALSE)))
+temp52 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="AX10:AX15", col_names=FALSE)))
+temp53 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="BD10:BD15", col_names=FALSE)))
+temp54 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="BJ10:BJ15", col_names=FALSE)))
+temp55 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="BP10:BP15", col_names=FALSE)))
+temp56 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="BV10:BV15", col_names=FALSE)))
+temp57 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="CB10:CB15", col_names=FALSE)))
+temp58 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="CH10:CH15", col_names=FALSE)))
+temp59 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="CN10:CN15", col_names=FALSE)))
+temp60 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="CT10:CT15", col_names=FALSE)))
+temp61 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="CZ10:CZ15", col_names=FALSE)))
+temp62 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="DF10:DF15", col_names=FALSE)))
+temp63 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="DL10:DL15", col_names=FALSE)))
+temp64 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="DR10:DR15", col_names=FALSE)))
+temp65 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="DX10:DX15", col_names=FALSE)))
+temp66 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="ED10:ED15", col_names=FALSE)))
+temp67 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="EJ10:EJ15", col_names=FALSE)))
+temp68 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="EP10:EP15", col_names=FALSE)))
+temp69 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="EV10:EV15", col_names=FALSE)))
+temp70 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="FB10:FB15", col_names=FALSE)))
+temp71 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="FH10:FH15", col_names=FALSE)))
+temp72 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="FN10:FN15", col_names=FALSE)))
+temp73 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="FT10:FT15", col_names=FALSE)))
+temp74 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="FZ10:FZ15", col_names=FALSE)))
+temp75 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="GF10:GF15", col_names=FALSE)))
+temp76 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="GL10:GL15", col_names=FALSE)))
+temp77 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="GR10:GR15", col_names=FALSE)))
+temp78 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="GX10:GX15", col_names=FALSE)))
+temp79 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="HD10:HD15", col_names=FALSE)))
+temp80 <- as.data.frame(t(read_excel(temp, sheet="Covid-19 - Place of occurrence ", range="HJ10:HJ15", col_names=FALSE)))
 
 data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, 
                     temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, 
@@ -551,7 +552,7 @@ data2021.loc <- bind_rows(temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8
                     temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55,
                     temp56, temp57, temp58, temp59, temp60, temp60, temp61, temp62, temp63,
                     temp64, temp65, temp66, temp67, temp68, temp69, temp70, temp71, temp72,
-                    temp73, temp74, temp75, temp76, temp77, temp78, temp79) %>% 
+                    temp73, temp74, temp75, temp76, temp77, temp78, temp79, temp80) %>% 
   mutate(week=c(11:(nrow(.)+10)),
          year=if_else(week<=53, 2020, 2021),
          week=if_else(week>53, week-53, as.double(week)),
@@ -1175,7 +1176,7 @@ ggplot(plot1)+
   theme_classic()+
   theme(plot.title=element_text(face="bold", size=rel(1.5)), plot.subtitle=element_markdown(),
         text=element_text(family="Lato"))+
-  labs(title="England and Wales has seen excess mortality for the last 10 weeks",
+  labs(title="England and Wales has seen excess mortality for the last 11 weeks",
        subtitle=paste0("Weekly deaths registered in England & Wales in <span style='color:red;'>2020/21</span> compared to <span style='color:Skyblue4;'>the range in 2010-19</span>. Data up to ", EWDate, " 2021."),
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate(geom="text", x=as.Date("2020-06-01"), y=labpos, 
