@@ -16,12 +16,12 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/COVID-19-daily-admissions-and-beds-20210915.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/COVID-19-daily-admissions-and-beds-20210929.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/Weekly-covid-admissions-and-beds-publication-210909.xlsx"
 #Increment by one each day
-dailyrange <- "FF"
-dailyoccrange <- "FH"
+dailyrange <- "FT"
+dailyoccrange <- "FV"
 #Increment by seven each week
 weeklyrange <- "EZ"
 
@@ -100,7 +100,7 @@ ggplot(dailydata)+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Lato"))+
-  labs(title="New COVID admissions have levelled off, but occupancy is still rising",
+  labs(title="All COVID hospital measures are falling in all regions of England",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -117,7 +117,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="New COVID admissions have levelled off, but occupancy is still rising",
+  labs(title="All COVID hospital measures are falling in all regions of England",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
