@@ -6,7 +6,7 @@ library(paletteer)
 library(extrafont)
 library(ggtext)
 
-#Read in data
+#Read in data generated from https://github.com/VictimOfMaths/COVID_LA_Plots/blob/master/UnderlyingCode.R
 load("COVID_LA_Plots/Alldata.RData")
 
 #Filter out occurence data (as we don't have historic occurence data for English & Welsh LAs)
@@ -46,7 +46,7 @@ ggplot(locdata %>% filter(!Region %in% c("Region", "Nation") & location=="Hospit
   scale_y_discrete(name="")+
   scale_fill_paletteer_c("pals::ocean.amp", limits=c(0,0.6))+
   theme_classic()+
-  theme(text=element_text(family="Roboto"), plot.title=element_text(face="bold"))+
+  theme(text=element_text(family="Lato"), plot.title=element_text(face="bold"))+
   labs(title="The Local Authorities with the biggest relative increases in deaths are mostly in London",
        subtitle="Local Authorities in England, Wales and Scotland with the largest proportional increase in mortality\nsince the start of the pandemic compared to average mortality in 2015-19",
        caption="Data from ONS | Plot by @VictimOfMaths")
@@ -61,8 +61,9 @@ ggplot(locdata %>% filter(!Region %in% c("Region", "Nation") & totexcessrate>250
   scale_y_discrete(name="")+
   scale_fill_paletteer_d("ggsci::planetexpress_futurama", name="Place of death")+
   theme_classic()+
-  theme(text=element_text(family="Roboto"), plot.title=element_text(face="bold"))+
-  labs(title="The Local Authorities with the highest excess mortality rates are (mostly) not in London",
+  theme(text=element_text(family="Lato"), plot.title=element_text(face="bold"),
+        plot.title.position="plot")+
+  labs(title="The Local Authorities in Great Britain with the highest excess mortality rates",
        subtitle="Local Authorities in England, Wales and Scotland with excess mortality rates of more than 250 per 100,000\nsince the start of the pandemic compared to average mortality rates in 2015-19",
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -76,7 +77,7 @@ ggplot(locdata %>% filter(!Region %in% c("Region", "Nation") & location=="Hospit
   scale_y_discrete(name="")+
   scale_fill_manual(values=c("Grey60", "Grey60", "#FF007F", rep("Grey60", times=8)))+
   theme_classic()+
-  theme(text=element_text(family="Roboto"), axis.text.y=element_blank(),
+  theme(text=element_text(family="Lato"), axis.text.y=element_blank(),
         axis.line.y=element_blank(), axis.ticks.y=element_blank(),
         plot.title=element_text(face="bold", size=rel(1.5)),
         plot.subtitle=element_markdown())+
@@ -85,7 +86,7 @@ ggplot(locdata %>% filter(!Region %in% c("Region", "Nation") & location=="Hospit
        caption="Data from ONS | Plot by @VictimOfMaths")+
   annotate("text", x=1100, y=30, 
            label="Local Authorities in London have younger populations,\non average, so see fewer deaths", 
-           family="Roboto", fontface="bold", size=rel(3), colour="#FF007F")+
+           family="Lato", fontface="bold", size=rel(3), colour="#FF007F")+
   geom_curve(aes(x=940, y=27, xend=600, yend=18), 
              colour="#FF007F", curvature=-0.15, arrow=arrow(length=unit(0.1, "cm"), type="closed"), 
              lineend="round")
@@ -117,9 +118,9 @@ ltla <- tempfile()
 source <- ("https://github.com/houseofcommonslibrary/uk-hex-cartograms-noncontiguous/raw/main/geopackages/LocalAuthorities-lowertier.gpkg")
 ltla <- curl_download(url=source, destfile=ltla, quiet=FALSE, mode="wb")
 
-Background <- st_read(ltla, layer="6 Background")
+Background <- st_read(ltla, layer="7 Background")
 
-ltlacases <- st_read(ltla, layer="4 LTLA-2019") %>% 
+ltlacases <- st_read(ltla, layer="6 LTLA-2021") %>% 
   left_join(mapdata, by=c("Lacode"="code"))
 
 Groups <- st_read(ltla, layer="2 Groups")
@@ -139,16 +140,16 @@ plot1 <- ggplot()+
                          limit=c(-1,1)*max(abs((ltlacases %>% filter(location=="Hospital"))$totexcessrate)))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   annotate("text", x=16, y=40, label="Excess deaths are highest\nin the North-West\nand West Midlands...",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
   annotate("text", x=50, y=1, label="...and isolated areas\nin the South East",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
   labs(title="Excess mortality rates for Local Authorities in Great Britain",
        subtitle="Additional deaths per 100,000 population from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot1
 dev.off()
 
@@ -165,12 +166,12 @@ plot1b <- ggplot()+
                          label=scales::label_percent(accuracy=2))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="Relative changes in all-cause deaths in Local Authorities in Great Britain",
        subtitle="Proportional changes in all-cause deaths from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessPropLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessPropLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot1b
 dev.off()
 
@@ -186,15 +187,15 @@ plot2 <- ggplot()+
                          limit=c(-1,1)*max(abs((ltlacases %>% filter(location=="Hospital"))$excessrate)))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   annotate("text", x=45, y=60, label="There have been fewer deaths\nthan usual in hospitals\nin many more remote areas...",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#006D5B")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#006D5B")+
   annotate("text", x=16, y=40, label="...but more in urban areas",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+labs(title="Hospital excess mortality rates for Local Authorities in Great Britain",
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+labs(title="Hospital excess mortality rates for Local Authorities in Great Britain",
        subtitle="Additional deaths per 100,000 population from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessHospLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessHospLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot2
 dev.off()
 
@@ -211,12 +212,12 @@ plot2b <- ggplot()+
                          label=scales::label_percent(accuracy=2))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="Relative changes in all-cause deaths in hospitals in Local Authorities in Great Britain",
        subtitle="Proportional changes in all-cause deaths from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessHospPropLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessHospPropLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot2b
 dev.off()
 
@@ -232,16 +233,16 @@ plot3 <- ggplot()+
                          limit=c(-1,1)*max(abs((ltlacases %>% filter(location=="Care home"))$excessrate)))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   annotate("text", x=47, y=52, label="Excess care home deaths are\nhighest in the North East..",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
   annotate("text", x=48, y=1, label="...and isolated areas\nin the South East",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
   labs(title="Care home excess mortality rates for Local Authorities in Great Britain",
        subtitle="Additional deaths per 100,000 population from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessCareHomeLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessCareHomeLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot3
 dev.off()
 
@@ -258,12 +259,12 @@ plot3b <- ggplot()+
                          label=scales::label_percent(accuracy=2))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="Relative changes in all-cause deaths in care homes in Local Authorities in Great Britain",
        subtitle="Proportional changes in all-cause deaths from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessCareHomePropLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessCareHomePropLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot3b
 dev.off()
 
@@ -279,14 +280,14 @@ plot4 <- ggplot()+
                          limit=c(-1,1)*max(abs((ltlacases %>% filter(location=="Home/Other"))$excessrate)))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   annotate("text", x=45, y=60, label="Excess deaths at home are\nhighest in the West of Scotland",
-           family="Roboto", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
+           family="Lato", fontface="bold", size=rel(2.5), colour="#6e0a1e")+
   labs(title="Home excess mortality rates for Local Authorities in Great Britain",
        subtitle="Additional deaths per 100,000 population from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessHomeLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessHomeLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot4
 dev.off()
 
@@ -303,11 +304,11 @@ plot4b <- ggplot()+
                          label=scales::label_percent(accuracy=2))+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
+        text=element_text(family="Lato"))+
   labs(title="Relative changes in all-cause deaths at home in Local Authorities in Great Britain",
        subtitle="Proportional changes in all-cause deaths from week 10 in 2020 to the latest week of available data,\ncompared to the average mortality rate in 2015-19.",
        caption="Data from ONS and NRS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDExcessHomePropLTLACartogram.tiff", units="in", width=9, height=10, res=800)
+agg_tiff("Outputs/COVIDExcessHomePropLTLACartogram.tiff", units="in", width=9, height=10, res=500)
 plot4b
 dev.off()
