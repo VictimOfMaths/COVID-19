@@ -97,7 +97,7 @@ heatmapdata <- data %>%
   spread(sex, rates_roll) %>% 
   mutate(maleprop=Male/(Male+Female))
 
-agg_tiff("Outputs/COVIDCasesxSexHeatmap.tiff", units="in", width=10, height=7, res=800)
+agg_tiff("Outputs/COVIDCasesxSexHeatmap.tiff", units="in", width=10, height=7, res=500)
 ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)))+
   geom_tile(aes(x=date, y=age, fill=maleprop))+
   theme_custom()+
@@ -109,9 +109,9 @@ ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases in 20-50 year olds are becoming increasingly female-dominated",
+  labs(title="COVID cases in 20-49 year olds are becoming increasingly female-dominated",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
-       caption="Date from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 agg_tiff("Outputs/COVIDCasesxSexHeatmapU60s.tiff", units="in", width=10, height=6, res=800)
@@ -129,7 +129,7 @@ ggplot(temp<-heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases in 20-50 year olds are becoming increasingly female-dominated",
+  labs(title="COVID cases in 20-49 year olds are becoming increasingly female-dominated",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
        caption="Date from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -294,6 +294,56 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-05-01")),
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()
+
+#Line chart of CRRs
+agg_tiff("Outputs/COVIDCaseRatioLineRecent.tiff", units="in", width=10, height=6, res=800)
+ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+  geom_hline(yintercept=1, colour="Grey50")+
+  geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
+  geom_hline(yintercept=2, colour="Grey70", linetype=2)+
+  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+            colour="Grey70")+
+  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+            colour="Grey70")+
+  geom_line(aes(x=date, y=caseratio, colour=age))+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="7-day Case Rate Ratio",
+                     breaks=c(0.5, 1, 2), 
+                     labels=c("-50%", "No change", "+100%"))+
+  scale_colour_paletteer_d("pals::stepped", name="Age")+
+  theme_custom()+
+  labs(title="The Delta wave has seen very different trajectories in different age groups",
+       subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDCaseRatioLineRecent6579.tiff", units="in", width=10, height=6, res=800)
+ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+  geom_hline(yintercept=1, colour="Grey50")+
+  geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
+  geom_hline(yintercept=2, colour="Grey70", linetype=2)+
+  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+            colour="Grey70")+
+  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+            colour="Grey70")+
+  geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+                                         age %in% c("60 to 64", "65 to 69", "70 to 74",
+                                                    "75 to 79")),
+            aes(x=date, y=caseratio, colour=age))+
+  scale_x_date(name="")+
+  scale_y_continuous(trans="log", name="7-day Case Rate Ratio",
+                     breaks=c(0.5, 1, 2), 
+                     labels=c("-50%", "No change", "+100%"))+
+  scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
+  theme_custom()+
+  theme(plot.title=element_markdown())+
+  labs(title="COVID case rates are now highest in <span style='color:#c51b8a;'>65-79 year olds",
+       subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
 
 #Scotland
 temp <- tempfile()
