@@ -52,7 +52,7 @@ data <- bind_rows(data.f, data.m) %>%
                                   "65 to 69", "70 to 74", "75 to 79", "80 to 84",
                                   "85 to 89", "90+")))
 
-agg_tiff("Outputs/COVIDCasesxSex.tiff", units="in", width=12, height=7, res=800)
+agg_tiff("Outputs/COVIDCasesxSex.tiff", units="in", width=12, height=7, res=500)
 ggplot(data %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)), 
        aes(x=date, y=rates_roll, colour=sex))+
   geom_line(show.legend=FALSE)+
@@ -64,12 +64,12 @@ ggplot(data %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)),
   theme(plot.subtitle=element_markdown(), strip.text=element_blank())+
   geom_text(data=data %>% filter(date==as.Date("2021-06-16") & sex=="Male"),
             aes(x=date, y=140, label=age), colour="Black", family="Lato", fontface="bold")+
-  labs(title="COVID case rates in 25-49 year old men and women have diverged in recent weeks",
+  labs(title="COVID case rates have diverged for men and women",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDCasesxSexFull.tiff", units="in", width=10, height=7, res=800)
+agg_tiff("Outputs/COVIDCasesxSexFull.tiff", units="in", width=10, height=7, res=500)
 ggplot(data %>% filter(date<max(date)-days(3)), 
        aes(x=date, y=rates_roll, colour=sex))+
   geom_line(show.legend=FALSE)+
@@ -109,7 +109,7 @@ ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases in 20-49 year olds are becoming increasingly female-dominated",
+  labs(title="The female dominance of 20-49 year old case rates looks to be fading",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -281,19 +281,25 @@ ratesdata <- caseratios %>%
   ungroup()) %>% 
   mutate(rates_roll=cases_roll*100000/pop)
 
-ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-05-01")), 
+agg_tiff("Outputs/COVIDCaseRatesLineRecent.tiff", units="in", width=10, height=6, res=800)
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-08-01") & date<max(date)), 
        aes(x=date, y=rates_roll, colour=age))+
-  geom_rect(aes(xmin=as.Date("2021-06-11"), xmax=as.Date("2021-07-11"), ymin=0, ymax=220),
-            fill="Grey90", colour="Grey90")+
-  geom_rect(aes(xmin=as.Date("2021-09-01"), xmax=as.Date("2021-09-27"), ymin=0, ymax=220),
-            fill="Grey90", colour="Grey90")+
-  geom_segment(aes(x=as.Date("2021-07-19"), xend=as.Date("2021-07-19"), y=0, yend=220),
-               colour="Grey30", linetype=2)+
+  #geom_rect(aes(xmin=as.Date("2021-06-11"), xmax=as.Date("2021-07-11"), ymin=0, ymax=220),
+  #          fill="Grey90", colour="Grey90")+
+  #geom_rect(aes(xmin=as.Date("2021-09-01"), xmax=as.Date("2021-09-27"), ymin=0, ymax=220),
+  #          fill="Grey90", colour="Grey90")+
+  #geom_segment(aes(x=as.Date("2021-07-19"), xend=as.Date("2021-07-19"), y=0, yend=220),
+  #             colour="Grey30", linetype=2)+
   geom_line()+
   scale_x_date(name="")+
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
-  theme_custom()
+  theme_custom()+
+  labs(title="Current case rates are still highest (by far) in schoolchildren",
+       subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
 
 #Line chart of CRRs
 agg_tiff("Outputs/COVIDCaseRatioLineRecent.tiff", units="in", width=10, height=6, res=800)
@@ -347,7 +353,7 @@ dev.off()
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20210927.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20211013.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -435,7 +441,7 @@ scotheatmapdata <- scotdata %>%
   spread(Sex, caserate_roll) %>% 
   mutate(maleprop=Male/(Male+Female))
 
-agg_tiff("Outputs/COVIDCasesxSexHeatmapScot.tiff", units="in", width=10, height=7, res=800)
+agg_tiff("Outputs/COVIDCasesxSexHeatmapScot.tiff", units="in", width=10, height=7, res=500)
 ggplot(scotheatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)))+
   geom_tile(aes(x=date, y=AgeGroup, fill=maleprop))+
   theme_custom()+
@@ -447,12 +453,12 @@ ggplot(scotheatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-da
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="Scotland is also seeing a gap emerging between male and female cases in younger adults",
+  labs(title="Scotland is also seeing the gap in COVID case rates between men and women closing",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in Scotland, based on a 7-day rolling average",
        caption="Date from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDCaseRatioHeatmapRecentScot.tiff", units="in", width=10, height=6, res=800)
+agg_tiff("Outputs/COVIDCaseRatioHeatmapRecentScot.tiff", units="in", width=10, height=6, res=500)
 ggplot(popheatmap.scot %>% filter(date>as.Date("2021-05-01")))+
   geom_tile(aes(x=date, y=AgeGroup, fill=caseratio))+
   scale_x_date(name="")+
