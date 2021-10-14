@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/Weekly-covid-admissions-and-beds-publication-210930.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211014.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "FU"
+admrange <- "GI"
 #Set latest date of admissions data
-admdate <- as.Date("2021-09-26")
+admdate <- as.Date("2021-10-10")
 
 #Read in admissions
 #First data up to 6th April
@@ -133,8 +133,8 @@ admissions <- merge(admissions, trust.lookup, by.x="code", by.y="code", all=TRUE
 #aggregate up to LTLA level
 LAadmissions <- admissions %>% 
   mutate(LA.admissions=case_when(
-    date<=as.Date("2020-10-04") ~ admissions*popprop1,
-    TRUE ~ admissions*popprop2)) %>% 
+           date<=as.Date("2020-10-04") ~ admissions*popprop1,
+           TRUE ~ admissions*popprop2)) %>% 
   group_by(LAD19CD, date, LAD19NM) %>% 
   summarise(admissions=sum(LA.admissions, na.rm=TRUE)) %>% 
   ungroup() %>% 
@@ -220,8 +220,8 @@ plot1 <- ggplot()+
           aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels %>% filter(!RegionNation %in% c("Scotland", "Wales", 
                                                                  "Northern Ireland")), 
-               aes(geometry=geom, label=Group.labe,
-                   hjust=just), size=rel(2.4), colour="Black")+
+                                            aes(geometry=geom, label=Group.labe,
+                                      hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, limits=c(0,NA),
                          name="Admissions per day\nper 100,000")+
   theme_void()+
@@ -230,7 +230,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates are still highest in the North of England",
+  labs(title="COVID admission rates are still highest in the North",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -256,7 +256,7 @@ plot2 <- ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
   scale_size(guide=FALSE)+
   theme_custom()+
-  labs(title="COVID hospital admissions are a very mixed picture in England",
+  labs(title="At a local level, COVID admissions are a mixed picture",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
@@ -351,11 +351,60 @@ plot3 <- ggplot()+
   scale_size(guide=FALSE)+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admissions are a mixed picture across England",
+  labs(title="At a local level, COVID admissions are a mixed picture",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDAdmissionsTrustChangeScatterPaths.tiff", units="in", width=9, height=7, res=800)
 plot3
+dev.off()
+
+########################
+#Focus on County Durham/Darlington
+plotdata4 <-trustadm %>% 
+  filter(date>=adm_max-days(120) & date<=adm_max)
+
+plot4 <- ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdata4,
+            aes(x=adm_roll, y=adm_change, group=trust, alpha=120-as.integer(adm_max-date)),
+            colour="Grey50", show.legend=FALSE)+
+  geom_path(data=plotdata4 %>% filter(code=="RXP"),
+            aes(x=adm_roll, y=adm_change, group=trust, alpha=120-as.integer(adm_max-date)),
+            colour="#FF4E86", show.legend=FALSE)+
+  geom_point(data=plotdata4 %>% filter(date==adm_max),
+             aes(x=adm_roll, y=adm_change, size=catchpop), shape=21, alpha=0.7, fill="Grey70")+
+  geom_point(data=plotdata4 %>% filter(date==adm_max & code=="RXP"),
+             aes(x=adm_roll, y=adm_change, size=catchpop), shape=21, alpha=0.7, fill="#FF4E86")+
+  #geom_text_repel(data=plotdata4 %>% filter(date==adm_max), 
+  #                aes(x=adm_roll, y=adm_change, label=trust), size=rel(2.3))+
+  scale_x_continuous(name="Average new admissions per day in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in admission rate compared to the preceding week")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto", name="")+
+  scale_size(guide=FALSE)+
+  theme_custom()+
+  theme(axis.line=element_blank(), plot.subtitle=element_markdown())+
+  labs(title="COVID admission rates have been persistently bad in County Durham & Darlington NHS Trust",
+       subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
+                       adm_max),
+       caption="Data from NHS England, UKHSA & ONS\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDAdmissionsLTLAChangeScatterPathsLong.tiff", units="in", width=9, height=7, res=800)
+plot4
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsDurham.tiff", units="in", width=9, height=6, res=800)
+ggplot()+
+  geom_line(data=plotdata4, aes(x=date, y=adm_roll, group=trust), colour="Grey70")+
+  geom_line(data=plotdata4 %>% filter(code=="RXP"), 
+            aes(x=date, y=adm_roll), colour="#FF4E86")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Average new admissions per day in the past week\n(rate per 100,000)")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="There's something odd about Durham and Darlington",
+       subtitle="Rolling 7-day average of new COVID admissions during the delta wave in <span style='color:#FF4E86;'>Country Durham & Darlington NHS Trust </span><br>compared to <span style='color:Grey50;'>other trusts in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
