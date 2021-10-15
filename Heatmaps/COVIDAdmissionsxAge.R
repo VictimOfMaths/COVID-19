@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/Covid-Publication-09-09-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Covid-Publication-14-10-2021-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:LT25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:MX25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -171,7 +171,7 @@ alldata <- data %>%
          age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
                                   "75-84", "85+", "Total")))
 
-agg_tiff("Outputs/COVIDCHROverall.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDCHROverall.tiff", units="in", width=9, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
   geom_line(colour="dodgerblue")+
   scale_x_date(name="")+
@@ -183,7 +183,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot and analysis by Colin Angus")
 dev.off()
 
-agg_tiff("Outputs/COVIDCHRxAge.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDCHRxAge.tiff", units="in", width=9, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour=age))+
   geom_line()+
   scale_x_date(name="")+
@@ -196,7 +196,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDCHRxAgeFacets.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDCHRxAgeFacets.tiff", units="in", width=9, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour=age))+
   geom_line(show.legend=FALSE)+
   scale_x_date(name="")+
@@ -210,7 +210,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDAdmissionsStreamgraph.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDAdmissionsStreamgraph.tiff", units="in", width=9, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
        aes(x=date, y=admroll, fill=age))+
   geom_stream()+
@@ -223,7 +223,7 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total"),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDAdmissionsStreamgraphRecent.tiff", units="in", width=9, height=6, res=800)
+agg_tiff("Outputs/COVIDAdmissionsStreamgraphRecent.tiff", units="in", width=9, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(admroll) & age!="Total" & date>as.Date("2021-04-01")),
        aes(x=date, y=admroll, fill=age))+
   geom_stream()+
@@ -243,7 +243,7 @@ admratios <- alldata %>%
   mutate(ratio=admroll/lag(admroll, 7)) %>% 
   filter(age!="Total" & !is.na(ratio))
 
-agg_tiff("Outputs/COVIDAdmissionRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
+agg_tiff("Outputs/COVIDAdmissionRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=500)
 ggplot(admratios %>% filter(date>as.Date("2021-05-01")))+
   geom_tile(aes(x=date, y=age, fill=ratio))+
   scale_x_date(name="")+
@@ -260,4 +260,18 @@ ggplot(admratios %>% filter(date>as.Date("2021-05-01")))+
        subtitle="Weekly change in the rolling 7-day average number of new admissions with a positive COVID test, or people testing positive in hospital in England",
        caption="Data from NHS England | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
+dev.off()
+
+#As a line graph
+agg_tiff("Outputs/COVIDAdmissionsxAgeLine.tiff", units="in", width=9, height=6, res=500)
+ggplot(alldata %>% filter(!is.na(admroll) & age!="Total" & date>as.Date("2021-05-01")),
+       aes(x=date, y=admroll, colour=age))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new hospital admissions", labels=abs)+
+  scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
+  theme_custom()+
+  labs(title="The average age of COVID patients admitted to hospital has risen since July",
+       subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
