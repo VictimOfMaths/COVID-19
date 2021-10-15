@@ -61,7 +61,7 @@ plot1 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 cases are highest in Northern Ireland and North-East England",
+  labs(title="COVID-19 cases are high across large parts of the UK",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -85,7 +85,7 @@ plot2 <- ggplot()+
   theme_void()+
   theme(plot.title=element_markdown(face="bold", size=rel(1.5)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 case rates are falling across England",
+  labs(title="In the past week, COVID cases have risen almost everywhere except SW Scotland",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Lower Tier Local Authority level\nData up to ", maxdate),
        caption="Data from PHE, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -221,7 +221,7 @@ plot3 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.5)),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 cases are highest in the North of England",
+  labs(title="There are local COVID outbreaks across many parts of England",
        subtitle=paste0("Rolling 7-day average number of cases in the past week at Middle Super Output Area level in England\nData up to ", 
                        maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in grey."),       
        caption="Data from coronavirus.data.gov.uk | Cartogram from the House of Commons Library\nAnalysis and plot by Colin Angus")
@@ -251,7 +251,7 @@ plot4 <- ggplot()+
   theme_void()+
   theme(plot.title=element_text(face="bold", size=rel(1.5)),
         text=element_text(family="Lato"), plot.caption.position = "plot")+
-  labs(title="COVID-19 cases are falling *almost* everywhere",
+  labs(title="At neighbourhood level, recent changes in COVID cases are a mixed picture",
        subtitle=paste0("Change in the past week in the rolling 7-day average number of cases at Middle Super Output Area level in England\nData up to ", 
                        maxdate, ". MSOAs with small populations and/or low case counts may be censored and appear in white"),       
        caption="Data from coronavirus.data.gov.uk | Cartogram from the House of Commons Library\nAnalysis and plot by Colin Angus")
