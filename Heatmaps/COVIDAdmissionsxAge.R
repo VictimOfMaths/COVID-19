@@ -275,3 +275,34 @@ ggplot(alldata %>% filter(!is.na(admroll) & age!="Total" & date>as.Date("2021-05
        subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsxAgeLineRate.tiff", units="in", width=9, height=6, res=500)
+ggplot(alldata %>% filter(!is.na(admrateroll) & age!="Total" & date>as.Date("2021-05-01")),
+       aes(x=date, y=admrateroll, colour=age))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new hospital admissions per 100,000", labels=abs)+
+  scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
+  theme_custom()+
+  labs(title="The average age of COVID patients admitted to hospital has risen since July",
+       subtitle="Rolling 7-day average of daily new hospital admissions with a positive COVID test, or patients in hospital testing positive,\nby age group in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+#Cases vs admissions
+agg_tiff("Outputs/COVIDAdmissionsxCasesxAge.tiff", units="in", width=9, height=6, res=500)
+ggplot(alldata %>% filter(!is.na(admrateroll)),
+       aes(x=caserateroll, y=admrateroll, colour=date))+
+  geom_path(show.legend=FALSE)+
+  scale_x_continuous(name="Daily cases per 100,000")+
+  scale_y_continuous(name="Daily new admissions per 100,000")+
+  scale_colour_paletteer_c("pals::ocean.ice", direction=-1)+
+  facet_wrap(~age, scales="free_y")+
+  theme_custom()+
+  labs(title="Older ages are seeing far fewer admissions per case, in younger ages it's less clear",
+       subtitle="Rolling 7-day average rates of new COVID cases and hospital admissions in England since October 2020.\nDarker colours represent more recent dates.",
+       caption="Data from UKHSA and NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+
+
