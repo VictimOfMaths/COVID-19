@@ -8,6 +8,7 @@ library(ggtext)
 library(extrafont)
 library(ragg)
 library(paletteer)
+library(readxl)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -353,7 +354,7 @@ dev.off()
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20211013.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20211018.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
@@ -474,5 +475,27 @@ ggplot(popheatmap.scot %>% filter(date>as.Date("2021-05-01")))+
   labs(title="COVID case rates in Scotland are falling across all age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in Scotland, by age group",
        caption="Data from NHS Scotland | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDCaseRatesLineRecentScot.tiff", units="in", width=10, height=6, res=800)
+ggplot(scotdata %>% filter(date>as.Date("2021-05-10") & date<max(date)-days(3) &
+                             Sex!="Total"), 
+       aes(x=date, y=caserate_roll, colour=AgeGroup, group=AgeGroup))+
+  #geom_rect(aes(xmin=as.Date("2021-06-11"), xmax=as.Date("2021-07-11"), ymin=0, ymax=220),
+  #          fill="Grey90", colour="Grey90")+
+  #geom_rect(aes(xmin=as.Date("2021-09-01"), xmax=as.Date("2021-09-27"), ymin=0, ymax=220),
+  #          fill="Grey90", colour="Grey90")+
+  #geom_segment(aes(x=as.Date("2021-07-19"), xend=as.Date("2021-07-19"), y=0, yend=220),
+  #             colour="Grey30", linetype=2)+
+  geom_line()+
+  facet_wrap(~Sex)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="New COVID cases per 100,000")+
+  scale_colour_paletteer_d("awtools::a_palette", name="Age")+
+  theme_custom()+
+  labs(title="Current case rates are still highest (by far) in schoolchildren",
+       subtitle="Rolling 7-day average number of new COVID cases in Scotland, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
