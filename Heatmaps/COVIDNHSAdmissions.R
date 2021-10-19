@@ -2,428 +2,299 @@ rm(list=ls())
 
 library(tidyverse)
 library(curl)
-library(readxl)
-library(lubridate)
 library(paletteer)
-library(RcppRoll)
-library(geofacet)
-library(ggtext)
-library(snakecase)
-library(forcats)
-library(ragg)
-library(extrafont)
 library(scales)
+library(extrafont)
+library(ragg)
+library(lubridate)
+library(readxl)
+library(ggtext)
 
-#Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-#Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-admissions-and-beds-20211013.xlsx"
-#Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211007.xlsx"
-#Increment by one each day
-dailyrange <- "GH"
-dailyoccrange <- "GJ"
-#Increment by seven each week
-weeklyrange <- "GD"
+options(scipen=10000)
 
-dailydata <- tempfile()
-dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
+theme_custom <- function() {
+  theme_classic() %+replace%
+    theme(plot.title.position="plot", plot.caption.position="plot",
+          strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+          plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
+                                  margin=margin(0,0,5.5,0)),
+          text=element_text(family="Lato"))
+}
 
-dailydata.old <- tempfile()
-dailyurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-daily-admissions-and-beds-20210406-1.xlsx"
-dailydata.old <- curl_download(url=dailyurl.old, destfile=dailydata.old, quiet=FALSE, mode="wb")
+#Total English doses
 
-#Total admissions
-daily1 <- read_excel(dailydata, range=paste0("B15:", dailyrange, "21"), col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Admissions",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
+#Download vaccination data from NHS England website
+#Daily data (includes boosters)
+temp <- tempfile()
 
-daily1.old <- read_excel(dailydata.old, range="B15:IQ21", col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Admissions",
-         date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-           rename(region=`...1`)
-  
-#Total occupancy
-daily2 <- read_excel(dailydata, range=paste0("B91:", dailyoccrange, "97"), col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Occupancy",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
+daily19th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-19-October-2021.xlsx"
 
-daily2.old <- read_excel(dailydata.old, range="B91:IQ97", col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Occupancy",
-         date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
+temp <- curl_download(url=daily19th, destfile=temp, quiet=FALSE, mode="wb")
 
-#Total MV occupancy
-daily3 <- read_excel(dailydata, range=paste0("B106:", dailyoccrange, "112"), col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Occupancy of MV beds",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
+dailydata <- read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+  select(1,5) %>% 
+  set_names(c("Region", "Booster")) %>% 
+  mutate(date=as.Date("2021-10-18"), Region=if_else(Region=="England4", "England", Region))
 
-daily3.old <- read_excel(dailydata.old, range="B106:IQ112", col_names=FALSE) %>% 
-  gather(date, count, c(2:ncol(.))) %>% 
-  mutate(metric="Occupancy of MV beds",
-         date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
+daily18th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-18-October-2021.xlsx"
 
-#Merge and convert to rates
-dailydata <- bind_rows(daily1.old, daily1, daily2.old, daily2, daily3.old, daily3) %>% 
-  mutate(pop=case_when(
-    region=="East of England" ~ 6236072,
-    region=="London" ~ 8961989,
-    region=="Midlands" ~ 5934037+4835928,
-    region=="North East and Yorkshire" ~ 2669941+5502967,
-    region=="North West" ~ 7341196,
-    region=="South East" ~ 9180135,
-    region=="South West" ~ 5624696),
-    rate=count*100000/pop) %>% 
-  group_by(region, metric) %>% 
-  mutate(rollrate=roll_mean(rate, 7, align="center", fill=NA))
+temp <- curl_download(url=daily18th, destfile=temp, quiet=FALSE, mode="wb")
 
-#Extract max date
-maxdailydate=max(dailydata$date)
+dailydata <- dailydata %>% bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+  select(1,5) %>% 
+  set_names(c("Region", "Booster")) %>% 
+  mutate(date=as.Date("2021-10-17"), Region=if_else(Region=="England4", "England", Region)))
 
-#Line charts
-agg_tiff("Outputs/COVIDNHSMetricsxReg.tiff", units="in", width=12, height=6, res=500)
-ggplot(dailydata)+
-  geom_line(aes(x=date, y=rollrate, colour=region))+
+daily17th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-17-October-2021.xlsx"
+
+temp <- curl_download(url=daily17th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-16"), Region=if_else(Region=="England4", "England", Region)))
+
+daily16th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-16-October-2021.xlsx"
+
+temp <- curl_download(url=daily16th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-15"), Region=if_else(Region=="England4", "England", Region)))
+
+daily15th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-15-October-2021.xlsx"
+
+temp <- curl_download(url=daily15th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-14"), Region=if_else(Region=="England4", "England", Region)))
+
+daily14th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-14-October-2021.xlsx"
+
+temp <- curl_download(url=daily14th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-13"), Region=if_else(Region=="England4", "England", Region)))
+
+daily13th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-13-October-2021.xlsx"
+
+temp <- curl_download(url=daily13th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-12"), Region=if_else(Region=="England4", "England", Region)))
+
+daily12th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-12-October-2021.xlsx"
+
+temp <- curl_download(url=daily12th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-11"), Region=if_else(Region=="England4", "England", Region)))
+
+daily11th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-11-October-2021.xlsx"
+
+temp <- curl_download(url=daily11th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-10"), Region=if_else(Region=="England4", "England", Region)))
+
+daily10th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-10-October-2021.xlsx"
+
+temp <- curl_download(url=daily10th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-09"), Region=if_else(Region=="England4", "England", Region)))
+
+daily9th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-09-October-2021.xlsx"
+
+temp <- curl_download(url=daily9th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-08"), Region=if_else(Region=="England4", "England", Region)))
+
+daily8th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-08-October-2021.xlsx"
+
+temp <- curl_download(url=daily8th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-07"), Region=if_else(Region=="England4", "England", Region)))
+
+daily7th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-07-October-2021.xlsx"
+
+temp <- curl_download(url=daily7th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-06"), Region=if_else(Region=="England4", "England", Region)))
+
+daily6th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-06-October-2021.xlsx"
+
+temp <- curl_download(url=daily6th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-05"), Region=if_else(Region=="England4", "England", Region)))
+
+daily5th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-05-October-2021.xlsx"
+
+temp <- curl_download(url=daily5th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-04"), Region=if_else(Region=="England4", "England", Region)))
+
+daily4th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-04-October-2021.xlsx"
+
+temp <- curl_download(url=daily4th, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-03"), Region=if_else(Region=="England4", "England", Region)))
+
+daily3rd <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-03-October-2021.xlsx"
+
+temp <- curl_download(url=daily3rd, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-02"), Region=if_else(Region=="England4", "England", Region)))
+
+daily2nd <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-02-October-2021.xlsx"
+
+temp <- curl_download(url=daily2nd, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-10-01"), Region=if_else(Region=="England4", "England", Region)))
+
+daily1st <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-01-October-2021.xlsx"
+
+temp <- curl_download(url=daily1st, destfile=temp, quiet=FALSE, mode="wb")
+
+dailydata <- dailydata %>% 
+  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+              select(1,5) %>% 
+              set_names(c("Region", "Booster")) %>% 
+              mutate(date=as.Date("2021-09-30"), Region=if_else(Region=="England4", "England", Region)))
+
+#Bring in eligible population
+Engurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&format=csv"
+temp <- curl_download(url=Engurl, destfile=temp, quiet=FALSE, mode="wb")
+
+Engdata <- read.csv(temp) %>% 
+  select(4,5) %>% 
+  set_names("date", "Eligible") %>% 
+  mutate(date=as.Date(date)+days(182)) %>% 
+  merge(dailydata, by="date", all.x=TRUE) %>% 
+  mutate(EligibleUnvax=Eligible-Booster,
+         Boosterprop=Booster/Eligible,
+         Forecast=if_else(date>max(date[!is.na(Booster)]), 
+                          Booster[date==max(date[!is.na(Booster)])]+
+                            166451*as.numeric(interval(date, max(date[!is.na(Booster)])), "days"),
+                          NA_real_))
+
+agg_tiff("Outputs/COVIDBoostersEng.tiff", units="in", width=9, height=6, res=500)
+ggplot(Engdata %>% filter(date>=as.Date("2021-09-21") & date<=max(date[!is.na(Booster)])))+
+  geom_line(aes(x=date, y=Eligible), colour="#CC3300")+
+  geom_line(aes(x=date, y=Booster), colour="#006666")+
   scale_x_date(name="")+
-  scale_y_continuous(name="Rate per 100,000 population")+
-  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
-  facet_wrap(~metric, scales="free_y")+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.4)),
-        text=element_text(family="Lato"))+
-  labs(title="COVID hospital data shows significant regional variation",
-       subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
+  scale_y_continuous(name="Number of people", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="England has delivered booster jabs to 43% of eligible people",
+       subtitle="Total number of <span style='color:#CC3300;'>people eligible</span> and <span style='color:#006666;'>having received</span> a COVID booster jab in Scotland since bookings were opened on 21st September",
+       caption="Data from NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-#Recent version
-agg_tiff("Outputs/COVIDNHSMetricsxRegRecent.tiff", units="in", width=12, height=6, res=500)
-ggplot(dailydata %>% filter(date>as.Date("2021-07-01")))+
-  geom_line(aes(x=date, y=rollrate, colour=region))+
+#Total Scottish doses
+Scotdoseurl <- "https://www.opendata.nhs.scot/dataset/6dbdd466-45e3-4348-9ee3-1eac72b5a592/resource/42f17a3c-a4db-4965-ba68-3dffe6bca13a/download/daily_vacc_scot_20211018.csv"
+temp <- tempfile()
+temp <- curl_download(url=Scotdoseurl, destfile=temp, quiet=FALSE, mode="wb")
+
+ScotDoses <- read.csv(temp) %>% 
+  filter(Product=="Total" & AgeBand=="16 years and over") %>% 
+  mutate(date=as.Date(as.character(Date), format="%Y%m%d"))
+
+ggplot(ScotDoses, aes(x=date, y=CumulativeNumberVaccinated, colour=Dose))+
+  geom_line()
+
+Scotdata <- ScotDoses %>% 
+  filter(Dose=="Dose 2") %>% 
+  mutate(date=date+days(182)) %>% 
+  select(date, CumulativeNumberVaccinated) %>% 
+  rename("Eligible"="CumulativeNumberVaccinated") %>% 
+  merge(ScotDoses %>% filter(Dose=="Booster"), by="date", all.x=TRUE) %>% 
+  filter(date>=max(date[Eligible==0]) & date<=max(date[!is.na(CumulativeNumberVaccinated)])) %>% 
+  mutate(EligibleUnvax=Eligible-CumulativeNumberVaccinated,
+         Boosterprop=CumulativeNumberVaccinated/Eligible)
+
+agg_tiff("Outputs/COVIDBoostersScot.tiff", units="in", width=9, height=6, res=500)
+ggplot(Scotdata %>% filter(date>=as.Date("2021-09-21")))+
+  geom_line(aes(x=date, y=Eligible), colour="#CC3300")+
+  geom_line(aes(x=date, y=CumulativeNumberVaccinated), colour="#006666")+
   scale_x_date(name="")+
-  scale_y_continuous(name="Rate per 100,000 population", limits=c(0,NA))+
-  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
-  facet_wrap(~metric, scales="free_y")+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Lato"))+
-  labs(title="COVID admissions are rising again in most regions of England",
-       subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
+  scale_y_continuous(name="Number of people", limits=c(0,NA))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="Scotland has delivered booster jabs to 41% of eligible people",
+       subtitle="Total number of <span style='color:#CC3300;'>people eligible</span> and <span style='color:#006666;'>having received</span> a COVID booster jab in Scotland since bookings were opened on 21st September",
+       caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDNHSMetricsxRegLog.tiff", units="in", width=12, height=6, res=500)
-ggplot(subset(dailydata, date>as.Date("2021-04-01")))+
-  geom_line(aes(x=date, y=rollrate, colour=region))+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Rate per 100,000 population (log scale)", trans="log",
-                     labels=label_number(accuracy=0.01))+
-  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
-  facet_wrap(~metric, scales="free_y")+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="On a log scale it's clear that hospital numbers are rising exponentially everywhere",
-       subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
+#Comparison of both countries
+agg_tiff("Outputs/COVIDBoostersEngScot.tiff", units="in", width=9, height=6, res=500)
+ggplot()+
+  geom_line(data=Engdata, aes(x=date, y=Boosterprop), colour="Red")+
+  geom_line(data=Scotdata, aes(x=date, y=Boosterprop), colour="RoyalBlue")+
+  scale_x_date(name="", limits=c(as.Date("2021-09-21"), NA_Date_))+
+  scale_y_continuous(name="Proportion of eligible population who have received a booster", limits=c(0,NA),
+               labels=label_percent(accuracy=1))+
+  theme_custom()+
+  theme(plot.title=element_markdown())+
+  labs(title="<span style='color:Red;'>England</span> has better COVID booster coverage than <span style='color:RoyalBlue;'>Scotland</span> (for now).",
+       subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September. Scottish data is only available for more recent days",
+       caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-#Admissions only
-agg_tiff("Outputs/COVIDNHSAdmissionsxReg.tiff", units="in", width=9, height=6, res=500)
-ggplot(subset(dailydata, metric=="Admissions"))+
-  geom_line(aes(x=date, y=rollrate, colour=region))+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Rate per 100,000 population")+
-  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)),
-        text=element_text(family="Roboto"))+
-  labs(title="New COVID-19 hospital admissions figures rising across all regions",
-       subtitle=paste0("Rolling 7-day averages of new hospital admissions for patients with a positive COVID-19 diagnosis.\nData up to ", maxdailydate, "."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
 
-#Now look at trust-level weekly data
-weeklydata <- tempfile()
-weeklydata <- curl_download(url=weeklyurl, destfile=weeklydata, quiet=FALSE, mode="wb")
 
-weeklydata.old <- tempfile()
-weeklyurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/Weekly-covid-admissions-and-beds-publication-210429-up-to-210406.xlsx"
-weeklydata.old <- curl_download(url=weeklyurl.old, destfile=weeklydata.old, quiet=FALSE, mode="wb")
 
-weeklyCOVID <- read_excel(weeklydata, sheet="Adult G&A Beds Occupied COVID", 
-                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="COVID",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklyCOVID.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Occupied COVID", 
-                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="COVID",
-         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklyOther <- read_excel(weeklydata, sheet="Adult G&A Bed Occupied NonCOVID", 
-                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="non-COVID",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklyOther.old <- read_excel(weeklydata.old, sheet="Adult G&A Bed Occupied NonCOVID", 
-                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="non-COVID",
-         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklyEmpty <- read_excel(weeklydata, sheet="Adult G&A Beds Unoccupied", 
-                          range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="Unoccupied",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklyEmpty.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Unoccupied", 
-                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
-  gather(date, count, c(4:ncol(.))) %>% 
-  mutate(type="Unoccupied",
-         date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
-  rename(region=`...1`, code=`...2`, trust=`...3`)
-
-weeklydata <- bind_rows(weeklyCOVID, weeklyCOVID.old, weeklyOther, weeklyOther.old,
-                        weeklyEmpty, weeklyEmpty.old) %>% 
-  mutate(region=case_when(
-    trust=="ENGLAND" ~ "Nation", 
-    trust %in% c("East of England", "London", "Midlands", "North East and Yorkshire",
-                 "North West", "South East", "South West") ~ "Region",
-    TRUE ~ region)) %>% 
-  group_by(trust, date) %>% 
-  mutate(capacity=sum(count)) %>% 
-  ungroup() %>% 
-  mutate(proportion=count/capacity)
-
-#Extract max date
-maxweeklydate=max(weeklydata$date)
-
-#Carve out into separate regional/national and trust-level datasets
-natdata <- weeklydata %>% filter(region %in% c("Nation", "Region"))
-trustdata <- weeklydata %>% 
-  filter(!region %in% c("Nation", "Region") & capacity>=100) %>% 
-  mutate(trust=str_replace(trust, " NHS TRUST", ""),
-         trust=str_replace(trust, "NHS FOUNDATION TRUST", ""),
-         trust=to_any_case(trust, case="title"),
-         trust=str_replace(trust, "King s", "King's"),
-         trust=str_replace(trust, "Guy s", "Guy's"),
-         trust=str_replace(trust, "George s", "George's"),
-         trust=str_replace(trust, "Women s", "Women's"),
-         trust=str_replace(trust, "Children s", "Children's"),
-         trust=str_replace(trust, "Peter s", "Peter's")) %>% 
-  group_by(trust) %>% 
-  mutate(maxcap=max(count[type=="COVID"])) %>% 
-  ungroup() %>% 
-  mutate(trust=fct_reorder(trust, -maxcap))
-
-#Convert national/region data to rates
-natdata <- natdata %>% 
-  mutate(pop=case_when(
-    trust=="East of England" ~ 6236072,
-    trust=="London" ~ 8961989,
-    trust=="Midlands" ~ 5934037+4835928,
-    trust=="North East and Yorkshire" ~ 2669941+5502967,
-    trust=="North West" ~ 7341196,
-    trust=="South East" ~ 9180135,
-    trust=="South West" ~ 5624696,
-    trust=="ENGLAND" ~ 56286961),
-    rate=count*100000/pop)
-
-#Single national plot
-agg_tiff("Outputs/COVIDNHSBedOccupancy.tiff", units="in", width=8, height=6, res=500)
-ggplot(subset(natdata, trust=="ENGLAND"))+
-  geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Beds per 100,000 population")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="The number of people in hospital with a positive COVID-19 test is still relatively low",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate in England for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-#Set up geofacet grid of NHS regions
-mygrid <- data.frame(name=c("North West", "North East and Yorkshire", 
-                            "Midlands","East of England",
-                            "South West", "London", "South East"),
-                     row=c(1,1,2,2,3,3,3), col=c(2,3,2,3,1,2,3),
-                     code=c(1:7))
-
-#Faceted regional plot
-agg_tiff("Outputs/COVIDNHSBedOccupancyxReg.tiff", units="in", width=8, height=8, res=500)
-ggplot(subset(natdata, trust!="ENGLAND"))+
-  geom_area(aes(x=date, y=rate, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Beds per 100,000 population")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                         labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_geo(~trust, grid=mygrid)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="COVID-19 bed occupancy is still low across all regions of England",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-#Get into trust-level data
-agg_tiff("Outputs/COVIDNHSBedOccupancyLondon.tiff", units="in", width=13, height=8, res=500)
-trustdata %>% 
-  filter(region=="London") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="COVID-19 bed occupancy has fallen across London",
-     subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-     caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=8, res=500)
-trustdata %>% 
-  filter(region=="South East") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in hospital is falling across the South East",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancySouthWest.tiff", units="in", width=10, height=6, res=500)
-trustdata %>% 
-  filter(region=="South West") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="COVID-19 bed occupancy is falling across the South West",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancyMidlands.tiff", units="in", width=14, height=9, res=500)
-trustdata %>% 
-  filter(region=="Midlands") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="COVID-19 bed occupancy in the Midlands is falling across all NHS trusts",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancyEast.tiff", units="in", width=10, height=6, res=500)
-trustdata %>% 
-  filter(region=="East of England") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients is falling in hospitals in the East of England",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancyNorthWest.tiff", units="in", width=13, height=8, res=500)
-trustdata %>% 
-  filter(region=="North West") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="The number of COVID-19 patients in hospital is still relatively low across the North West",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
-
-agg_tiff("Outputs/COVIDNHSBedOccupancyNEYorks.tiff", units="in", width=13, height=8, res=500)
-trustdata %>% 
-  filter(region=="North East and Yorkshire") %>% 
-  ggplot()+
-  geom_area(aes(x=date, y=count, fill=type), show.legend=FALSE)+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Number of beds")+
-  scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
-  facet_wrap(~trust)+
-  theme_classic()+
-  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(0.6)),
-        plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
-        text=element_text(family="Lato"))+
-  labs(title="COVID-19 patient numbers are falling across North East and Yorkshire",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
-dev.off()
 
