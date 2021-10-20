@@ -324,3 +324,19 @@ ggplot(combined, aes(x=date, colour=country))+
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDBoostersEngScotForecasts2.tiff", units="in", width=10, height=6, res=500)
+ggplot(combined %>% mutate(Eligible=if_else(is.na(Booster) & date<as.Date("2021-10-15"), 0, as.numeric(Eligible))), 
+       aes(x=date))+
+  geom_col(aes(y=Eligible), fill="#D72000")+
+  geom_col(aes(y=Booster), fill="#172869")+
+  geom_col(aes(y=Forecast), fill="#088BBE")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Individuals")+
+  scale_fill_manual(values=c("Red", "RoyalBlue"))+
+  facet_wrap(~country, scales="free_y")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="Both England and Scotland could do with accelerating their booster programmes",
+       subtitle="Total number of <span style='color:#D72000;'>people eligible for a COVID booster</span> and the number of those who have <span style='color:#172869;'>already been vaccinated</span>, or <span style='color:#088BBE;'>will be in coming months</span><br>at current vaccination rates",
+       caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
