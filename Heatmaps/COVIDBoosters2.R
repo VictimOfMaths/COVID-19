@@ -224,12 +224,16 @@ Engdata <- read.csv(temp) %>%
   set_names("date", "Eligible") %>% 
   mutate(date=as.Date(date)+days(182)) %>% 
   merge(dailydata, by="date", all.x=TRUE) %>% 
-  filter(date<=max(date[!is.na(Booster)])) %>% 
   mutate(EligibleUnvax=Eligible-Booster,
-         Boosterprop=Booster/Eligible)
+         Boosterprop=Booster/Eligible,
+         Forecast=if_else(date>max(date[!is.na(Booster)]), 
+                          Booster[date==max(date[!is.na(Booster)])]+
+                            166451*as.numeric(interval(max(date[!is.na(Booster)]), date), "days"),
+                          NA_real_),
+         Forecastprop=Forecast/Eligible)
 
 agg_tiff("Outputs/COVIDBoostersEng.tiff", units="in", width=9, height=6, res=500)
-ggplot(Engdata %>% filter(date>=as.Date("2021-09-21")))+
+ggplot(Engdata %>% filter(date>=as.Date("2021-09-21") & date<=max(date[!is.na(Booster)])))+
   geom_line(aes(x=date, y=Eligible), colour="#CC3300")+
   geom_line(aes(x=date, y=Booster), colour="#006666")+
   scale_x_date(name="")+
@@ -259,9 +263,14 @@ Scotdata <- ScotDoses %>%
   select(date, CumulativeNumberVaccinated) %>% 
   rename("Eligible"="CumulativeNumberVaccinated") %>% 
   merge(ScotDoses %>% filter(Dose=="Booster"), by="date", all.x=TRUE) %>% 
-  filter(date>=max(date[Eligible==0]) & date<=max(date[!is.na(CumulativeNumberVaccinated)])) %>% 
+  filter(date>=max(date[Eligible==0])) %>% 
   mutate(EligibleUnvax=Eligible-CumulativeNumberVaccinated,
-         Boosterprop=CumulativeNumberVaccinated/Eligible)
+         Boosterprop=CumulativeNumberVaccinated/Eligible,      
+         Forecast=if_else(date>max(date[!is.na(CumulativeNumberVaccinated)]), 
+                          CumulativeNumberVaccinated[date==max(date[!is.na(CumulativeNumberVaccinated)])]+ 
+                            20718*as.numeric(interval(max(date[!is.na(CumulativeNumberVaccinated)]), date), "days"),
+                          NA_real_),
+         Forecastprop=Forecast/Eligible)
 
 agg_tiff("Outputs/COVIDBoostersScot.tiff", units="in", width=9, height=6, res=500)
 ggplot(Scotdata %>% filter(date>=as.Date("2021-09-21")))+
@@ -291,7 +300,27 @@ ggplot()+
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+combined <- Engdata %>% 
+  select(date, Eligible, Booster, Boosterprop, Forecast, Forecastprop) %>% 
+  mutate(country="England") %>% 
+  bind_rows(Scotdata %>% 
+              select(date, Eligible, CumulativeNumberVaccinated, Boosterprop, Forecast, Forecastprop) %>% 
+              rename("Booster"="CumulativeNumberVaccinated") %>% 
+              mutate(country="Scotland")) %>% 
+  filter(date>=as.Date("2021-09-21") & date<as.Date("2022-01-01")) 
 
-
-
+agg_tiff("Outputs/COVIDBoostersEngScotForecasts.tiff", units="in", width=9, height=6, res=500)
+ggplot(combined, aes(x=date, colour=country))+
+  geom_line(aes(y=Boosterprop), show.legend=FALSE)+
+  geom_line(aes(y=Forecastprop), linetype=2, show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of eligible population who have received a booster", limits=c(0,NA),
+                     labels=label_percent(accuracy=1))+
+  scale_colour_manual(values=c("Red", "RoyalBlue"))+
+  theme_custom()+
+  theme(plot.title=element_markdown())+
+  labs(title="<span style='color:RoyalBlue;'>Scotland</span> could overtake <span style='color:Red;'>England</span> in terms of Booster coverage within a few weeks",
+       subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September (solid lines) and forecasts based on recent vaccination rates and the number of people\ndue to become eligible (dashed lines). Scottish data is only available for more recent days",
+       caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
 
