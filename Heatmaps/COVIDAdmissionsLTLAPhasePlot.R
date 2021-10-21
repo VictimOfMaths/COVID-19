@@ -23,12 +23,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211014.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211021.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "GI"
+admrange <- "GP"
 #Set latest date of admissions data
-admdate <- as.Date("2021-10-10")
+admdate <- as.Date("2021-10-17")
 
 #Read in admissions
 #First data up to 6th April
@@ -234,7 +234,7 @@ plot1 <- ggplot()+
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
-agg_tiff("Outputs/COVIDAdmissionsLTLACartogram.tiff", units="in", width=8, height=9, res=800)
+agg_tiff("Outputs/COVIDAdmissionsLTLACartogram.tiff", units="in", width=8, height=9, res=500)
 plot1
 dev.off()
 
