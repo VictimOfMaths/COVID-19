@@ -13,19 +13,18 @@ library(gganimate)
 #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
 
 
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1020037/Weekly_Influenza_and_COVID19_report_data_W38_v2.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1027448/Weekly_Influenza_and_COVID19_report_data_w42.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-data <- read_excel(temp, sheet="Figure 62&63. COVID Vac Age Sex", range="B13:N30", col_names=FALSE) %>% 
+data <- read_excel(temp, sheet="Figure 63&64. COVID Vac Age Sex", range="B13:N29", col_names=FALSE) %>% 
   select(`...1`, `...2`, `...3`, `...5`, `...6`, `...9`, `...12`)
 
 colnames(data) <- c("Age", "Male_Pop", "Male_Vax1", "Female_Pop", "Female_Vax1", "Male_Vax2",
                      "Female_Vax2")
 
 data <- data %>% 
-  filter(Age!="18 to under 25") %>% 
   rowwise() %>% 
   mutate(Male_Unvax=Male_Pop-Male_Vax1,
          Female_Unvax=Female_Pop-Female_Vax1,
