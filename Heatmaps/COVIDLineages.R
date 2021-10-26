@@ -30,8 +30,10 @@ data <- merge(rawdata, LADtoRegion,all.x=TRUE) %>%
     TRUE ~ Region),
     WeekEndDate=as.Date(WeekEndDate),
     strain=case_when(
-      Lineage=="B.1.617.2" ~ "'Indian' variant",
-      Lineage=="B.1.1.7" ~ "'Kent' variant",
+      Lineage=="B.1.177" ~ "B.1.177",
+      Lineage %in% c("B.1.617.2", "AY.4") ~ "Delta",
+      Lineage=="B.1.1.7" ~ "Alpha",
+      Lineage=="AY.4.2" ~ "New variant",
       TRUE ~ "Other variants")) %>% 
   group_by(WeekEndDate, strain, Region) %>% 
   summarise(Count=sum(Count)) %>% 
@@ -48,33 +50,32 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
-agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=500)
 ggplot(data, aes(x=WeekEndDate, y=Count, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
   scale_y_continuous(name="Genomes sequenced")+
-  scale_fill_paletteer_d("rcartocolor::Vivid", name="Lineage")+
+  scale_fill_paletteer_d("beyonce::X127", name="Lineage")+
   facet_geo(~Region, grid=mygrid)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="There is a lot of regional variation in the number of 'Indian' variant cases being identified",
-       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage. Data up to ", max(rawdata$WeekEndDate)),
+  labs(title="The new 'AY4.2' COVID variant represents a small, but growing, proportion of new cases",
+       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as  selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=500)
 ggplot(data, aes(x=WeekEndDate, y=prop, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
   scale_y_continuous(name="Genomes sequenced", labels=label_percent(accuracy=1))+
-  scale_fill_paletteer_d("rcartocolor::Vivid", name="Lineage")+
+  scale_fill_paletteer_d("beyonce::X127", name="Lineage")+
   facet_geo(~Region, grid=mygrid)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="The 'Indian' variant is now dominant across most of England",
-       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute with identified as B.1.617.2 ('Indian'),\nB.1.1.7 ('Kent') or other lineage. Data up to ", max(rawdata$WeekEndDate)),
+  labs(title="The new 'AY4.2' COVID variant represents a small, but growing, proportion of new cases",
+       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
-
