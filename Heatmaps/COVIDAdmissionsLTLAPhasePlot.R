@@ -11,6 +11,7 @@ library(sf)
 library(snakecase)
 library(ggrepel)
 library(ragg)
+library(ggtext)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -23,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211021.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211028.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "GP"
+admrange <- "GW"
 #Set latest date of admissions data
-admdate <- as.Date("2021-10-17")
+admdate <- as.Date("2021-10-24")
 
 #Read in admissions
 #First data up to 6th April
@@ -407,4 +408,140 @@ ggplot()+
   labs(title="There's something odd about Durham and Darlington",
        subtitle="Rolling 7-day average of new COVID admissions during the delta wave in <span style='color:#FF4E86;'>Country Durham & Darlington NHS Trust </span><br>compared to <span style='color:Grey50;'>other trusts in England",
        caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+####################
+#Explore fallout from Immensa scandal
+#Look at rates in LAs most impacted by testing, list taken from https://twitter.com/AlastairGrant4/status/1452897309591756800
+Imm.data <- LAadmissions %>% 
+  select(date, Region, admissions, name, pop) %>% 
+  filter(date>as.Date("2021-08-01")) %>% 
+  mutate(flag1=case_when(
+    name %in% c("Gloucester", "South Gloucestershire", "West Berkshire", "North Somerset", "Swindon",
+                "Somerset West and Taunton", "Tewkesbury", "Bristol, City of", "Cheltenham", 
+                "Bath and North East Somerset",
+                "Cotswold", "Sedgemoor", "Stroud") ~ "Most Affected Areas",
+    TRUE ~ "Rest of England"),
+    flag2=case_when(
+      flag1=="Most Affected Areas" ~ "Most Affected Areas",
+      Region=="South West" ~ "Rest of the South West",
+      TRUE ~ "Rest of England"))
+
+Imm.data1 <- Imm.data %>% 
+  group_by(date, flag1) %>% 
+  summarise(admissions=sum(admissions),
+            pop=sum(pop)) %>% 
+  ungroup() %>% 
+  group_by(flag1) %>% 
+  mutate(admrate=admissions*100000/pop,
+         adm_roll=roll_mean(admrate, 7, align="center", fill=NA, na.rm=TRUE)) %>% 
+  ungroup()
+
+agg_tiff("Outputs/COVIDAdmissionsImmensa.tiff", units="in", width=8, height=6, res=500)
+ggplot(Imm.data1)+
+  geom_rect(aes(xmin=as.Date("2021-09-02")+days(8), xmax=as.Date("2021-10-12")+days(8), ymin=0, ymax=2),
+             fill="Grey90")+
+  geom_line(aes(x=date, y=adm_roll, colour=flag1), show.legend=FALSE)+
+  geom_text_repel(data=Imm.data1 %>% filter(date==max(date)-days(4)),
+                  aes(x=date, y=adm_roll, colour = flag1, label=flag1),
+                  family = "Lato", fontface = "bold", direction = "y", box.padding = 0.4, hjust=0,
+                  xlim = c(as.Date("2021-10-22"), NA_Date_), show.legend=FALSE, segment.color = NA)+
+  scale_x_date(name="", limits=c(as.Date("2021-08-01"), as.Date("2021-11-15")))+
+  scale_y_continuous(name="Daily admissions per 100,000 population")+
+  scale_colour_manual(values=c("#dc322f", "#073642"))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown(colour="Grey50"))+
+  labs(title="COVID admissions have risen in areas most affected by the Immensa scandal",
+       subtitle="Rolling 7-day average rate of new COVID-19 hospital admissions or in-hospital diagnoses in <span style='color:#dc322f;'>the 13 English<br>Local Authorities most affected</span> by the Immensa lab errors compared to <span style='color:#073642;'>the rest of England",
+       caption="Data from NHS England | Affected Local Authorities identified by @AlistairGrant4 | Plot by @VictimOfMaths\n* The shaded area is offset by 8 days from the period when incorrect test results were given to allow for the lag between testing positive\nand being admitted to hospital")+
+  annotate(geom="text", x=as.Date("2021-09-30"), y=0.5, family="Lato", label="Period affected by testing errors*")
+dev.off()
+
+Imm.data2 <- Imm.data %>% 
+  group_by(date, flag2) %>% 
+  summarise(admissions=sum(admissions),
+            pop=sum(pop)) %>% 
+  ungroup() %>% 
+  group_by(flag2) %>% 
+  mutate(admrate=admissions*100000/pop,
+         adm_roll=roll_mean(admrate, 7, align="center", fill=NA, na.rm=TRUE)) %>% 
+  ungroup()
+
+agg_tiff("Outputs/COVIDAdmissionsImmensa2.tiff", units="in", width=8, height=6, res=500)
+ggplot(Imm.data2)+
+  geom_rect(aes(xmin=as.Date("2021-09-02")+days(8), xmax=as.Date("2021-10-12")+days(8), ymin=0, ymax=2),
+            fill="Grey90")+
+  geom_line(aes(x=date, y=adm_roll, colour=flag2), show.legend=FALSE)+
+  geom_text_repel(data=Imm.data2 %>% filter(date==max(date)-days(4)),
+                  aes(x=date, y=adm_roll, colour = flag2, label=flag2),
+                  family = "Lato", fontface = "bold", direction = "y", box.padding = 0.4, hjust=0,
+                  xlim = c(as.Date("2021-10-25"), NA_Date_), show.legend=FALSE, segment.color = NA)+
+  scale_x_date(name="", limits=c(as.Date("2021-08-01"), as.Date("2021-11-23")))+
+  scale_y_continuous(name="Daily admissions per 100,000 population")+
+  scale_colour_manual(values=c("#dc322f", "#073642", "#268bd2"))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown(colour="Grey50"))+
+  labs(title="COVID admissions have risen in areas most affected by the Immensa scandal",
+       subtitle="Rolling 7-day average rate of new COVID-19 hospital admissions or in-hospital diagnoses in <span style='color:#dc322f;'>the 13 English<br>Local Authorities most affected</span> by the Immensa lab errors compared to <span style='color:#268bd2;'>other Local Authorities in the South West</span><br>and<span style='color:#073642;'> the rest of England",
+       caption="Data from NHS England | Affected Local Authorities identified by @AlistairGrant4 | Plot by @VictimOfMaths\n* The shaded area is offset by 8 days from the period when incorrect test results were given to allow for the lag between testing positive\nand being admitted to hospital")+
+  annotate(geom="text", x=as.Date("2021-09-30"), y=0.5, family="Lato", label="Period affected by testing errors*")
+dev.off()
+
+#Bring in case data for these areas
+url <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=ltla&metric=newCasesBySpecimenDateRollingRate&format=csv"
+temp1 <- tempfile()
+temp1 <- curl_download(url=url, destfile=temp1, quiet=FALSE, mode="wb")
+
+cases <- read.csv(temp1) %>% 
+  mutate(date=as.Date(date)) %>% 
+  filter(date>="2021-08-01" & substr(areaCode, 1, 1)=="E") %>% 
+  mutate(highlight=if_else(areaName %in% c("Gloucester", "South Gloucestershire", "West Berkshire", 
+                                           "North Somerset", "Swindon", "Somerset West and Taunton", 
+                                           "Tewkesbury", "Bristol, City of", "Cheltenham", "Bath and North East Somerset",
+                                           "Cotswold", "Sedgemoor", "Stroud"),
+                           "Most affected areas", "Rest of England"))
+
+agg_tiff("Outputs/COVIDCasesImmensa.tiff", units="in", width=8, height=6, res=500)
+ggplot()+
+  geom_rect(aes(xmin=as.Date("2021-09-02"), xmax=as.Date("2021-10-12"), ymin=0, ymax=1500),
+            fill="Grey90")+
+  geom_line(data=cases, aes(x=date, y=newCasesBySpecimenDateRollingRate, group=areaName), colour="Grey70")+
+  geom_line(data=cases %>% filter(highlight=="Most affected areas"), 
+            aes(x=date, y=newCasesBySpecimenDateRollingRate, group=areaName), colour="#FF4E86")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Weekly COVID cases per 100,000 population")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="COVID cases fell sharply in areas affected by the Immensa scandal",
+       subtitle="Rolling 7-day average rate of new COVID-19 cases in <span style='color:#FF4E86;'>the 13 English Local Authorities most affected</span><br>by the Immensa lab errors compared to <span style='color:Grey60;'>other Local Authorities in England",
+       caption="Data from coronavirus.data.gov.uk | Affected Local Authorities identified by @AlistairGrant4 | Plot by @VictimOfMaths")+
+  annotate(geom="text", x=as.Date("2021-09-20"), y=1400, family="Lato", label="Period affected by testing errors")
+dev.off()
+
+cases2 <- Imm.data %>% merge(cases %>% rename("name"="areaName")) %>% 
+  mutate(cases=newCasesBySpecimenDateRollingRate*pop/100000) %>% 
+  group_by(flag2, date) %>% 
+  summarise(pop=sum(pop), cases=sum(cases)) %>% 
+  ungroup() %>% 
+  mutate(caserate=cases*100000/pop)
+
+agg_tiff("Outputs/COVIDCasesImmensa2.tiff", units="in", width=9, height=6, res=500)
+ggplot(cases2)+
+  geom_rect(aes(xmin=as.Date("2021-09-02"), xmax=as.Date("2021-10-12"), ymin=0, ymax=1000),
+            fill="Grey90")+
+  geom_line(aes(x=date, y=caserate, colour=flag2), show.legend=FALSE)+
+  geom_text_repel(data=cases2 %>% filter(date==max(date)),
+                  aes(x=date, y=caserate, colour = flag2, label=flag2),
+                  family = "Lato", fontface = "bold", direction = "y", box.padding = 0.4, hjust=0,
+                  xlim = c(as.Date("2021-10-24"), NA_Date_), show.legend=FALSE, segment.color = NA)+
+  scale_x_date(name="", limits=c(as.Date("2021-08-01"), as.Date("2021-11-23")))+
+  scale_y_continuous(name="Weekly COVID cases per 100,000 population")+
+  scale_colour_manual(values=c("#dc322f", "#073642", "#268bd2"))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown(colour="Grey50"))+
+  labs(title="COVID cases in the most affected areas look different to the rest of the South West",
+       subtitle="Rolling 7-day average rate of new COVID-19 cases in <span style='color:#dc322f;'>the 13 English Local Authorities most affected</span> by the<br>Immensa lab errors compared to <span style='color:#268bd2;'>other Local Authorities in the South West</span><br>and<span style='color:#073642;'> the rest of England",
+       caption="Data from coronavirus.data.gov.uk | Affected Local Authorities identified by @AlistairGrant4 | Plot by @VictimOfMaths")+
+  annotate(geom="text", x=as.Date("2021-09-22"), y=750, family="Lato", label="Period affected by testing errors")
+
 dev.off()
