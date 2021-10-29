@@ -229,3 +229,41 @@ ggplot(datafull_se %>% filter(age %in% c("12-15", "16-17")) %>%
 
 dev.off()
 
+#########################
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-29-October-2021.xlsx"
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+Boosters <- read_excel(temp, sheet="Total Vaccinations by Age", range="B15:F29") %>% 
+  select(-2) %>% 
+  set_names("age", "1 doses", "2 doses", "3 dose") %>% 
+  mutate(`1 dose`=`1 doses`-`2 doses`,
+         `2 dose`=`2 doses`-`3 dose`) %>% 
+  merge(popdata %>% filter(source=="pop_ONS2020") %>% 
+          mutate(age=case_when(
+    age %in% c("80-84", "85-89", "90+") ~ "80+",
+    age %in% c("12-15", "17-18") ~ "Under 18",
+    age=="Total" ~ "Total",
+    TRUE ~ age)) %>% 
+      group_by(age) %>% 
+      summarise(pop=sum(pop))) %>% 
+  mutate(`Unvaccinated`=pop-`1 doses`,
+         age=if_else(age=="Under 18", "12-17", age)) %>% 
+  gather(Doses, Vaccinated, c(Unvaccinated, `1 dose`, `2 dose`, `3 dose`)) %>% 
+  mutate(Vaccinated=if_else(Vaccinated<0, 0, Vaccinated),
+         Doses=factor(Doses, levels=c("Unvaccinated", "1 dose", "2 dose", "3 dose")))
+
+total <- Boosters %>% group_by(Doses) %>% 
+  summarise(Vaccinated=sum(Vaccinated))
+
+agg_tiff("Outputs/COVIDVaxBooster Pyramix.tiff", units="in", width=9, height=8, res=500)
+ggplot(Boosters, aes(x=Vaccinated/1000000, y=age, fill=Doses))+
+  geom_col()+
+  scale_x_continuous(name="Number of people (millions)")+
+  scale_y_discrete(name="Age")+
+  scale_fill_manual(values=c("#01000E", "#FBA724", "#EE7E24", "#D42D24"), name="")+
+  theme_custom()+
+  labs(title="13% of people in England aged 12+ have now received a 3rd COVID jab",
+       subtitle="Number of vaccine doses delivered by age group in England. 3 doses includes both boosters and 3rd primary doses",
+       caption="Vaccination data from NHS England | Population data from ONS | plot by @VictimOfMaths\nNote that for ages 75+, ONS population estimates suggest >100% first dose coverage")
+dev.off()
