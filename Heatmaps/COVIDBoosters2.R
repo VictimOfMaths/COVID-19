@@ -25,195 +25,41 @@ theme_custom <- function() {
 
 #Download vaccination data from NHS England website
 #Daily data (includes boosters)
+#Start with most recent data
 temp <- tempfile()
 
-daily19th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-19-October-2021.xlsx"
+latest <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-29-October-2021.xlsx"
 
-temp <- curl_download(url=daily19th, destfile=temp, quiet=FALSE, mode="wb")
+temp <- curl_download(url=latest, destfile=temp, quiet=FALSE, mode="wb")
 
-dailydata <- read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
+dailydata <- read_excel(temp, sheet=1, range="B13:F14", col_names=FALSE) %>% 
   select(1,5) %>% 
   set_names(c("Region", "Booster")) %>% 
-  mutate(date=as.Date("2021-10-18"), Region=if_else(Region=="England4", "England", Region))
+  mutate(date=as.Date("2021-10-28"), Region=if_else(Region=="England4", "England", Region)) %>% 
+  filter(substr(Region, 1, 7)=="England") %>% 
+  mutate(Booster=as.numeric(Booster))
 
-daily18th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-18-October-2021.xlsx"
+#Shout out to @jackd1801 for suggesting this would be *much* easier as a for loop.
 
-temp <- curl_download(url=daily18th, destfile=temp, quiet=FALSE, mode="wb")
+for(i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", as.character(10:28))){
+  
+  url <- paste0("https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-", i, "-October-2021.xlsx")
+  
+  temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+  
+  dailydata <- dailydata %>% 
+    bind_rows(read_excel(temp, sheet=1, range="B13:F14", col_names=FALSE) %>% 
+                select(1,5) %>% 
+                set_names(c("Region", "Booster")) %>% 
+                mutate(date=as.Date("2021-10-01")+days(as.numeric(i)-2), 
+                       Region=if_else(Region=="England4", "England", Region))%>% 
+    filter(substr(Region, 1, 7)=="England")%>% 
+      mutate(Booster=as.numeric(Booster)))
+}
 
-dailydata <- dailydata %>% bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-  select(1,5) %>% 
-  set_names(c("Region", "Booster")) %>% 
-  mutate(date=as.Date("2021-10-17"), Region=if_else(Region=="England4", "England", Region)))
-
-daily17th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-17-October-2021.xlsx"
-
-temp <- curl_download(url=daily17th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-16"), Region=if_else(Region=="England4", "England", Region)))
-
-daily16th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-16-October-2021.xlsx"
-
-temp <- curl_download(url=daily16th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-15"), Region=if_else(Region=="England4", "England", Region)))
-
-daily15th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-15-October-2021.xlsx"
-
-temp <- curl_download(url=daily15th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-14"), Region=if_else(Region=="England4", "England", Region)))
-
-daily14th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-14-October-2021.xlsx"
-
-temp <- curl_download(url=daily14th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-13"), Region=if_else(Region=="England4", "England", Region)))
-
-daily13th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-13-October-2021.xlsx"
-
-temp <- curl_download(url=daily13th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-12"), Region=if_else(Region=="England4", "England", Region)))
-
-daily12th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-12-October-2021.xlsx"
-
-temp <- curl_download(url=daily12th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-11"), Region=if_else(Region=="England4", "England", Region)))
-
-daily11th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-11-October-2021.xlsx"
-
-temp <- curl_download(url=daily11th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-10"), Region=if_else(Region=="England4", "England", Region)))
-
-daily10th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-10-October-2021.xlsx"
-
-temp <- curl_download(url=daily10th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-09"), Region=if_else(Region=="England4", "England", Region)))
-
-daily9th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-09-October-2021.xlsx"
-
-temp <- curl_download(url=daily9th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-08"), Region=if_else(Region=="England4", "England", Region)))
-
-daily8th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-08-October-2021.xlsx"
-
-temp <- curl_download(url=daily8th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-07"), Region=if_else(Region=="England4", "England", Region)))
-
-daily7th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-07-October-2021.xlsx"
-
-temp <- curl_download(url=daily7th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-06"), Region=if_else(Region=="England4", "England", Region)))
-
-daily6th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-06-October-2021.xlsx"
-
-temp <- curl_download(url=daily6th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-05"), Region=if_else(Region=="England4", "England", Region)))
-
-daily5th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-05-October-2021.xlsx"
-
-temp <- curl_download(url=daily5th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-04"), Region=if_else(Region=="England4", "England", Region)))
-
-daily4th <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-04-October-2021.xlsx"
-
-temp <- curl_download(url=daily4th, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-03"), Region=if_else(Region=="England4", "England", Region)))
-
-daily3rd <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-03-October-2021.xlsx"
-
-temp <- curl_download(url=daily3rd, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B13:F13", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-02"), Region=if_else(Region=="England4", "England", Region)))
-
-daily2nd <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-02-October-2021.xlsx"
-
-temp <- curl_download(url=daily2nd, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-10-01"), Region=if_else(Region=="England4", "England", Region)))
-
-daily1st <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-01-October-2021.xlsx"
-
-temp <- curl_download(url=daily1st, destfile=temp, quiet=FALSE, mode="wb")
-
-dailydata <- dailydata %>% 
-  bind_rows(read_excel(temp, sheet=1, range="B14:F14", col_names=FALSE) %>% 
-              select(1,5) %>% 
-              set_names(c("Region", "Booster")) %>% 
-              mutate(date=as.Date("2021-09-30"), Region=if_else(Region=="England4", "England", Region)))
+#Calculate 'run rate' for last 14 days
+runrate.e <- as.numeric(dailydata %>% filter(date>=max(date)-days(14)) %>% 
+  summarise((value=max(Booster)-min(Booster))/14))
 
 #Bring in eligible population
 Engurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&format=csv"
@@ -228,25 +74,28 @@ Engdata <- read.csv(temp) %>%
          Boosterprop=Booster/Eligible,
          Forecast=if_else(date>max(date[!is.na(Booster)]), 
                           Booster[date==max(date[!is.na(Booster)])]+
-                            166451*as.numeric(interval(max(date[!is.na(Booster)]), date), "days"),
+                            runrate.e*as.numeric(interval(max(date[!is.na(Booster)]), date), "days"),
                           NA_real_),
          Forecastprop=Forecast/Eligible)
 
+Engprop <- as.numeric(Engdata %>% filter(date==max(date[!is.na(Booster)])) %>% 
+                         summarise(value=Booster/Eligible))
+
 agg_tiff("Outputs/COVIDBoostersEng.tiff", units="in", width=9, height=6, res=500)
-ggplot(Engdata %>% filter(date>=as.Date("2021-09-21") & date<=max(date[!is.na(Booster)])))+
+ggplot(Engdata %>% filter(date>=as.Date("2021-09-21")))+
   geom_line(aes(x=date, y=Eligible), colour="#CC3300")+
   geom_line(aes(x=date, y=Booster), colour="#006666")+
   scale_x_date(name="")+
   scale_y_continuous(name="Number of people", limits=c(0,NA))+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="England has delivered booster jabs to 43% of eligible people",
-       subtitle="Total number of <span style='color:#CC3300;'>people eligible</span> and <span style='color:#006666;'>having received</span> a COVID booster jab in Scotland since bookings were opened on 21st September",
+  labs(title=paste0("England has delivered booster jabs to ",round(Engprop*100, 0),"% of eligible people"),
+       subtitle="Total number of <span style='color:#CC3300;'>people eligible</span> and <span style='color:#006666;'>having received</span> a COVID booster jab in England since bookings were opened on 21st September",
        caption="Data from NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 #Total Scottish doses
-Scotdoseurl <- "https://www.opendata.nhs.scot/dataset/6dbdd466-45e3-4348-9ee3-1eac72b5a592/resource/42f17a3c-a4db-4965-ba68-3dffe6bca13a/download/daily_vacc_scot_20211018.csv"
+Scotdoseurl <- "https://www.opendata.nhs.scot/dataset/6dbdd466-45e3-4348-9ee3-1eac72b5a592/resource/42f17a3c-a4db-4965-ba68-3dffe6bca13a/download/daily_vacc_scot_20211029.csv"
 temp <- tempfile()
 temp <- curl_download(url=Scotdoseurl, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -256,6 +105,10 @@ ScotDoses <- read.csv(temp) %>%
 
 ggplot(ScotDoses, aes(x=date, y=CumulativeNumberVaccinated, colour=Dose))+
   geom_line()
+
+#Calculate 'run rate' for last 14 days
+runrate.s <- as.numeric(ScotDoses %>% filter(Dose=="Booster" & date>=max(date)-days(14)) %>% 
+                          summarise((value=max(CumulativeNumberVaccinated)-min(CumulativeNumberVaccinated))/14))
 
 Scotdata <- ScotDoses %>% 
   filter(Dose=="Dose 2") %>% 
@@ -268,9 +121,12 @@ Scotdata <- ScotDoses %>%
          Boosterprop=CumulativeNumberVaccinated/Eligible,      
          Forecast=if_else(date>max(date[!is.na(CumulativeNumberVaccinated)]), 
                           CumulativeNumberVaccinated[date==max(date[!is.na(CumulativeNumberVaccinated)])]+ 
-                            20718*as.numeric(interval(max(date[!is.na(CumulativeNumberVaccinated)]), date), "days"),
+                            runrate.s*as.numeric(interval(max(date[!is.na(CumulativeNumberVaccinated)]), date), "days"),
                           NA_real_),
          Forecastprop=Forecast/Eligible)
+
+Scotprop <- as.numeric(Scotdata %>% filter(date==max(date[!is.na(CumulativeNumberVaccinated)])) %>% 
+                         summarise(value=CumulativeNumberVaccinated/Eligible))
 
 agg_tiff("Outputs/COVIDBoostersScot.tiff", units="in", width=9, height=6, res=500)
 ggplot(Scotdata %>% filter(date>=as.Date("2021-09-21")))+
@@ -280,7 +136,7 @@ ggplot(Scotdata %>% filter(date>=as.Date("2021-09-21")))+
   scale_y_continuous(name="Number of people", limits=c(0,NA))+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Scotland has delivered booster jabs to 41% of eligible people",
+  labs(title=paste0("Scotland has delivered booster jabs to ",round(Scotprop*100, 0),"% of eligible people"),
        subtitle="Total number of <span style='color:#CC3300;'>people eligible</span> and <span style='color:#006666;'>having received</span> a COVID booster jab in Scotland since bookings were opened on 21st September",
        caption="Data from Public Health Scotland | Plot by @VictimOfMaths")
 dev.off()
@@ -290,7 +146,7 @@ agg_tiff("Outputs/COVIDBoostersEngScot.tiff", units="in", width=9, height=6, res
 ggplot()+
   geom_line(data=Engdata, aes(x=date, y=Boosterprop), colour="Red")+
   geom_line(data=Scotdata, aes(x=date, y=Boosterprop), colour="RoyalBlue")+
-  scale_x_date(name="", limits=c(as.Date("2021-09-21"), NA_Date_))+
+  scale_x_date(name="", limits=c(as.Date("2021-09-21"), as.Date("2021-11-01")))+
   scale_y_continuous(name="Proportion of eligible population who have received a booster", limits=c(0,NA),
                labels=label_percent(accuracy=1))+
   theme_custom()+
@@ -322,6 +178,7 @@ ggplot(combined, aes(x=date, colour=country))+
   labs(title="<span style='color:RoyalBlue;'>Scotland</span> could overtake <span style='color:Red;'>England</span> in terms of Booster coverage within a few weeks",
        subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September (solid lines) and forecasts based on recent vaccination rates and the number of people\ndue to become eligible (dashed lines). Scottish data is only available for more recent days",
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDBoostersEngScotForecasts2.tiff", units="in", width=10, height=6, res=500)
