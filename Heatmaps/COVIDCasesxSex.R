@@ -115,6 +115,26 @@ ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDCasesxSexHeatmapFull.tiff", units="in", width=10, height=7, res=500)
+ggplot(heatmapdata %>% filter(date>as.Date("2020-03-10") &date<max(date)-days(3)))+
+  geom_tile(aes(x=date, y=age, fill=maleprop))+
+  theme_custom()+
+  scale_fill_distiller(palette="PRGn", limits=c(0.2,0.8), name="", breaks=c(0.2, 0.33,0.5,0.67, 0.8),
+                       labels=c("4 Female cases\nfor each\nmale case", 
+                                "2:1", 
+                                "Equal male\nand female\ncases", 
+                                "2:1", 
+                                "4 Male cases\nfor each\nmale case"))+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  theme(legend.position = "top", plot.subtitle=element_markdown())+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID cases in 20 year-olds in the 1st wave were heavily female-dominated",
+       subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
+
 agg_tiff("Outputs/COVIDCasesxSexHeatmapU60s.tiff", units="in", width=10, height=6, res=800)
 ggplot(temp<-heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3) &
          age %in% c("0 to 4", "5 to 9", "10 to 14", "15 to 19", "20 to 24",
