@@ -172,19 +172,19 @@ ggplot(popheatmap)+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-05-01")))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-08-01")))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
-  scale_fill_paletteer_c("pals::warmcool", limit=c(0.249,4), direction=-1 ,
-                         trans="log", breaks=c(0.25, 0.5, 1, 2, 4), 
-                         labels=c("-75%", "-50%", "No change", "+100%", "+300%"),
+  scale_fill_paletteer_c("pals::warmcool", limit=c(0.5,2), direction=-1 ,
+                         trans="log", breaks=c(0.5, 1, 1.9999), 
+                         labels=c("-50%", "No change", "+100%"),
                          name="Change in cases in the past week")+
   theme_custom()+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases are rising at a similar rate across all age groups",
+  labs(title="COVID cases are falling (almost) all age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -296,7 +296,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-08-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Current case rates are still highest (by far) in schoolchildren",
+  labs(title="Current case rates are still highest in schoolchildren",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -319,7 +319,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Case rate ratios are heading down, but there are interesting differences by age",
+  labs(title="Case rates are heading down, but at different rates in different age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -346,7 +346,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are falling fastest in <span style='color:#c51b8a;'>the under 20s",
+  labs(title="COVID case rate ratios are falling in <span style='color:#c51b8a;'>the under 20s</span> after a post half-term bump",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -373,7 +373,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates ratios are falling slowly in <span style='color:#c51b8a;'>20-39 year olds",
+  labs(title="COVID case rates are falling slowly in <span style='color:#c51b8a;'>20-39 year olds",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -400,7 +400,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are changing least in <span style='color:#c51b8a;'>40-59 year olds",
+  labs(title="COVID case rates have started falling faster in <span style='color:#c51b8a;'>40-59 year olds",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -427,7 +427,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates ratios in October have been highest in <span style='color:#c51b8a;'>65-79 year olds",
+  labs(title="The fall in COVID case rates in <span style='color:#c51b8a;'>65-79 year olds</span> has accelerated in recent days",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -453,7 +453,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are now falling in <span style='color:#c51b8a;'>the over 80s",
+  labs(title="COVID case rates are falling pretty rapidly in <span style='color:#c51b8a;'>the over 80s",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
