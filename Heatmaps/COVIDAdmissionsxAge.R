@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Covid-Publication-14-10-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/Covid-Publication-11-11-2021-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:MX25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:NZ25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -116,6 +116,71 @@ ggplot(data %>% filter(date>as.Date("2021-06-01")), aes(x=date, y=age, fill=admr
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="COVID admission rates have been rising in older age groups",
+       subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+dev.off()
+
+################
+#Take rolling averages
+rolldata <- data %>% 
+  group_by(age) %>% 
+  arrange(date) %>% 
+  mutate(admrate_roll=roll_mean(admrate, 7, align="center", fill=NA),
+         agecont=case_when(
+           age=="0-5" ~ 2.5,
+           age=="6-17" ~ 12.5,
+           age=="18-24" ~ 20.5,
+           age=="25-34" ~ 29.5,
+           age=="35-44" ~ 39.5,
+           age=="45-54" ~ 49.5,
+           age=="55-64" ~ 59.5,
+           age=="65-74" ~ 69.5,
+           age=="75-84" ~ 79.5,
+           age=="85+" ~ 89.5))
+
+agg_tiff("Outputs/COVIDAdmissionsHeatmapRateRecentSmoothed.tiff", 
+         units="in", width=9, height=6, res=800)
+ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)), 
+       aes(x=date, y=age, fill=admrate_roll))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age group")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions per 100,000")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID admission rates have been rising in older age groups",
+       subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsContourRateRecentSmoothed.tiff", 
+         units="in", width=9, height=6, res=800)
+ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)), 
+       aes(x=date, y=agecont, z=admrate_roll))+
+  geom_contour_filled(colour="white", show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Age")+
+  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000")+
+  theme_custom()+
+  #theme(legend.position="top")+
+  labs(title="COVID admission rates have been rising in older age groups",
+       subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsContourRateSmoothed.tiff", 
+         units="in", width=9, height=6, res=800)
+ggplot(rolldata %>% filter(!is.na(admrate_roll)), 
+       aes(x=date, y=agecont, z=admrate_roll))+
+  geom_contour_filled(colour="white", show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Age")+
+  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000")+
+  theme_custom()+
+  #theme(legend.position="top")+
+  labs(title="COVID admission rates are *much* lower than last winter",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 dev.off()
