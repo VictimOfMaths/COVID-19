@@ -28,20 +28,20 @@ theme_custom <- function() {
 #Start with most recent data
 temp <- tempfile()
 
-latest <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-29-October-2021.xlsx"
+latest <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/COVID-19-daily-announced-vaccinations-15-November-2021.xlsx"
 
 temp <- curl_download(url=latest, destfile=temp, quiet=FALSE, mode="wb")
 
 dailydata <- read_excel(temp, sheet=1, range="B13:F14", col_names=FALSE) %>% 
   select(1,5) %>% 
   set_names(c("Region", "Booster")) %>% 
-  mutate(date=as.Date("2021-10-28"), Region=if_else(Region=="England4", "England", Region)) %>% 
+  mutate(date=as.Date("2021-11-14"), Region=if_else(Region=="England4", "England", Region)) %>% 
   filter(substr(Region, 1, 7)=="England") %>% 
   mutate(Booster=as.numeric(Booster))
 
 #Shout out to @jackd1801 for suggesting this would be *much* easier as a for loop.
-
-for(i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", as.character(10:28))){
+#October
+for(i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", as.character(10:31))){
   
   url <- paste0("https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-announced-vaccinations-", i, "-October-2021.xlsx")
   
@@ -57,18 +57,46 @@ for(i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", as.character(10
       mutate(Booster=as.numeric(Booster)))
 }
 
+#November
+for(i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", as.character(10:14))){
+  
+  url <- paste0("https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/COVID-19-daily-announced-vaccinations-", i, "-November-2021.xlsx")
+  
+  temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+  
+  dailydata <- dailydata %>% 
+    bind_rows(read_excel(temp, sheet=1, range="B13:F14", col_names=FALSE) %>% 
+                select(1,5) %>% 
+                set_names(c("Region", "Booster")) %>% 
+                mutate(date=as.Date("2021-11-01")+days(as.numeric(i)-2), 
+                       Region=if_else(Region=="England4", "England", Region))%>% 
+                filter(substr(Region, 1, 7)=="England")%>% 
+                mutate(Booster=as.numeric(Booster)))
+}
+
 #Calculate 'run rate' for last 14 days
 runrate.e <- as.numeric(dailydata %>% filter(date>=max(date)-days(14)) %>% 
   summarise((value=max(Booster)-min(Booster))/14))
 
 #Bring in eligible population
+#Commented out lines are for switching to alternative assumptions about eligibility based on age
+#Engurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=vaccinationsAgeDemographics&format=csv"
 Engurl <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&areaCode=E92000001&metric=cumPeopleVaccinatedSecondDoseByVaccinationDate&format=csv"
+
 temp <- curl_download(url=Engurl, destfile=temp, quiet=FALSE, mode="wb")
 
 Engdata <- read.csv(temp) %>% 
   select(4,5) %>% 
   set_names("date", "Eligible") %>% 
   mutate(date=as.Date(date)+days(182)) %>% 
+  #select(4,5,11) %>% 
+  #set_names("date", "age", "Eligible") %>% 
+  #mutate(date=as.Date(date)+days(182),
+  #       Eligible=if_else(age %in% c("12_15", "16_17", "18_24", "25_29", "30_34", "35_39",
+  #                                   "40_44", "45_49"), 0, Eligible)) %>% 
+  #group_by(date) %>% 
+  #summarise(Eligible=sum(Eligible)) %>% 
+  #ungroup() %>% 
   merge(dailydata, by="date", all.x=TRUE) %>% 
   mutate(EligibleUnvax=Eligible-Booster,
          Boosterprop=Booster/Eligible,
@@ -100,14 +128,14 @@ temp <- tempfile()
 temp <- curl_download(url=Scotdoseurl, destfile=temp, quiet=FALSE, mode="wb")
 
 ScotDoses <- read.csv(temp) %>% 
-  filter(Product=="Total" & AgeBand=="16 years and over") %>% 
+  filter(Product=="Total" & AgeBand=="12 years and over") %>% 
   mutate(date=as.Date(as.character(Date), format="%Y%m%d"))
 
 ggplot(ScotDoses, aes(x=date, y=CumulativeNumberVaccinated, colour=Dose))+
   geom_line()
 
 #Calculate 'run rate' for last 14 days
-runrate.s <- as.numeric(ScotDoses %>% filter(Dose=="Booster" & date>=max(date)-days(14)) %>% 
+runrate.s <- as.numeric(ScotDoses %>% filter(Dose=="Dose 3 and Booster" & date>=max(date)-days(14)) %>% 
                           summarise((value=max(CumulativeNumberVaccinated)-min(CumulativeNumberVaccinated))/14))
 
 Scotdata <- ScotDoses %>% 
@@ -115,7 +143,7 @@ Scotdata <- ScotDoses %>%
   mutate(date=date+days(182)) %>% 
   select(date, CumulativeNumberVaccinated) %>% 
   rename("Eligible"="CumulativeNumberVaccinated") %>% 
-  merge(ScotDoses %>% filter(Dose=="Booster"), by="date", all.x=TRUE) %>% 
+  merge(ScotDoses %>% filter(Dose=="Dose 3 and Booster"), by="date", all.x=TRUE) %>% 
   filter(date>=max(date[Eligible==0])) %>% 
   mutate(EligibleUnvax=Eligible-CumulativeNumberVaccinated,
          Boosterprop=CumulativeNumberVaccinated/Eligible,      
@@ -146,13 +174,14 @@ agg_tiff("Outputs/COVIDBoostersEngScot.tiff", units="in", width=9, height=6, res
 ggplot()+
   geom_line(data=Engdata, aes(x=date, y=Boosterprop), colour="Red")+
   geom_line(data=Scotdata, aes(x=date, y=Boosterprop), colour="RoyalBlue")+
-  scale_x_date(name="", limits=c(as.Date("2021-09-21"), as.Date("2021-11-01")))+
-  scale_y_continuous(name="Proportion of eligible population who have received a booster", limits=c(0,NA),
+  scale_x_date(name="", limits=c(as.Date("2021-09-21"), as.Date("2021-11-15")))+
+  scale_y_continuous(name="Proportion of eligible population who have received a booster", 
+                     limits=c(0,1),
                labels=label_percent(accuracy=1))+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="<span style='color:Red;'>England</span> has better COVID booster coverage than <span style='color:RoyalBlue;'>Scotland</span> (for now).",
-       subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September. Scottish data is only available for more recent days",
+  labs(title="<span style='color:RoyalBlue;'>Scotland's</span> COVID booster coverage has overtaken <span style='color:Red;'>England</span>",
+       subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September. Scottish data is only available for more recent days.\nBooster data includes a small number of people with weakened immune systems who have been offered a 3rd primary dose.",
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
@@ -175,7 +204,7 @@ ggplot(combined, aes(x=date, colour=country))+
   scale_colour_manual(values=c("Red", "RoyalBlue"))+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="<span style='color:RoyalBlue;'>Scotland</span> could overtake <span style='color:Red;'>England</span> in terms of Booster coverage within a few weeks",
+  labs(title="<span style='color:Red;'>England</span> needs to speed up its booster rollout to keep up with <span style='color:RoyalBlue;'>Scotland</span>",
        subtitle="Proportion of people who received their 2nd COVID jab at least 6 months ago who have received a booster since bookings\nwere opened on 21st September (solid lines) and forecasts based on recent vaccination rates and the number of people\ndue to become eligible (dashed lines). Scottish data is only available for more recent days",
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -193,7 +222,7 @@ ggplot(combined %>% mutate(Eligible=if_else(is.na(Booster) & date<as.Date("2021-
   facet_wrap(~country, scales="free_y")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Both England and Scotland could do with accelerating their booster programmes",
+  labs(title="Both England and Scotland have accelerated their booster programmes",
        subtitle="Total number of <span style='color:#D72000;'>people eligible for a COVID booster</span> and the number of those who have <span style='color:#172869;'>already been vaccinated</span>, or <span style='color:#088BBE;'>will be in coming months</span><br>at current vaccination rates",
        caption="Data from Public Health Scotland, NHS England & coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
