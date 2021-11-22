@@ -311,7 +311,7 @@ ggplot(LAcases %>% filter(date>as.Date("2021-05-01")),
 dev.off()
 
 #Bring in u18 vaccine uptake
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/COVID-19-weekly-announced-vaccinations-04-November-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/COVID-19-weekly-announced-vaccinations-18-November-2021.xlsx"
 
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -443,6 +443,23 @@ ggplot(cases_age %>% filter(date>=as.Date("2021-05-01")),
        subtitle="7-day rolling average rate of new COVID cases by age and IMD decile, based on average deprivation across each Local Authority",
        caption="Data from coronavirus.data.gov.uk & ONS | Plot by @VictimOfMaths")
 dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgexIMDv2.tiff", units="in", width=11, height=8, res=500)
+ggplot(cases_age %>% filter(date>=as.Date("2021-05-01")), 
+       aes(x=date, y=caserate_roll, colour=as.factor(decile)))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="",
+                           labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
+                                    "10 - least deprived"))+
+  facet_wrap(~age, scales="free_y")+
+  theme_custom()+
+  labs(title="Cases have risen in less deprived areas in schoolkids and their parents age group",
+       subtitle="7-day rolling average rate of new COVID cases by age and IMD decile, based on average deprivation across each Local Authority",
+       caption="Data from coronavirus.data.gov.uk & ONS | Plot by @VictimOfMaths")
+dev.off()
+
 
 agg_tiff("Outputs/COVIDCasesxAgexIMDU20.tiff", units="in", width=11, height=6, res=500)
 ggplot(cases_age %>% filter(date>=as.Date("2021-05-01") & age %in% c("05-09", "10-14", "15-19")), 
