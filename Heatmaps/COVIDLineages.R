@@ -31,9 +31,10 @@ data <- merge(rawdata, LADtoRegion,all.x=TRUE) %>%
     WeekEndDate=as.Date(WeekEndDate),
     strain=case_when(
       Lineage=="B.1.177" ~ "B.1.177",
-      Lineage %in% c("B.1.617.2", "AY.4") ~ "Delta",
+      Lineage %in% c("B.1.617.2", "AY.4") ~ "Delta (OG)",
       Lineage=="B.1.1.7" ~ "Alpha",
-      Lineage=="AY.4.2" ~ "New variant",
+      Lineage=="B.1.1.529" ~ "Omicron",
+      Lineage=="AY.4.2" ~ "Delta (AY4.2 variant)",
       TRUE ~ "Other variants")) %>% 
   group_by(WeekEndDate, strain, Region) %>% 
   summarise(Count=sum(Count)) %>% 
@@ -41,7 +42,9 @@ data <- merge(rawdata, LADtoRegion,all.x=TRUE) %>%
   group_by(WeekEndDate, Region) %>% 
   mutate(Total=sum(Count)) %>% 
   ungroup() %>% 
-  mutate(prop=Count/Total)
+  mutate(prop=Count/Total,
+         strain=factor(strain, levels=c("B.1.177", "Alpha", "Delta (OG)", "Delta (AY4.2 variant)",
+                                        "Omicron", "Other variants")))
 
 #Compare regions
 mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
@@ -50,32 +53,69 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
-agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=500)
+agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=800)
 ggplot(data, aes(x=WeekEndDate, y=Count, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
   scale_y_continuous(name="Genomes sequenced")+
-  scale_fill_paletteer_d("beyonce::X127", name="Lineage")+
+  scale_fill_paletteer_d("khroma::bright", name="Lineage")+
   facet_geo(~Region, grid=mygrid)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="The new 'AY4.2' COVID variant represents a small, but growing, proportion of new cases",
-       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as  selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
+  labs(title="We are now sequencing more COVID genomes than ever before",
+       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as belonging to selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=500)
+agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=800)
 ggplot(data, aes(x=WeekEndDate, y=prop, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
   scale_y_continuous(name="Genomes sequenced", labels=label_percent(accuracy=1))+
-  scale_fill_paletteer_d("beyonce::X127", name="Lineage")+
+  scale_fill_paletteer_d("khroma::bright", name="Lineage")+
   facet_geo(~Region, grid=mygrid)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)),
+        axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(title="The Delta variant is still dominant across England. For now",
+       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as belonging to selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
+       caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
+dev.off()
+
+#National picture
+natdata <- data %>% 
+  group_by(WeekEndDate, strain) %>% 
+  summarise(Count=sum(Count), Total=sum(Total)) %>% 
+  ungroup() %>% 
+  mutate(prop=Count/Total)
+
+agg_tiff("Outputs/COVIDGenomesCount.tiff", units="in", width=10, height=8, res=800)
+ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
+  geom_col(position="stack")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Genomes sequenced")+
+  scale_fill_paletteer_d("khroma::bright", name="Lineage")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)))+
-  labs(title="The new 'AY4.2' COVID variant represents a small, but growing, proportion of new cases",
-       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
+  labs(title="We are now sequencing more COVID genomes than ever before",
+       subtitle=paste0("Number of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as belonging to selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
+       caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDGenomesStacked.tiff", units="in", width=10, height=8, res=800)
+ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
+  geom_col(position="fill")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Genomes sequenced", labels=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("khroma::bright", name="Lineage")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.4)),
+        axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(title="The Delta variant is still dominant across England. For now",
+       subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as belonging to selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
