@@ -16,14 +16,14 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/COVID-19-daily-admissions-and-beds-20211025.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211206.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211021.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211202.xlsx"
 #Increment by one each day
-dailyrange <- "GT"
-dailyoccrange <- "GV"
+dailyrange <- "IJ"
+dailyoccrange <- "IL"
 #Increment by seven each week
-weeklyrange <- "GR"
+weeklyrange <- "IF"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -43,8 +43,8 @@ daily1.old <- read_excel(dailydata.old, range="B15:IQ21", col_names=FALSE) %>%
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Admissions",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
-  rename(region=`...1`)
-
+           rename(region=`...1`)
+  
 #Total occupancy
 daily2 <- read_excel(dailydata, range=paste0("B91:", dailyoccrange, "97"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
@@ -98,16 +98,16 @@ ggplot(dailydata)+
   facet_wrap(~metric, scales="free_y")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
-        plot.title=element_text(face="bold", size=rel(1.2)),
+        plot.title=element_text(face="bold", size=rel(1.4)),
         text=element_text(family="Lato"))+
-  labs(title="The number of COVID-positive patients in hospital is much higher than 12 months ago",
+  labs(title="COVID hospital data shows significant regional variation",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 #Recent version
 agg_tiff("Outputs/COVIDNHSMetricsxRegRecent.tiff", units="in", width=12, height=6, res=500)
-ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
+ggplot(dailydata %>% filter(date>as.Date("2021-09-01")))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
   scale_y_continuous(name="Rate per 100,000 population", limits=c(0,NA))+
@@ -117,7 +117,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-04-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="COVID hospital admissions and occupancy is rising across all of England",
+  labs(title="COVID admissions are on different trends in different areas",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -150,10 +150,26 @@ ggplot(subset(dailydata, metric=="Admissions"))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="New COVID-19 hospital admissions figures rising across all regions",
+  labs(title="New COVID-19 hospital admissions are much lower than last winter",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions for patients with a positive COVID-19 diagnosis.\nData up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
+
+agg_tiff("Outputs/COVIDNHSAdmissionsxRegRecent.tiff", units="in", width=9, height=6, res=500)
+ggplot(subset(dailydata, metric=="Admissions" & date>as.Date("2021-09-01")))+
+  geom_line(aes(x=date, y=rollrate, colour=region))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Rate per 100,000 population")+
+  scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
+  theme_classic()+
+  theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
+        plot.title=element_text(face="bold", size=rel(1.2)),
+        text=element_text(family="Roboto"))+
+  labs(title="New COVID-19 hospital admissions are rising in some areas and falling in others",
+       subtitle=paste0("Rolling 7-day averages of new hospital admissions for patients with a positive COVID-19 diagnosis.\nData up to ", maxdailydate, "."),
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
 
 #Now look at trust-level weekly data
 weeklydata <- tempfile()
@@ -171,7 +187,7 @@ weeklyCOVID <- read_excel(weeklydata, sheet="Adult G&A Beds Occupied COVID",
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
 weeklyCOVID.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Occupied COVID", 
-                              range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
@@ -185,7 +201,7 @@ weeklyOther <- read_excel(weeklydata, sheet="Adult G&A Bed Occupied NonCOVID",
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
 weeklyOther.old <- read_excel(weeklydata.old, sheet="Adult G&A Bed Occupied NonCOVID", 
-                              range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="non-COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
@@ -199,7 +215,7 @@ weeklyEmpty <- read_excel(weeklydata, sheet="Adult G&A Beds Unoccupied",
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
 weeklyEmpty.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Unoccupied", 
-                              range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
+                          range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="Unoccupied",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
@@ -263,7 +279,7 @@ ggplot(subset(natdata, trust=="ENGLAND"))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         text=element_text(family="Lato"))+
-  labs(title="The number of people in hospital with a positive COVID-19 test is still relatively low",
+  labs(title="The number of unoccupied beds in English hospitals is slowly falling",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate in England for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -282,7 +298,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
   scale_x_date(name="")+
   scale_y_continuous(name="Beds per 100,000 population")+
   scale_fill_manual(values=c("#FD625E", "#374649", "#00B8AA"), name="Occupied by", 
-                    labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
+                         labels=c("Patient with COVID-19", "Other patient", "Unoccupied"))+
   facet_geo(~trust, grid=mygrid)+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
@@ -309,8 +325,8 @@ trustdata %>%
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         text=element_text(family="Lato"))+
   labs(title="COVID-19 bed occupancy has fallen across London",
-       subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
-       caption="Data from NHS England | Plot by @VictimOfMaths")
+     subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
+     caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 agg_tiff("Outputs/COVIDNHSBedOccupancySouthEast.tiff", units="in", width=13, height=8, res=500)
@@ -426,7 +442,4 @@ trustdata %>%
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy by NHS trust for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " . Excluding trusts with fewer than 100 beds."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
-
-
-
 
