@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/Covid-Publication-11-11-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Covid-Publication-09-12-2021-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:NZ25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:PB25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -145,12 +145,13 @@ ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)),
   geom_tile()+
   scale_x_date(name="")+
   scale_y_discrete(name="Age group")+
-  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions per 100,000")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions per 100,000",
+                         limits=c(0,NA))+
   theme_custom()+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates have been rising in older age groups",
+  labs(title="COVID admission rates have been falling in older age groups",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -159,30 +160,37 @@ agg_tiff("Outputs/COVIDAdmissionsContourRateRecentSmoothed.tiff",
          units="in", width=9, height=6, res=800)
 ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)), 
        aes(x=date, y=agecont, z=admrate_roll))+
-  geom_contour_filled(colour="white", show.legend=FALSE)+
+  geom_contour_filled(colour="white")+
   scale_x_date(name="")+
   scale_y_continuous(name="Age")+
-  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000")+
+  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000",
+                       labels=c("<1", "1+", "2+", "3+", "4+", "5+", "6+", "7+", "8+"))+
   theme_custom()+
-  #theme(legend.position="top")+
-  labs(title="COVID admission rates have been rising in older age groups",
+  theme(legend.position="top")+
+  guides(fill=guide_legend(nrow=1))+
+  labs(title="COVID admission rates have been falling in older age groups",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDAdmissionsContourRateSmoothed.tiff", 
          units="in", width=9, height=6, res=800)
 ggplot(rolldata %>% filter(!is.na(admrate_roll)), 
        aes(x=date, y=agecont, z=admrate_roll))+
-  geom_contour_filled(colour="white", show.legend=FALSE)+
+  geom_contour_filled(colour="white")+
   scale_x_date(name="")+
   scale_y_continuous(name="Age")+
-  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000")+
+  scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000",
+                       labels=c("<5", "5+", "10+", "15+", "20+", "25+", "30+", "35+", 
+                                "40+", "45+", "50+"))+
   theme_custom()+
-  #theme(legend.position="top")+
+  theme(legend.position="top")+
+  guides(fill=guide_legend(nrow=1))+
   labs(title="COVID admission rates are *much* lower than last winter",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
 dev.off()
 
 #Bring in case data
@@ -236,14 +244,14 @@ alldata <- data %>%
          age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
                                   "75-84", "85+", "Total")))
 
-agg_tiff("Outputs/COVIDCHROverall.tiff", units="in", width=9, height=6, res=500)
+agg_tiff("Outputs/COVIDCHROverall.tiff", units="in", width=10, height=6, res=500)
 ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
   geom_line(colour="dodgerblue")+
   scale_x_date(name="")+
   scale_y_continuous(name="Proportion of cases admitted to hospital",
                      labels=label_percent(accuracy=1), limits=c(0,NA))+
   theme_custom()+
-  labs(title="The proportion of COVID cases being admitted to hospital has been fairly steady in recent weeks",
+  labs(title="The proportion of COVID cases being admitted to hospital has been fairly steady recently",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot and analysis by Colin Angus")
 dev.off()
@@ -270,7 +278,8 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
   scale_colour_paletteer_d("ggsci::default_gsea", name="Age")+
   facet_wrap(~age, scales="free_y")+
   theme_custom()+
-  labs(title="The proportion of COVID cases being admitted to hospital has fallen in older age groups",
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(title="The proportion of COVID cases being admitted to hospital is pretty stable in older ages",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
