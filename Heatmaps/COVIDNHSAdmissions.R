@@ -16,63 +16,89 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211206.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211209.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211202.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211209-211001-211207.xlsx"
 #Increment by one each day
-dailyrange <- "IJ"
-dailyoccrange <- "IL"
+dailyrange <- "BR"
+dailyoccrange <- "BT"
 #Increment by seven each week
-weeklyrange <- "IF"
+weeklyrange <- "BT"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
 
-dailydata.old <- tempfile()
-dailyurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-daily-admissions-and-beds-20210406-1.xlsx"
-dailydata.old <- curl_download(url=dailyurl.old, destfile=dailydata.old, quiet=FALSE, mode="wb")
+dailydata.old1 <- tempfile()
+dailyurl.old1 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-daily-admissions-and-beds-20210406-1.xlsx"
+dailydata.old1 <- curl_download(url=dailyurl.old1, destfile=dailydata.old1, quiet=FALSE, mode="wb")
+
+dailydata.old2 <- tempfile()
+dailyurl.old2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211207-20210407-20210930.xlsx"
+dailydata.old2 <- curl_download(url=dailyurl.old2, destfile=dailydata.old2, quiet=FALSE, mode="wb")
+
 
 #Total admissions
 daily1 <- read_excel(dailydata, range=paste0("B15:", dailyrange, "21"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Admissions",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
-daily1.old <- read_excel(dailydata.old, range="B15:IQ21", col_names=FALSE) %>% 
+daily1.old1 <- read_excel(dailydata.old1, range="B15:IQ21", col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Admissions",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
            rename(region=`...1`)
+
+daily1.old2 <- read_excel(dailydata.old2, range="B15:FW21", col_names=FALSE) %>% 
+  gather(date, count, c(2:ncol(.))) %>% 
+  mutate(metric="Admissions",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+  rename(region=`...1`)
+
   
 #Total occupancy
 daily2 <- read_excel(dailydata, range=paste0("B91:", dailyoccrange, "97"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
-daily2.old <- read_excel(dailydata.old, range="B91:IQ97", col_names=FALSE) %>% 
+daily2.old1 <- read_excel(dailydata.old1, range="B91:IQ97", col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+  rename(region=`...1`)
+
+daily2.old2 <- read_excel(dailydata.old2, range="B91:FW97", col_names=FALSE) %>% 
+  gather(date, count, c(2:ncol(.))) %>% 
+  mutate(metric="Occupancy",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
 #Total MV occupancy
 daily3 <- read_excel(dailydata, range=paste0("B106:", dailyoccrange, "112"), col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy of MV beds",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
-daily3.old <- read_excel(dailydata.old, range="B106:IQ112", col_names=FALSE) %>% 
+daily3.old1 <- read_excel(dailydata.old1, range="B106:IQ112", col_names=FALSE) %>% 
   gather(date, count, c(2:ncol(.))) %>% 
   mutate(metric="Occupancy of MV beds",
          date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2)) %>% 
   rename(region=`...1`)
 
+daily3.old2 <- read_excel(dailydata.old2, range="B106:FW112", col_names=FALSE) %>% 
+  gather(date, count, c(2:ncol(.))) %>% 
+  mutate(metric="Occupancy of MV beds",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2)) %>% 
+  rename(region=`...1`)
+
 #Merge and convert to rates
-dailydata <- bind_rows(daily1.old, daily1, daily2.old, daily2, daily3.old, daily3) %>% 
+dailydata <- bind_rows(daily1.old1, daily1.old2, daily1, 
+                       daily2.old1, daily2.old2, daily2, 
+                       daily3.old1, daily3.old2, daily3) %>% 
   mutate(pop=case_when(
     region=="East of England" ~ 6236072,
     region=="London" ~ 8961989,
@@ -175,54 +201,81 @@ dev.off()
 weeklydata <- tempfile()
 weeklydata <- curl_download(url=weeklyurl, destfile=weeklydata, quiet=FALSE, mode="wb")
 
-weeklydata.old <- tempfile()
-weeklyurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/Weekly-covid-admissions-and-beds-publication-210429-up-to-210406.xlsx"
-weeklydata.old <- curl_download(url=weeklyurl.old, destfile=weeklydata.old, quiet=FALSE, mode="wb")
+weeklydata.old1 <- tempfile()
+weeklyurl.old1 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/Weekly-covid-admissions-and-beds-publication-210429-up-to-210406.xlsx"
+weeklydata.old1 <- curl_download(url=weeklyurl.old1, destfile=weeklydata.old1, quiet=FALSE, mode="wb")
+
+weeklydata.old2 <- tempfile()
+weeklyurl.old2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211209-210407-210930.xlsx"
+weeklydata.old2 <- curl_download(url=weeklyurl.old2, destfile=weeklydata.old2, quiet=FALSE, mode="wb")
+
 
 weeklyCOVID <- read_excel(weeklydata, sheet="Adult G&A Beds Occupied COVID", 
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="COVID",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
-weeklyCOVID.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Occupied COVID", 
+weeklyCOVID.old1 <- read_excel(weeklydata.old1, sheet="Adult G&A Beds Occupied COVID", 
                           range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklyCOVID.old2 <- read_excel(weeklydata.old2, sheet="Adult G&A Beds Occupied COVID", 
+                               range="B16:FY167", col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="COVID",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
 weeklyOther <- read_excel(weeklydata, sheet="Adult G&A Bed Occupied NonCOVID", 
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="non-COVID",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
-weeklyOther.old <- read_excel(weeklydata.old, sheet="Adult G&A Bed Occupied NonCOVID", 
+weeklyOther.old1 <- read_excel(weeklydata.old1, sheet="Adult G&A Bed Occupied NonCOVID", 
                           range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="non-COVID",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
+weeklyOther.old2 <- read_excel(weeklydata.old2, sheet="Adult G&A Bed Occupied NonCOVID", 
+                               range="B16:FY167", col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="non-COVID",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
 weeklyEmpty <- read_excel(weeklydata, sheet="Adult G&A Beds Unoccupied", 
                           range=paste0("B16:", weeklyrange, "167"), col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="Unoccupied",
-         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+         date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
-weeklyEmpty.old <- read_excel(weeklydata.old, sheet="Adult G&A Beds Unoccupied", 
+weeklyEmpty.old1 <- read_excel(weeklydata.old1, sheet="Adult G&A Beds Unoccupied", 
                           range="B16:EO167", col_names=FALSE)[-c(2),] %>% 
   gather(date, count, c(4:ncol(.))) %>% 
   mutate(type="Unoccupied",
          date=as.Date("2020-11-17")+days(as.numeric(substr(date, 4,7))-4)) %>% 
   rename(region=`...1`, code=`...2`, trust=`...3`)
 
-weeklydata <- bind_rows(weeklyCOVID, weeklyCOVID.old, weeklyOther, weeklyOther.old,
-                        weeklyEmpty, weeklyEmpty.old) %>% 
+weeklyEmpty.old2 <- read_excel(weeklydata.old2, sheet="Adult G&A Beds Unoccupied", 
+                               range="B16:FY167", col_names=FALSE)[-c(2),] %>% 
+  gather(date, count, c(4:ncol(.))) %>% 
+  mutate(type="Unoccupied",
+         date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+weeklydata <- bind_rows(weeklyCOVID, weeklyCOVID.old1, weeklyCOVID.old2,
+                        weeklyOther, weeklyOther.old1, weeklyOther.old2,
+                        weeklyEmpty, weeklyEmpty.old1, weeklyEmpty.old2) %>% 
   mutate(region=case_when(
     trust=="ENGLAND" ~ "Nation", 
     trust %in% c("East of England", "London", "Midlands", "North East and Yorkshire",
@@ -304,7 +357,7 @@ ggplot(subset(natdata, trust!="ENGLAND"))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)), plot.subtitle=element_markdown(),
         text=element_text(family="Lato"))+
-  labs(title="COVID-19 bed occupancy is still low across all regions of England",
+  labs(title="Empty NHS beds are in short supply across the whole of England",
        subtitle=paste0("<span style='color:Grey60;'>Bed occupancy rate by NHS region for <span style='color:#FD625E;'>COVID-19 patients</span>, <span style='color:#374649;'>non-COVID patients</span> and <span style='color:#00B8AA;'>unoccupied beds</span>.<br>Data up to ", maxweeklydate, " ."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
