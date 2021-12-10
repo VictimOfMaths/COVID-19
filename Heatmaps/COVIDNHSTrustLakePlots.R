@@ -18,46 +18,66 @@ theme_custom <- function() {
 }
 
 #NE & Yorkshire version
-latestcol <- "FT"
+latestcol <- "BR"
 
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/09/COVID-19-daily-admissions-and-beds-20210929.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211209.xlsx"
 
 temp <- tempfile()
 temp <- curl_download(url=admurl, destfile=temp, quiet=FALSE, mode="wb")
 
-oldadmurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-daily-admissions-and-beds-20210406-1.xlsx"
+oldadmurl1 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/04/COVID-19-daily-admissions-and-beds-20210406-1.xlsx"
 
-oldtemp <- tempfile()
-oldtemp <- curl_download(url=oldadmurl, destfile=oldtemp, quiet=FALSE, mode="wb")
+oldtemp1 <- tempfile()
+oldtemp1 <- curl_download(url=oldadmurl1, destfile=oldtemp1, quiet=FALSE, mode="wb")
+
+oldadmurl2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211207-20210407-20210930.xlsx"
+
+oldtemp2 <- tempfile()
+oldtemp2 <- curl_download(url=oldadmurl2, destfile=oldtemp2, quiet=FALSE, mode="wb")
 
 occdata <- read_excel(temp, range=paste0("B90:",latestcol, "97"), col_names=FALSE) %>% 
   gather(date, occupancy, c(2:ncol(.))) %>% 
-  mutate(date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2))
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-2))
 
-oldoccdata <- read_excel(oldtemp, range="B90:IQ97", col_names=FALSE) %>% 
+oldoccdata1 <- read_excel(oldtemp1, range="B90:IQ97", col_names=FALSE) %>% 
   gather(date, occupancy, c(2:ncol(.))) %>% 
   mutate(date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2))
+
+oldoccdata2 <- read_excel(oldtemp2, range="B90:FY97", col_names=FALSE) %>% 
+  gather(date, occupancy, c(2:ncol(.))) %>% 
+  mutate(date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2))
   
 MVdata <-   read_excel(temp, range=paste0("B105:", latestcol, "112"), col_names=FALSE) %>% 
   gather(date, MVoccupancy, c(2:ncol(.))) %>% 
-  mutate(date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2))
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-2))
 
-oldMVdata <-   read_excel(oldtemp, range="B105:IQ112", col_names=FALSE) %>% 
+oldMVdata1 <-   read_excel(oldtemp1, range="B105:IQ112", col_names=FALSE) %>% 
   gather(date, MVoccupancy, c(2:ncol(.))) %>% 
   mutate(date=as.Date("2020-08-01")+days(as.numeric(substr(date, 4,7))-2))
 
+oldMVdata2 <-   read_excel(oldtemp2, range="B105:FY112", col_names=FALSE) %>% 
+  gather(date, MVoccupancy, c(2:ncol(.))) %>% 
+  mutate(date=as.Date("2021-04-07")+days(as.numeric(substr(date, 4,7))-2))
+
 data <- merge(occdata, MVdata) %>% 
-  bind_rows(merge(oldoccdata, oldMVdata)) %>% 
+  bind_rows(merge(oldoccdata1, oldMVdata1), merge(oldoccdata2, oldMVdata2)) %>% 
   rename(Region=`...1`) %>% 
   mutate(Otherbeds=occupancy-MVoccupancy) %>% 
   gather(type, beds, c(3:5)) %>% 
   filter(type!="occupancy") %>% 
   mutate(type=factor(type, levels=c("Otherbeds", "MVoccupancy")))
 
-ggplot(data %>% filter(Region!="ENGLAND"), 
+ggplot(data %>% filter(Region!="ENGLAND" & date>as.Date("2021-06-01")), 
        aes(x=date, y=beds, fill=type))+
   geom_col(position="stack")+
   facet_wrap(~Region)+
+  theme_custom()
+
+ggplot(data %>% filter(Region!="ENGLAND" & date>as.Date("2021-06-01")),
+       aes(x=date, y=beds, colour=Region))+
+  geom_line()+
+  facet_wrap(~type, scales="free_y")+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
   theme_custom()
 
 #Bring in case data
@@ -78,7 +98,7 @@ cases <- read.csv(casetemp) %>%
   ungroup()
 
 agg_tiff("Outputs/COVIDAdmissionsLakePlotxReg.tiff", units="in", width=10, height=7, 
-         res=800)
+         res=500)
 ggplot()+
   geom_col(data=cases %>% filter(date>as.Date("2020-08-01")), 
            aes(x=date, y=cases), fill="#47d4ae")+
@@ -94,10 +114,11 @@ ggplot()+
   labs(title="One of these waves is not like the others...",
        subtitle="Daily confirmed <span style='color:#47d4ae;'>new COVID-19 cases</span> and patients in hospital with COVID-19 in <span style='color:#ff1437;'>Mechanically Ventilated</span> and<span style='color:#ff9f55;'> all other</span> beds",
        caption="Data from NHS England and coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDAdmissionsLakePlotEng.tiff", units="in", width=10, height=7, 
-         res=800)
+         res=500)
 ggplot()+
   geom_col(data=cases %>% filter(date>as.Date("2020-08-01")) %>% 
                                    group_by(date) %>% 
