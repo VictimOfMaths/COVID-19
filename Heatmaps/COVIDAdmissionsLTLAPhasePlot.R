@@ -24,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/10/Weekly-covid-admissions-and-beds-publication-211028.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211209-211001-211207.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "GW"
+admrange <- "BR"
 #Set latest date of admissions data
-admdate <- as.Date("2021-10-24")
+admdate <- as.Date("2021-12-05")
 
 #Read in admissions
 #First data up to 6th April
@@ -38,6 +38,14 @@ admurl.old <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/
 temp1 <- tempfile()
 temp1 <- curl_download(url=admurl.old, destfile=temp1, quiet=FALSE, mode="wb")
 raw.adm.old <- read_excel(temp1, sheet="Hosp ads & diag", range=paste0("B25:IS512"), 
+                          col_names=FALSE)
+
+#Then data from 7th April to 30th Sept
+admurl.old2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211209-210407-210930.xlsx"
+
+temp1 <- tempfile()
+temp1 <- curl_download(url=admurl.old2, destfile=temp1, quiet=FALSE, mode="wb")
+raw.adm.old2 <- read_excel(temp1, sheet="Hosp ads & diag", range=paste0("B25:FY512"), 
                           col_names=FALSE)
 
 #Read in more recent data
@@ -50,11 +58,15 @@ raw.adm <- read_excel(temp2, sheet="Hosp ads & diag", range=paste0("B25:",admran
 admissions.old <- raw.adm.old %>% 
   gather(date, admissions, c(4:ncol(raw.adm.old))) %>% 
   mutate(date=as.Date("2020-08-01")+days(as.integer(substr(date, 4, 6))-4)) %>% 
-  rename(Region=...1, code=...2, name=...3)
+  rename(Region=...1, code=...2, name=...3) %>% 
+  bind_rows(raw.adm.old2 %>% 
+              gather(date, admissions, c(4:ncol(raw.adm.old2))) %>% 
+              mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-4)) %>% 
+              rename(Region=...1, code=...2, name=...3))
 
 admissions <- raw.adm %>% 
   gather(date, admissions, c(4:ncol(raw.adm))) %>% 
-  mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-4)) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.integer(substr(date, 4, 6))-4)) %>% 
   rename(Region=...1, code=...2, name=...3) %>% 
   bind_rows(admissions.old)
 
@@ -231,7 +243,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates are still highest in the North",
+  labs(title="COVID admission rates are highest along the South Coast",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -545,3 +557,21 @@ ggplot(cases2)+
   annotate(geom="text", x=as.Date("2021-09-22"), y=750, family="Lato", label="Period affected by testing errors")
 
 dev.off()
+
+Imm.data3 <- Imm.data2 %>% select(date, flag2, admissions) %>% 
+  spread(flag2, admissions) %>% 
+  mutate(diffSW=`Most Affected Areas`-`Rest of the South West`)
+
+ggplot(Imm.data3, aes(x=date, y=diffSW))+
+  geom_rect(aes(xmin=as.Date("2021-09-02")+days(8), xmax=as.Date("2021-10-12")+days(8), ymin=-25, ymax=20),
+            fill="Grey90")+
+  geom_col(fill="tomato")+
+  scale_x_date(name="")+
+  scale_y_continuous("Daily admissions in most affected areas - rest of South West")+
+  theme_custom()
+
+before <- Imm.data3 %>% filter(date<as.Date("2021-09-02")+days(8)) %>% 
+  summarise(mean(diffSW))
+
+during <- Imm.data3 %>% filter(date>=as.Date("2021-09-02")+days(8) & date<=as.Date("2021-10-12")+days(8)) %>% 
+  summarise(sum(diffSW))
