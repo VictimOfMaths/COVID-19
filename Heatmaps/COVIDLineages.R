@@ -31,10 +31,11 @@ data <- merge(rawdata, LADtoRegion,all.x=TRUE) %>%
     WeekEndDate=as.Date(WeekEndDate),
     strain=case_when(
       Lineage=="B.1.177" ~ "B.1.177",
-      Lineage %in% c("B.1.617.2", "AY.4") ~ "Delta (OG)",
-      Lineage=="B.1.1.7" ~ "Alpha",
-      Lineage=="B.1.1.529" ~ "Omicron",
       Lineage=="AY.4.2" ~ "Delta (AY4.2 variant)",
+      Lineage=="B.1.617.2" | substr(Lineage,1,3)=="AY." ~ "Delta (OG)",
+      Lineage=="B.1.1.7" ~ "Alpha",
+      Lineage %in% c("B.1.1.529", "BA.1") ~ "Omicron",
+      Lineage=="BA.2" ~ "Stealth Omicron",
       TRUE ~ "Other variants")) %>% 
   group_by(WeekEndDate, strain, Region) %>% 
   summarise(Count=sum(Count)) %>% 
@@ -44,7 +45,7 @@ data <- merge(rawdata, LADtoRegion,all.x=TRUE) %>%
   ungroup() %>% 
   mutate(prop=Count/Total,
          strain=factor(strain, levels=c("B.1.177", "Alpha", "Delta (OG)", "Delta (AY4.2 variant)",
-                                        "Omicron", "Other variants")))
+                                        "Omicron", "Stealth Omicron", "Other variants")))
 
 #Compare regions
 mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
@@ -53,7 +54,7 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
 
-agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesCountxReg.tiff", units="in", width=10, height=8, res=500)
 ggplot(data, aes(x=WeekEndDate, y=Count, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
@@ -68,7 +69,7 @@ ggplot(data, aes(x=WeekEndDate, y=Count, fill=strain))+
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesStackedxReg.tiff", units="in", width=10, height=8, res=500)
 ggplot(data, aes(x=WeekEndDate, y=prop, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
@@ -91,7 +92,7 @@ natdata <- data %>%
   ungroup() %>% 
   mutate(prop=Count/Total)
 
-agg_tiff("Outputs/COVIDGenomesCount.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesCount.tiff", units="in", width=10, height=8, res=500)
 ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
   geom_col(position="stack")+
   scale_x_date(name="")+
@@ -105,11 +106,11 @@ ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
 
-agg_tiff("Outputs/COVIDGenomesStacked.tiff", units="in", width=10, height=8, res=800)
+agg_tiff("Outputs/COVIDGenomesStacked.tiff", units="in", width=10, height=8, res=500)
 ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
   geom_col(position="fill")+
   scale_x_date(name="")+
-  scale_y_continuous(name="Genomes sequenced", labels=label_percent(accuracy=1))+
+  scale_y_continuous(name="Proprtion of genomes sequenced", labels=label_percent(accuracy=1))+
   scale_fill_paletteer_d("khroma::bright", name="Lineage")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
