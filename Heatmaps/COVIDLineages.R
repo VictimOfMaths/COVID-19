@@ -120,3 +120,41 @@ ggplot(natdata, aes(x=WeekEndDate, y=Count, fill=strain))+
        subtitle=paste0("Proportion of total COVID-19 genomes sequenced by the Wellcome Sanger Institute identified as belonging to selected major lineages.\nData up to ", max(rawdata$WeekEndDate)),
        caption="Data from Wellcome Sanger Institute | Plot by @VictimOfMaths")
 dev.off()
+
+#Using more current COG data (no subnational split)
+#Download Covid genome data
+temp <- tempfile()
+source <- "https://cog-uk.s3.climb.ac.uk/phylogenetics/latest/cog_metadata.csv"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+data <- read.csv(temp) %>% 
+  mutate(sample_date=as.Date(sample_date)) %>% 
+  select(sample_date, scorpio_call, epi_week, lineage) %>% 
+  mutate(lineagegroup=case_when(
+    substr(scorpio_call, 1, 5)=="Alpha" ~ "Alpha",
+    scorpio_call=="Delta (AY.4.2-like)" ~ "Delta (AY4.2 variant)",
+    substr(scorpio_call, 1, 5)=="Delta" ~ "Delta (OG)",
+    grepl("Omicron", scorpio_call) ~ "Omicron",
+    lineage=="B.1.177" ~ "B.1.177",
+    TRUE ~ "Other variants"),
+    lineagegroup=factor(lineagegroup, levels=c("B.1.177", "Alpha", "Delta (OG)", "Delta (AY4.2 variant)",
+                                               "Omicron", "Other variants")))
+
+dailydata <- data %>% 
+  group_by(lineagegroup, sample_date) %>% 
+  summarise(count=n())
+
+agg_tiff("Outputs/COVIDGenomesStackedCOG.tiff", units="in", width=10, height=8, res=500)
+ggplot(dailydata %>% filter(sample_date>as.Date("2020-08-01")), 
+       aes(x=sample_date, y=count, fill=lineagegroup))+
+  geom_col(position="fill")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of genomes sequenced", labels=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("khroma::bright", name="Lineage")+
+  theme_classic()+
+  theme(text=element_text(family="Lato"), 
+        plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="Omicron is coming...",
+       subtitle=paste0("Proportion of total COVID-19 genomes reported by COG-UK as belonging to selected major lineages.\nData up to ", max(dailydata$sample_date)),
+       caption="Data from COG-UK | Plot by @VictimOfMaths")
+dev.off()
