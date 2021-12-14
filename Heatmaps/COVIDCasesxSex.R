@@ -192,7 +192,7 @@ ggplot(popheatmap)+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01")))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
@@ -204,7 +204,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01")))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases are falling (almost) all age groups",
+  labs(title="COVID cases are rising fast in 20-somethings",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -302,21 +302,59 @@ ratesdata <- caseratios %>%
   ungroup()) %>% 
   mutate(rates_roll=cases_roll*100000/pop)
 
-agg_tiff("Outputs/COVIDCaseRatesLineRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-08-01") & date<max(date)-days(1)), 
+agg_png("Outputs/COVIDCaseRatesLineRecent.png", units="in", width=10, height=6, res=800)
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max(date)-days(1)), 
        aes(x=date, y=rates_roll, colour=age))+
-  #geom_rect(aes(xmin=as.Date("2021-06-11"), xmax=as.Date("2021-07-11"), ymin=0, ymax=220),
-  #          fill="Grey90", colour="Grey90")+
-  #geom_rect(aes(xmin=as.Date("2021-09-01"), xmax=as.Date("2021-09-27"), ymin=0, ymax=220),
-  #          fill="Grey90", colour="Grey90")+
-  #geom_segment(aes(x=as.Date("2021-07-19"), xend=as.Date("2021-07-19"), y=0, yend=220),
-  #             colour="Grey30", linetype=2)+
+
   geom_line()+
   scale_x_date(name="")+
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Current case rates are still highest in schoolchildren",
+  labs(title="Current case rates are rising in younger adults",
+       subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_png("Outputs/COVIDCaseRatesLineRecent60Plus.png", units="in", width=10, height=6, res=800)
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & 
+                              date<max(date)-days(1)), 
+       aes(x=date, y=rates_roll, group=age))+
+  geom_line(colour="Grey70")+
+  geom_line(data=ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & 
+                                        date<max(date)-days(1) &
+                                        age %in% c("60 to 64", "65 to 69", "70 to 74",
+                                                   "75 to 79", "80 to 84", "85 to 89",
+                                                   "90+")),
+            aes(colour=age))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="New COVID cases per 100,000")+
+  scale_colour_manual(values=c("#0F8299FF", "#3E9FB3FF", "#7ABECCFF", "#B8DEE6FF", 
+                               "#3D0F99FF", "#653EB3FF", "#967ACCFF"), name="Age")+
+  theme_custom()+
+  labs(title="COVID cases have fallen in the ages that received boosters earliest",
+       subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_png("Outputs/COVIDCaseRatesLineRecentu60.png", units="in", width=10, height=6, res=800)
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & 
+                              date<max(date)-days(1)), 
+       aes(x=date, y=rates_roll, group=age))+
+  geom_line(colour="Grey70")+
+  geom_line(data=ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & 
+                                        date<max(date)-days(1) &
+                                        !age %in% c("60 to 64", "65 to 69", "70 to 74",
+                                                   "75 to 79", "80 to 84", "85 to 89",
+                                                   "90+")),
+            aes(colour=age))+
+  scale_x_date(name="")+
+  scale_y_continuous(name="New COVID cases per 100,000")+
+  scale_colour_paletteer_d("pals::stepped", name="Age")+
+  theme_custom()+
+  labs(title="COVID cases have risen in younger age groups",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -324,13 +362,13 @@ dev.off()
 
 #Line chart of CRRs
 agg_tiff("Outputs/COVIDCaseRatioLineRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, colour=age))+
   scale_x_date(name="")+
@@ -339,27 +377,27 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Case ratios are heading down, but at different rates in different age groups",
+  labs(title="Case ratios are heading in different directions in different age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent019.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_rect(aes(xmin=as.Date("2021-10-25"), xmax=as.Date("2021-10-29"),
                 ymin=0.5, ymax=2), fill="Grey90", colour="Grey90")+
   geom_text(aes(x=as.Date("2021-10-23"), y=1.5, label="Half term"),
             colour="Grey70", angle=90)+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("0 to 4", "5 to 9", "10 to 14",
                                                     "15 to 19")),
             aes(x=date, y=caseratio, colour=age))+
@@ -377,16 +415,16 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent2039.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("20 to 24", "25 to 29", "30 to 34",
                                                     "35 to 39")),
             aes(x=date, y=caseratio, colour=age))+
@@ -397,23 +435,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are falling slowly in <span style='color:#c51b8a;'>20-39 year olds",
+  labs(title="Increases in COVID case rates in <span style='color:#c51b8a;'>20-39 year olds</span> have accelerated recently",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent4059.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("40 to 44", "45 to 49", "50 to 54",
                                                     "55 to 59")),
             aes(x=date, y=caseratio, colour=age))+
@@ -431,16 +469,16 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent6579.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("60 to 64", "65 to 69", "70 to 74",
                                                     "75 to 79")),
             aes(x=date, y=caseratio, colour=age))+
@@ -451,23 +489,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="The fall in COVID case rates in <span style='color:#c51b8a;'>65-79 year olds</span> has accelerated in recent days",
+  labs(title="The fall in COVID case rates in <span style='color:#c51b8a;'>60-79 year olds</span> has threatened to reverse",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent80Plus.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-08-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-08-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("80 to 84", "85 to 89", "90+")),
             aes(x=date, y=caseratio, colour=age))+
   scale_x_date(name="")+
@@ -477,7 +515,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-08-01") & date<max(date)))+
   scale_colour_manual(values=c("#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are falling pretty rapidly in <span style='color:#c51b8a;'>the over 80s",
+  labs(title="COVID case rates have crept up slightly <span style='color:#c51b8a;'>the over 80s</span> in recent weeks",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
