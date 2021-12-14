@@ -9,6 +9,7 @@ library(extrafont)
 library(ragg)
 library(scales)
 library(ggrepel)
+library(ggridges)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -156,6 +157,42 @@ ggplot()+
 
 dev.off()
 
+agg_tiff("Outputs/COVIDBoostersxAgevsCasesDark.tiff", units="in", width=9, height=7, res=500)
+ggplot()+
+  geom_hline(yintercept=1, linetype=2, colour="Grey40")+
+  geom_line(data=finaldata %>% filter(date>as.Date("2021-09-10") & 
+                                        !age %in% c("00_04", "05_09","10_14")), 
+            aes(x=date, y=caseproppeak, group=age, colour=dose3prop))+
+  geom_text_repel(data=finaldata %>% filter(date==max(date[!is.na(caseproppeak)]) & 
+                                              !age %in% c("00_04", "05_09","10_14")),
+                  aes(x=max(date[!is.na(caseproppeak)]), y=caseproppeak, label = age, colour=dose3prop),
+                  family = "Lato", direction = "y", xlim = c(as.Date("2021-12-10"), NA),
+                  hjust = 0, segment.size = .7, segment.alpha = .5, segment.linetype = "dotted",
+                  box.padding = .3, segment.curvature = -0.1, segment.ncp = 3, segment.angle = 20) +
+  scale_x_date(name="")+
+  scale_y_continuous(name="COVID cases as a proportion of their Dec 20/Jan21 peak",
+                     labels=label_percent(accuracy=1), limits=c(0,NA),
+                     breaks=c(0,0.25,0.5,0.75,1,1.25))+
+  scale_colour_paletteer_c("viridis::magma", name="Booster coverage",
+                           limits=c(0,1), labels=label_percent(accuracy=1))+
+  theme_custom()+
+  theme(legend.position="top", plot.background=element_rect(fill="Grey20", 
+                                                            colour="Grey20"),
+        panel.background=element_rect(fill="Grey20", 
+                                      colour="Grey20"),
+        legend.background=element_rect(fill="Grey20", 
+                                       colour="Grey20"),
+        text=element_text(colour="cornsilk"),
+        axis.text=element_text(colour="cornsilk"))+
+  guides(colour = guide_colorbar(title.position = 'top', title.hjust = .5,
+                                 barwidth = unit(20, 'lines'), 
+                                 barheight = unit(.5, 'lines')))+
+  labs(title="Boosters have been doing a great job against Delta transmission",
+       subtitle="Rolling 7-day rate of new COVID cases as a proportion of the peak last winter by age group, coloured by booster/3rd dose coverage\nfor all age groups 15+",
+       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @jburnmurdoch | Plot by @VictimOfMaths")
+
+dev.off()
+
 agg_tiff("Outputs/COVIDBoostersxAgevsCasesFacet.tiff", units="in", width=9, height=7, res=500)
 ggplot()+
   geom_hline(yintercept=1, linetype=2, colour="Grey60")+
@@ -206,5 +243,44 @@ ggplot()+
   labs(title="Boosters have been effective at limiting deaths due to Delta",
        subtitle="Rolling 7-day rate of deaths within 28 days of a positive COVID test as a proportion of the peak last winter by age group,\ncoloured by booster/3rd dose coverage for all age groups 40+",
        caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @jburnmurdoch | Plot by @VictimOfMaths")
+
+dev.off()
+
+##########################
+#Ridgeplots of vaccination age profiles by week
+#Heavily inspired by this wonderful plot 
+#https://twitter.com/MathiasLeroy_/status/1470785658537062407
+#from Mathias Leroy
+
+ridgedata <- finaldata %>% 
+  select(date, age, dose1, dose2, dose3) %>% 
+  filter(date>as.Date("2020-12-01")) %>% 
+  gather(dose, no, c(dose1, dose2, dose3)) %>% 
+  mutate(contage=case_when(
+    age=="00_04" ~ 2, age=="05_09" ~ 7, age=="10_14" ~ 12, age=="15_19" ~ 17,
+    age=="20_24" ~ 22, age=="25_29" ~ 27, age=="30_34" ~ 32, age=="35_39" ~ 37,
+    age=="40_44" ~ 42, age=="45_49" ~ 47, age=="50_54" ~ 52, age=="55_59" ~ 57,
+    age=="60_64" ~ 62, age=="65_69" ~ 67, age=="70_74" ~ 72, age=="75_79" ~ 77,
+    age=="80_84" ~ 82, age=="85_89" ~ 87, age=="90+" ~ 92),
+    week=if_else(year(date)==2020, week(date), week(date)+53)) %>% 
+  group_by(contage, week, dose) %>% 
+  summarise(no=sum(no)) %>% 
+  ungroup()
+
+
+agg_tiff("Outputs/COVIDVaxRidgesxAgexDose.tiff", units="in", width=8, height=8, res=500)
+ggplot(ridgedata, aes(x=contage, y=fct_rev(as.factor(week)), height=no, fill=dose))+
+  geom_density_ridges(stat="identity", scale=10, alpha=0.3, colour=NA)+
+  scale_x_continuous(name="Age", limits=c(0,95))+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+                   labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec"), name="")+
+  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+  theme_custom()+
+  theme(axis.line.y=element_blank())+
+  labs(title="Vaccine rollout down the age groups",
+       subtitle="Age distribution of COVID vaccines delivered each week in England by dose",
+       caption="Data from coronavirus.data.gov.uk | Inspired by @MathiasLeroy_ | Plot by @VictimOfMaths")
 
 dev.off()
