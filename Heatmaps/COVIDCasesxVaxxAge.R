@@ -152,7 +152,31 @@ ggplot()+
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Boosters have been doing a great job against Delta transmission",
        subtitle="Rolling 7-day rate of new COVID cases as a proportion of the peak last winter by age group, coloured by booster/3rd dose coverage\nfor all age groups 15+",
-       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @johnburnmurdoch | Plot by @VictimOfMaths")
+       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @jburnmurdoch | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDBoostersxAgevsCasesFacet.tiff", units="in", width=9, height=7, res=500)
+ggplot()+
+  geom_hline(yintercept=1, linetype=2, colour="Grey60")+
+  geom_line(data=finaldata %>% filter(date>as.Date("2021-09-10") & 
+                                        !age %in% c("00_04", "05_09","10_14")), 
+            aes(x=date, y=caseproppeak, group=age, colour=dose3prop))+
+  
+  scale_x_date(name="")+
+  scale_y_continuous(name="COVID cases as a proportion of their Dec 20/Jan21 peak",
+                     labels=label_percent(accuracy=1), limits=c(0,NA),
+                     breaks=c(0,0.25,0.5,0.75,1,1.25))+
+  scale_colour_paletteer_c("ggthemes::Red-Green Diverging", name="Booster coverage",
+                           limits=c(0,1), labels=label_percent(accuracy=1))+
+  facet_wrap(~age)+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(colour = guide_colorbar(title.position = 'top', title.hjust = .5,
+                                 barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="Boosters have been doing a great job against Delta transmission",
+       subtitle="Rolling 7-day rate of new COVID cases as a proportion of the peak last winter by age group, coloured by booster/3rd dose coverage\nfor all age groups 15+",
+       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @jburnmurdoch | Plot by @VictimOfMaths")
 
 dev.off()
 
@@ -171,7 +195,7 @@ ggplot()+
                   hjust = 0, segment.size = .7, segment.alpha = .5, segment.linetype = "dotted",
                   box.padding = .3, segment.curvature = -0.1, segment.ncp = 3, segment.angle = 20) +
   scale_x_date(name="")+
-  scale_y_continuous(name="COVID cases as a proportion of their Dec 20/Jan21 peak",
+  scale_y_continuous(name="COVID deaths as a proportion of their Dec 20/Jan21 peak",
                      labels=label_percent(accuracy=1), limits=c(0,NA))+
   scale_colour_paletteer_c("ggthemes::Red-Green Diverging", name="Booster coverage",
                            limits=c(0,1), labels=label_percent(accuracy=1))+
@@ -180,7 +204,7 @@ ggplot()+
   guides(colour = guide_colorbar(title.position = 'top', title.hjust = .5,
                                  barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
   labs(title="Boosters have been effective at limiting deaths due to Delta",
-       subtitle="Rolling 7-day rate of new COVID cases as a proportion of the peak last winter by age group, coloured by booster/3rd dose coverage\nfor all age groups 15+",
-       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @johnburnmurdoch | Plot by @VictimOfMaths")
+       subtitle="Rolling 7-day rate of deaths within 28 days of a positive COVID test as a proportion of the peak last winter by age group,\ncoloured by booster/3rd dose coverage for all age groups 40+",
+       caption="Data from coronavirus.data.gov.uk and ONS | Inspired by @jburnmurdoch | Plot by @VictimOfMaths")
 
 dev.off()
