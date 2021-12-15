@@ -10,6 +10,7 @@ library(ragg)
 library(scales)
 library(ggrepel)
 library(ggridges)
+library(ungroup)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -63,8 +64,20 @@ deathsdata <- read.csv(temp) %>%
   select(date, age, deaths) %>% 
   mutate(date=as.Date(date))
 
-#Combine  
-data <- merge(casedata, vaxdata, all=TRUE) %>% 
+#Combine (avoiding missing date/age combinations because of faff reasons)  
+data <- data.frame(date=rep(seq.Date(from=min(min(deathsdata$date), min(casedata$date), 
+                                          min(vaxdata$date)),
+                                 to=max(max(deathsdata$date), max(casedata$date), 
+                                        max(vaxdata$date)), "days"), 
+                       each=length(unique(casedata$age)))) %>% 
+  mutate(age=rep(unique(casedata$age), 
+                 times=length(seq.Date(from=min(min(deathsdata$date), min(casedata$date), 
+                                                                      min(vaxdata$date)),
+                                       to=max(max(deathsdata$date), max(casedata$date), 
+                                                                    max(vaxdata$date)), 
+                                       "days")))) %>% 
+  merge(casedata, all=TRUE) %>% 
+  merge(vaxdata, all=TRUE) %>% 
   merge(deathsdata, all=TRUE) %>% 
   mutate(dose1=if_else(is.na(dose1), 0, dose1),
          dose2=if_else(is.na(dose2), 0, dose2),
@@ -277,6 +290,90 @@ ggplot(ridgedata, aes(x=contage, y=fct_rev(as.factor(week)), height=no, fill=dos
                             "Oct", "Nov", "Dec"), name="")+
   scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
                          labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+  theme_custom()+
+  theme(axis.line.y=element_blank())+
+  labs(title="Vaccine rollout down the age groups",
+       subtitle="Age distribution of COVID vaccines delivered each week in England by dose",
+       caption="Data from coronavirus.data.gov.uk | Inspired by @MathiasLeroy_ | Plot by @VictimOfMaths")
+
+dev.off()
+
+#Alternative version interpolating the age groups to give (hopefully) smoother
+smoothdata <- finaldata %>% 
+  select(date, age, dose1, dose2, dose3) %>% 
+  filter(date>as.Date("2020-12-01")) %>% 
+  gather(dose, no, c(dose1, dose2, dose3)) %>% 
+  mutate(contage=case_when(
+    age=="00_04" ~ 0, age=="05_09" ~ 5, age=="10_14" ~ 10, age=="15_19" ~ 15,
+    age=="20_24" ~ 20, age=="25_29" ~ 25, age=="30_34" ~ 30, age=="35_39" ~ 35,
+    age=="40_44" ~ 40, age=="45_49" ~ 45, age=="50_54" ~ 50, age=="55_59" ~ 55,
+    age=="60_64" ~ 60, age=="65_69" ~ 65, age=="70_74" ~ 70, age=="75_79" ~ 75,
+    age=="80_84" ~ 80, age=="85_89" ~ 85, age=="90+" ~ 90),
+    week=if_else(year(date)==2020, week(date), week(date)+53)) %>% 
+  #filter(dose=="dose1" & week=="55") %>% 
+  group_by(age, contage, week, dose) %>% 
+  summarise(no=sum(no)) %>% 
+  ungroup() %>% 
+  merge(ONSpop)
+
+
+
+smootheddata <- data.frame(dose=character(), week=integer(), age=integer(),
+                            smoothedno=double())
+
+for(i in c("dose1", "dose2", "dose3")){
+  for(j in min(smoothdata$week):max(smoothdata$week)){
+    working <- smoothdata %>% 
+      filter(dose==i & week==j)
+    x <- working$contage
+    y <- working$no
+    offset <- working$pop
+    nlast <- 21
+    
+    smoothed <- pclm(x, y, nlast)
+    
+    outputs <- as.data.frame(smoothed$fitted) %>% 
+      mutate(dose=i, week=j, age=0:110) %>% 
+      rename("smoothedno"="smoothed$fitted")
+    
+    smootheddata=smootheddata %>% bind_rows(outputs)
+  }
+}
+
+agg_tiff("Outputs/COVIDVaxRidgesxAgexDoseSmoothed.tiff", units="in", width=8, height=8, res=500)
+ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, fill=dose,
+                         colour=dose))+
+  geom_density_ridges(stat="identity", scale=10, alpha=0.4, rel_min_height=0.01)+
+  geom_segment(aes(x = 5, y = 35, xend = 5, yend = 25),
+               arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
+  scale_x_continuous(name="Age", limits=c(0,105))+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+                   labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec"), name="")+
+  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+  scale_colour_paletteer_d("lisa::AndyWarhol_2", guide="none")+
+  annotate("text", x=3, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
+  theme_custom()+
+  theme(axis.line.y=element_blank())+
+  labs(title="Vaccine rollout down the age groups",
+       subtitle="Age distribution of COVID vaccines delivered each week in England by dose",
+       caption="Data from coronavirus.data.gov.uk | Inspired by @MathiasLeroy_ | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDVaxRidgesxAgexDoseSmoothedv2.tiff", units="in", width=8, height=8, res=500)
+ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, fill=dose))+
+  geom_density_ridges(stat="identity", scale=10, alpha=0.4, colour=NA)+
+  geom_segment(aes(x = 5, y = 35, xend = 5, yend = 25),
+               arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
+  scale_x_continuous(name="Age", limits=c(0,105))+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+                   labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec"), name="")+
+  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+  annotate("text", x=3, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
   theme_custom()+
   theme(axis.line.y=element_blank())+
   labs(title="Vaccine rollout down the age groups",
