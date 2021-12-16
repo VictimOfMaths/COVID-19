@@ -163,13 +163,13 @@ ggplot(regdata1 %>% filter(date>as.Date("2020-04-01")),
   scale_x_date(name="", date_labels="%B %y")+
   scale_y_continuous(labels=label_percent(accuracy=1), 
                      name="Level as a proportion of January 2021 peak")+
-  scale_colour_manual(values=c("#FF0000", "#00A08A"))+
+  scale_colour_manual(values=c("#FF0000", "#F2AD00"))+
   facet_geo(~Region, grid=mygrid)+
   theme_custom()+
   theme(plot.subtitle=element_markdown(),
         panel.grid.major.y=element_line(colour="Grey90"))+
-  labs(title="Vaccination is keeping admissions and deaths lower than previous waves",
-       subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span> and <span style='color:#00A08A;'>deaths</span> as a proportion of their peak value in January 2021",
+  labs(title="Vaccination is keeping deaths lower than previous waves",
+       subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span> and <span style='color:#F2AD00;'>deaths</span> as a proportion of their peak value in January 2021 in English regions",
        caption="Plot inspired by @PaulMainwood | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
@@ -179,6 +179,43 @@ url <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=nhsRegion&metric=ne
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-regdata2 <- read.csv(temp)
+regdata2 <- read.csv(temp) %>% 
+  select(-c(1,3)) %>% 
+  set_names(c("Region", "date", "count")) %>% 
+  mutate(date=as.Date(date), metric="Admissions") %>% 
+  group_by(Region) %>% 
+  #Calculate rolling means
+  mutate(count_roll=roll_mean(count, 7, align="center", fill=NA)) %>% 
+  #Normalise against the peak.
+  #Step 1 - grab the peak value for each metric
+  #Option 1, just using the max value across the entire time series
+  #mutate(max=max(count, na.rm=TRUE)) %>% 
+  #Option 2, normalising against the max value within a chosen date range
+  mutate(max=max(count_roll[date>as.Date("2020-08-01") & date<as.Date("2021-05-01")], 
+                 na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  #Step 2 - calculate each date's value as a proportion of the peak
+  mutate(prop=count_roll/max)
 
+#Stick together (ignoring differences in regional boundaries)
+regdata <- bind_rows(regdata1, regdata2) %>% 
+  mutate(metric=factor(metric, levels=c("Cases", "Admissions", "Deaths")))
 
+agg_tiff("Outputs/COVIDMetricsNormalisedLondon.tiff", units="in", width=9, height=6, res=500)
+ggplot(regdata %>% filter(Region=="London" & date>as.Date("2020-04-01")), 
+       aes(x=date, y=prop, colour=metric))+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="", date_labels="%B %y")+
+  scale_y_continuous(labels=label_percent(accuracy=1), 
+                     name="Level as a proportion of January 2021 peak")+
+  scale_colour_paletteer_d("wesanderson::Darjeeling1")+
+  theme_classic()+
+  theme(text=element_text(family="Lato"), plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.5)),
+        plot.subtitle=element_markdown(),
+        panel.grid.major.y=element_line(colour="Grey90"))+
+  labs(title="As the Omicron wave hits London, where are admissions and deaths headed?",
+       subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span>, <span style='color:#00A08A;'>admissions</span> and <span style='color:#F2AD00;'>deaths</span>in London* as a proportion of their peak value in January 2021",
+       caption="Plot inspired by @PaulMainwood | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths\n\n*Admissions data is based on the London NHS region, which does not exactly match the government region that cases and deaths data is based on")
+
+dev.off()
