@@ -101,3 +101,19 @@ data %>% filter(type!="incidental" & Region=="London") %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
+agg_tiff("Outputs/COVIDAdmissionsCausePropxReg.tiff", units="in", width=9, height=7, res=500)
+data %>% filter(type!="incidental" & Region!="ENGLAND") %>% 
+  spread(type, count) %>% 
+  mutate(prop=from/with) %>% 
+  ggplot(aes(x=date, y=prop, colour=Region))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of COVID patients for whom\nCOVID is the main cause of hospitalisation",
+                     limits=c(0,NA), labels=label_percent(accuracy=1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  theme_custom()+
+  labs(title="The proportion of COVID patients hospitalised because of COVID varies a lot by region",
+       subtitle="Proportion of total COVID-positive patients assessed to be in hospital 'for' rather than 'with' COVID by NHS region",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
