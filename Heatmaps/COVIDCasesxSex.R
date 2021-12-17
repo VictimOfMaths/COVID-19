@@ -196,7 +196,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
-  scale_fill_paletteer_c("pals::warmcool", limit=c(0.5,2), direction=-1 ,
+  scale_fill_paletteer_c("pals::warmcool", limit=c(0.4,2.5), direction=-1 ,
                          trans="log", breaks=c(0.5, 1, 1.9999), 
                          labels=c("-50%", "No change", "+100%"),
                          name="Change in cases in the past week")+
@@ -377,7 +377,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Case ratios are heading in different directions in different age groups",
+  labs(title="Case ratios are rising an *almost* all age groups, but the 20-somethings 😱",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
