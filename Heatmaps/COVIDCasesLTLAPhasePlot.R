@@ -117,13 +117,79 @@ plot <- ggplot()+
         plot.title=element_text(face="bold", size=rel(1.6)),
         legend.text = element_text(face="bold", size=rel(1)))+
   guides(fill=guide_legend(override.aes=list(size=3)))+
-  labs(title="COVID case rates are falling across almost the entire UK",
+  labs(title="COVID case rates in London are heading skywards",
        subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
 
 agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPaths.tiff", units="in", width=9, height=7, res=800)
 plot
+dev.off()
+
+#Regional version
+regplot <- ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdata %>% filter(date>=maxdate-days(7) & Country=="England"), 
+            aes(x=caserate, y=change, group=areaName, alpha=7-dayssince),
+            colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata %>% filter(date==maxdate & Country=="England"),
+             aes(x=caserate, y=change, fill=Region, size=pop), shape=21, alpha=0.7,
+             show.legend=FALSE)+
+  geom_text_repel(data=plotdata %>% filter(date==maxdate & Country=="England"), 
+                  aes(x=caserate, y=change, label=areaName), size=rel(2.3))+
+  scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in case rate compared to the preceding week")+
+  scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
+  scale_size(guide=FALSE)+
+  theme_classic()+
+  facet_wrap(~Region)+
+  theme(axis.line=element_blank(), text=element_text(family="Lato"),
+        legend.position = "top", plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.6)),
+        legend.text = element_text(face="bold", size=rel(1)),
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  guides(fill=guide_legend(override.aes=list(size=3)))+
+  labs(title="COVID case rates are threatening to take off in many English regions",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
+                       maxdate),
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPathsxRegion.tiff", units="in", width=10, height=10, res=500)
+regplot
+dev.off()
+
+#Free scales version
+regplot <- ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdata %>% filter(date>=maxdate-days(7) & Country=="England"), 
+            aes(x=caserate, y=change, group=areaName, alpha=7-dayssince),
+            colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata %>% filter(date==maxdate & Country=="England"),
+             aes(x=caserate, y=change, fill=Region, size=pop), shape=21, alpha=0.7,
+             show.legend=FALSE)+
+  geom_text_repel(data=plotdata %>% filter(date==maxdate & Country=="England"), 
+                  aes(x=caserate, y=change, label=areaName), size=rel(2.3))+
+  scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in case rate compared to the preceding week")+
+  scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
+  scale_size(guide=FALSE)+
+  theme_classic()+
+  facet_wrap(~Region, scales="free")+
+  theme(axis.line=element_blank(), text=element_text(family="Lato"),
+        legend.position = "top", plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.6)),
+        legend.text = element_text(face="bold", size=rel(1)),
+        strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
+  guides(fill=guide_legend(override.aes=list(size=3)))+
+  labs(title="COVID case rates are threatening to take off in many English regions",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
+                       maxdate),
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
+
+agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPathsxRegionv2.tiff", units="in", width=10, height=10, res=500)
+regplot
 dev.off()
 
 #Animated version (to be honest, this needs tweaking, it looks pretty rubbish with
