@@ -16,12 +16,12 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211216.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211220.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
 weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211216.xlsx"
 #Increment by one each day
-dailyrange <- "BY"
-dailyoccrange <- "CA"
+dailyrange <- "CC"
+dailyoccrange <- "CE"
 #Increment by seven each week
 weeklyrange <- "CA"
 
@@ -185,13 +185,13 @@ agg_tiff("Outputs/COVIDNHSAdmissionsxRegRecent.tiff", units="in", width=9, heigh
 ggplot(subset(dailydata, metric=="Admissions" & date>as.Date("2021-09-01")))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
-  scale_y_continuous(name="Rate per 100,000 population")+
+  scale_y_continuous(name="Rate per 100,000 population", limits=c(0,NA))+
   scale_colour_paletteer_d("colorblindr::OkabeIto", name="NHS Region")+
   theme_classic()+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Roboto"))+
-  labs(title="New COVID-19 hospital admissions are starting to rise in all regions",
+  labs(title="New COVID-19 hospital admissions are rising sharply in London",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions for patients with a positive COVID-19 diagnosis.\nData up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
