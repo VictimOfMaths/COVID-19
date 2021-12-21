@@ -19,12 +19,13 @@ theme_custom <- function() {
 
 #Bring in SGTF data from UKHSA
 #https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042224/sgtf_regionepicurve_2021-12-17.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042233/sgtf_regionepicurve_2021-12-18.csv"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 SGTFdata <- read.csv(temp) %>% 
-  mutate(specimen_date=as.Date(specimen_date, format="%d/%m/%Y"),
+  #mutate(specimen_date=as.Date(specimen_date, format="%d/%m/%Y"),
+  mutate(specimen_date=as.Date(specimen_date),
          areaName=if_else(UKHSA_region=="Yorkshire and Humber", 
                           "Yorkshire and The Humber", UKHSA_region))
 
