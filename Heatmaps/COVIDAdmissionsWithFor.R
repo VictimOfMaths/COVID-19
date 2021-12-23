@@ -117,3 +117,52 @@ data %>% filter(type!="incidental" & Region!="ENGLAND") %>%
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
+#Bring in unseparated data to get figures from non-acute trusts
+source2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211222.xlsx"
+temp2 <- tempfile()
+temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
+
+combdata <- read_excel(temp2, range="B90:CG97", col_names=FALSE) %>% 
+  gather(date, alltrusts, c(2:ncol(.))) %>% 
+  rename("Region"=`...1`) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
+
+alldata <- data %>% spread(type, count) %>% 
+  merge(combdata, all.x=TRUE) %>% 
+  mutate("Non-acute"=alltrusts-with) %>% 
+  gather(type, count, c(3:7))
+
+agg_tiff("Outputs/COVIDAdmissionsCauseLondonv2.tiff", units="in", width=9, height=7, res=500)
+ggplot(alldata %>% filter(Region=="London" & type %in% c("from", "incidental", "Non-acute") & 
+                            date>as.Date("2021-10-01")), 
+       aes(x=date, y=count, colour=type))+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of patients", limits=c(0,NA))+
+  scale_colour_manual(values=c("#40A0D8", "#F89088", "DarkRed"))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="The number of COVID patients in non-acute hospitals in London is also rising",
+       subtitle="Patients in London in acute hospitals <span style='color:#40A0D8;'>due to COVID</span> and <span style='color:#F89088;'>with COVID</span> and <span style='color:DarkRed;'>COVID-positive patients in non-acute hospitals</span>",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsCauseLondonv3.tiff", units="in", width=9, height=7, res=500)
+alldata %>% filter(Region=="London" & type %in% c("from", "incidental", "Non-acute") & 
+                     date>as.Date("2021-10-01")) %>% 
+  spread(type, count) %>% 
+  mutate(with=incidental+`Non-acute`) %>% 
+  gather(type, count, c(3:6)) %>% 
+  filter(type %in% c("from", "with")) %>% 
+  ggplot(aes(x=date, y=count, colour=type))+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of patients", limits=c(0,NA))+
+  scale_colour_manual(values=c("#40A0D8", "DarkRed"))+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="In total the rise in patients 'with' COVID *may* be greater than patients 'for' COVID",
+       subtitle="Patients in London in acute hospitals <span style='color:#40A0D8;'>due to COVID</span> and <span style='color:DarkRed;'>with COVID and COVID-positive patients in non-acute hospitals</span>",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
