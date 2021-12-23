@@ -24,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211209-211001-211207.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Weekly-covid-admissions-and-beds-publication-211223.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "BR"
+admrange <- "CF"
 #Set latest date of admissions data
-admdate <- as.Date("2021-12-05")
+admdate <- as.Date("2021-12-19")
 
 #Read in admissions
 #First data up to 6th April
@@ -46,7 +46,7 @@ admurl.old2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2
 temp1 <- tempfile()
 temp1 <- curl_download(url=admurl.old2, destfile=temp1, quiet=FALSE, mode="wb")
 raw.adm.old2 <- read_excel(temp1, sheet="Hosp ads & diag", range=paste0("B25:FY512"), 
-                          col_names=FALSE)
+                           col_names=FALSE)
 
 #Read in more recent data
 temp2 <- tempfile()
@@ -146,8 +146,8 @@ admissions <- merge(admissions, trust.lookup, by.x="code", by.y="code", all=TRUE
 #aggregate up to LTLA level
 LAadmissions <- admissions %>% 
   mutate(LA.admissions=case_when(
-           date<=as.Date("2020-10-04") ~ admissions*popprop1,
-           TRUE ~ admissions*popprop2)) %>% 
+    date<=as.Date("2020-10-04") ~ admissions*popprop1,
+    TRUE ~ admissions*popprop2)) %>% 
   group_by(LAD19CD, date, LAD19NM) %>% 
   summarise(admissions=sum(LA.admissions, na.rm=TRUE)) %>% 
   ungroup() %>% 
@@ -233,8 +233,8 @@ plot1 <- ggplot()+
           aes(geometry=geom), fill=NA, colour="Black")+
   geom_sf_text(data=Group_labels %>% filter(!RegionNation %in% c("Scotland", "Wales", 
                                                                  "Northern Ireland")), 
-                                            aes(geometry=geom, label=Group.labe,
-                                      hjust=just), size=rel(2.4), colour="Black")+
+               aes(geometry=geom, label=Group.labe,
+                   hjust=just), size=rel(2.4), colour="Black")+
   scale_fill_paletteer_c("pals::ocean.haline", direction=-1, limits=c(0,NA),
                          name="Admissions per day\nper 100,000")+
   theme_void()+
@@ -243,7 +243,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates are highest along the South Coast",
+  labs(title="COVID admission rates are highest in London and Manchester",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -452,7 +452,7 @@ Imm.data1 <- Imm.data %>%
 agg_tiff("Outputs/COVIDAdmissionsImmensa.tiff", units="in", width=8, height=6, res=500)
 ggplot(Imm.data1)+
   geom_rect(aes(xmin=as.Date("2021-09-02")+days(8), xmax=as.Date("2021-10-12")+days(8), ymin=0, ymax=2),
-             fill="Grey90")+
+            fill="Grey90")+
   geom_line(aes(x=date, y=adm_roll, colour=flag1), show.legend=FALSE)+
   geom_text_repel(data=Imm.data1 %>% filter(date==max(date)-days(4)),
                   aes(x=date, y=adm_roll, colour = flag1, label=flag1),
