@@ -19,7 +19,7 @@ theme_custom <- function() {
 
 #Bring in SGTF data from UKHSA
 #https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1042545/sgtf_regionepicurve_2021-12-19.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1043759/sgtf_regionepicurve_2021-12-22.csv"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -57,7 +57,7 @@ ggplot(data)+
   theme_custom()+
   theme(plot.subtitle=element_markdown(),
         strip.text=element_blank())+
-  labs(title="Omicron cases in London appear to be falling",
+  labs(title="Omicron cases *may* be falling in London, but they are rising elsewhere",
        subtitle=paste0("Estimated total number of <span style='color:#FD0409;'>Omicron</span> and <span style='color:#3D98D3;'>Delta</span> cases based on SGTF data and total positve tests.<br> Dots represent daily figures, lines the 7-day centered rolling average. Data up to ", maxdate),
        caption="Data from UKHSA & coronavirus.data.gov.uk| Plot by @VictimOfMaths")+
   geom_text(aes(x=as.Date("2021-11-20"), y=13000, label=areaName), family="Lato", fontface="bold",
