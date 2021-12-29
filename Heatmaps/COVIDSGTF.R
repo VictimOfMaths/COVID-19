@@ -7,6 +7,7 @@ library(paletteer)
 library(ragg)
 library(RcppRoll)
 library(ggtext)
+library(geofacet)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -19,7 +20,7 @@ theme_custom <- function() {
 
 #Bring in SGTF data from UKHSA
 #https://www.gov.uk/government/publications/covid-19-omicron-daily-overview
-source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1043759/sgtf_regionepicurve_2021-12-22.csv"
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1043909/sgtf_regionepicurve_2021-12-27.csv"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -46,6 +47,12 @@ data <- merge(SGTFdata, casedata, all.x=T) %>%
 
 maxdate=max(data$specimen_date)
 
+mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humber",
+                            "West Midlands", "East Midlands", "East of England",
+                            "South West", "London", "South East"),
+                     row=c(1,1,1,2,2,2,3,3,3), col=c(3,1,2,1,2,3,1,2,3),
+                     code=c(1:9))
+
 agg_tiff("Outputs/COVIDSGTFxRegion.tiff", units="in", width=9, height=7, res=500)
 ggplot(data)+
   geom_line(aes(x=specimen_date, y=cases_roll, colour=sgtf), show.legend=FALSE)+
@@ -53,7 +60,7 @@ ggplot(data)+
   scale_x_date(name="")+
   scale_y_continuous(name="Daily cases")+
   scale_colour_manual(values=c("#3D98D3", "#FD0409"))+
-  facet_wrap(~areaName)+
+  facet_geo(~areaName, grid=mygrid)+
   theme_custom()+
   theme(plot.subtitle=element_markdown(),
         strip.text=element_blank())+
@@ -65,3 +72,34 @@ ggplot(data)+
 
 dev.off()
 
+#rates instead of cases. Populations from ONS 2020 mid-year estimates. 
+#Hard coded because I AM A MONSTER AND I DON'T CARE
+agg_tiff("Outputs/COVIDSGTFxRegionRates.tiff", units="in", width=9, height=7, res=500)
+data %>% mutate(pop=case_when(
+  areaName=="North East" ~ 2680763,
+  areaName=="North West" ~ 7367456,
+  areaName=="Yorkshire and The Humber" ~ 5526350,
+  areaName=="East Midlands" ~ 4865583,
+  areaName=="West Midlands" ~ 5961929,
+  areaName=="East of England" ~ 6269161,
+  areaName=="London" ~ 9002488,
+  areaName=="South East" ~ 9217265,
+  areaName=="South West" ~ 5659143),
+  caserate=cases*100000/pop,
+  caserate_roll=cases_roll*100000/pop) %>% 
+  ggplot()+
+  geom_line(aes(x=specimen_date, y=caserate_roll, colour=sgtf), show.legend=FALSE)+
+  geom_point(aes(x=specimen_date, y=caserate, colour=sgtf), shape=21, show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_manual(values=c("#3D98D3", "#FD0409"))+
+  facet_geo(~areaName, grid=mygrid)+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown(),
+        strip.text=element_blank())+
+  labs(title="Omicron has seen off Delta",
+       subtitle=paste0("Estimated total number of <span style='color:#FD0409;'>Omicron</span> and <span style='color:#3D98D3;'>Delta</span> cases based on SGTF data and total positve tests.<br> Dots represent daily figures, lines the 7-day centered rolling average. Data up to ", maxdate),
+       caption="Data from UKHSA & coronavirus.data.gov.uk| Plot by @VictimOfMaths")+
+  geom_text(aes(x=as.Date("2021-11-20"), y=200, label=areaName), family="Lato", fontface="bold",
+            size=rel(4))
+dev.off()
