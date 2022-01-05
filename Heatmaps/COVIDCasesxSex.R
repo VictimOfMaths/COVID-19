@@ -302,7 +302,24 @@ ratesdata <- caseratios %>%
   ungroup()) %>% 
   mutate(rates_roll=cases_roll*100000/pop)
 
-agg_png("Outputs/COVIDCaseRatesLineRecent.png", units="in", width=10, height=6, res=800)
+agg_png("Outputs/COVIDCasesHeatmapxAge.png", units="in", width=10, height=6, res=500)
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max(date)-days(1)),
+       aes(x=date, y=age, fill=rates_roll))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age")+
+  scale_fill_paletteer_c("viridis::inferno", name="Cases per 100,000")+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5, 
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID cases are working their way up the age groups",
+       subtitle="Rolling 7-day average rates of new COVID-19 cases by age in England",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_png("Outputs/COVIDCaseRatesLineRecent.png", units="in", width=10, height=6, res=500)
 ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max(date)-days(1)), 
        aes(x=date, y=rates_roll, colour=age))+
 
@@ -377,7 +394,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Where the 20-somethings led, the rest now follow",
+  labs(title="COVID cases are growing at different rates in different age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -392,10 +409,10 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
             colour="Grey70")+
   geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
-  geom_rect(aes(xmin=as.Date("2021-10-25"), xmax=as.Date("2021-10-29"),
-                ymin=0.5, ymax=2), fill="Grey90", colour="Grey90")+
-  geom_text(aes(x=as.Date("2021-10-23"), y=1.5, label="Half term"),
-            colour="Grey70", angle=90)+
+  #geom_rect(aes(xmin=as.Date("2021-10-25"), xmax=as.Date("2021-10-29"),
+  #              ymin=0.5, ymax=2), fill="Grey90", colour="Grey90")+
+  #geom_text(aes(x=as.Date("2021-10-23"), y=1.5, label="Half term"),
+  #          colour="Grey70", angle=90)+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
   geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
                                          age %in% c("0 to 4", "5 to 9", "10 to 14",
@@ -408,7 +425,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rate ratios are falling again in <span style='color:#c51b8a;'>the under 20s</span>",
+  labs(title="COVID case rate ratios are low but rising in <span style='color:#c51b8a;'>the under 20s</span>",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -435,7 +452,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="Increases in COVID case rates in <span style='color:#c51b8a;'>20-39 year olds</span> have accelerated recently",
+  labs(title="Case growth in <span style='color:#c51b8a;'>20-39 year olds</span> has slowed hugely since Omicron first hit",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -462,7 +479,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case ratios are falling in <span style='color:#c51b8a;'>40-59 year olds",
+  labs(title="COVID cases are growing rapidly in <span style='color:#c51b8a;'>40-59 year olds",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -489,7 +506,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="The fall in COVID case rates in <span style='color:#c51b8a;'>60-79 year olds</span> has threatened to reverse",
+  labs(title="COVID case rates in <span style='color:#c51b8a;'>60-79 year olds</span> are doubling every week",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -515,7 +532,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates have crept up slightly <span style='color:#c51b8a;'>the over 80s</span> in recent weeks",
+  labs(title="COVID case rates are more than doubling each week in <span style='color:#c51b8a;'>the over 80s</span>",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
