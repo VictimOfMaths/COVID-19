@@ -63,8 +63,8 @@ ggplot(data %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3)),
   facet_wrap(~age)+
   theme_custom()+
   theme(plot.subtitle=element_markdown(), strip.text=element_blank())+
-  geom_text(data=data %>% filter(date==as.Date("2021-06-16") & sex=="Male"),
-            aes(x=date, y=140, label=age), colour="Black", family="Lato", fontface="bold")+
+  geom_text(data=data %>% filter(date==as.Date("2021-07-16") & sex=="Male"),
+            aes(x=date, y=240, label=age), colour="Black", family="Lato", fontface="bold")+
   labs(title="COVID case rates have diverged for men and women",
        subtitle="Rolling 7-day average of new COVID case rates in <span style='color:#6600cc;'>men</span> and <span style='color:#00cc99;'>women</span> in England, by age.",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
@@ -110,7 +110,7 @@ ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The female dominance of 20-49 year old case rates hasn't disappeared yet",
+  labs(title="COVID cases in 15-24 year olds are very female-dominated",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -150,7 +150,7 @@ ggplot(temp<-heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases in 20-49 year olds are becoming increasingly female-dominated",
+  labs(title="COVID cases in working age adults are becomine increasingly female-dominated",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
        caption="Date from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -196,7 +196,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
-  scale_fill_paletteer_c("pals::warmcool", limit=c(0.4,2.5), direction=-1 ,
+  scale_fill_paletteer_c("pals::warmcool", limit=c(1/3.1,3.1), direction=-1 ,
                          trans="log", breaks=c(0.5, 1, 1.9999), 
                          labels=c("-50%", "No change", "+100%"),
                          name="Change in cases in the past week")+
@@ -204,7 +204,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases are rising fast in 20-somethings",
+  labs(title="The Omicron wave has shifted into older, more vulnerable ages",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -311,7 +311,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Current case rates are rising in younger adults",
+  labs(title="Current case rates have risen in all adult age groups",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -377,7 +377,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Case ratios are rising an *almost* all age groups, but the 20-somethings 😱",
+  labs(title="Where the 20-somethings led, the rest now follow",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -521,10 +521,83 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
 
 dev.off()
 
+#Positivity rates by sex (pillar 2 only)
+#Data from weekly surveillance reports #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1043581/Weekly_Influenza_and_COVID19_report_data_W51.xlsx"
+temp <- tempfile()
+temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
+
+posdata.m <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C121:L174") %>% 
+  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index)) %>% 
+  gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
+  mutate(ageband=gsub("_", "-", ageband), sex="Male")
+
+posdata.f <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C177:L230") %>% 
+  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index)) %>% 
+  gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
+  mutate(ageband=gsub("_", "-", ageband), sex="Female")
+
+posdata <- bind_rows(posdata.m, posdata.f) %>% 
+  select(-index) %>% 
+  mutate(posrate=posrate/100,
+         ageband=factor(ageband, levels=c("0-4", "5-9", "10-19", "20-29", "30-39", "40-49",
+                                          "50-59", "60-69", "70-79", "80+")))
+
+agg_tiff("Outputs/COVIDPosratexSex.tiff", units="in", width=10, height=7, res=500)
+ggplot(posdata, aes(x=date, y=posrate, colour=sex))+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Positivity rate", labels=label_percent(accuracy=1))+
+  scale_colour_manual(values=c("#00cc99", "#6600cc"))+
+  facet_wrap(~ageband)+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="Women test more than men",
+       subtitle="COVID test posivity rate for <span style='color:#00cc99;'>women</span> and <span style='color:#6600cc;'>men</span> in England, for pillar 2 (community) tests, by age",
+       caption="Date from UKHSA | Plot by @VictimOfMaths")
+
+dev.off()
+
+sexratio <- posdata %>% spread(sex, posrate) %>% 
+  mutate(sexratio=Female/Male) 
+
+agg_tiff("Outputs/COVIDPosrateSexRatio.tiff", units="in", width=8, height=6, res=500)
+ggplot(sexratio, aes(x=date, y=sexratio, colour=ageband))+
+  geom_hline(yintercept=1, colour="Grey50")+
+  geom_line(show.legend=FALSE)+
+  geom_text_repel(data=sexratio %>% filter(date==max(date)),
+                  aes(x=max(date), y=sexratio, label = ageband, 
+                      colour=ageband),
+                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-01-01"), NA),
+                  hjust = 0, segment.size = .7,
+                  segment.alpha = .5,
+                  segment.linetype = "dotted",
+                  segment.curvature = -0.1,
+                  segment.ncp = 3,
+                  segment.angle = 20, box.padding = .3, show.legend = FALSE)+
+  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-01-10")))+
+  scale_y_continuous(trans="log10", name="Female:Male positivity rate ratio\n(log scale)",
+                     breaks=c(0.25, 0.5, 1, 2), limits=c(NA, 2))+
+  scale_colour_paletteer_d("rcartocolor::Prism")+
+  theme_custom()+
+  theme(panel.grid.major.y=element_line(colour="Grey90"))+
+  annotate("text", x=as.Date("2021-10-10"), y=0.26, label="Female positivity 4x higher",
+           colour="Grey70", family="Lato")+
+  annotate("text", x=as.Date("2021-10-10"), y=0.52, label="Female positivity 2x higher",
+           colour="Grey70", family="Lato")+
+  annotate("text", x=as.Date("2021-10-10"), y=1.92, label="Male positivity 2x higher",
+           colour="Grey70", family="Lato")+
+  labs(title="Adult women consistently test more than men",
+       subtitle="Ratio of COVID test positivity rates in England, for pillar 2 (community) tests, by age",
+       caption="Data from UKHSA | Plot by @VictimOfMaths")
+
+dev.off()
+
+
 
 #Scotland
 temp <- tempfile()
-source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20211031.csv"
+source <- "https://www.opendata.nhs.scot/dataset/b318bddf-a4dc-4262-971f-0ba329e09b87/resource/9393bd66-5012-4f01-9bc5-e7a10accacf4/download/trend_agesex_20211231.csv"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 scotdata <- read.csv(temp) %>% 
