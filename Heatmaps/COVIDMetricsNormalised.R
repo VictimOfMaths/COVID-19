@@ -214,8 +214,8 @@ ggplot(regdata %>% filter(Region=="London" & date>as.Date("2020-04-01")),
         plot.title=element_text(face="bold", size=rel(1.5)),
         plot.subtitle=element_markdown(),
         panel.grid.major.y=element_line(colour="Grey90"))+
-  labs(title="As the Omicron wave hits London, where are admissions and deaths headed?",
-       subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span>, <span style='color:#00A08A;'>admissions</span> and <span style='color:#F2AD00;'>deaths</span>in London* as a proportion of their peak value in January 2021",
+  labs(title="Hospital admissions in London *might* have peaked 🤞",
+       subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span>, <span style='color:#00A08A;'>admissions</span> and <span style='color:#F2AD00;'>deaths</span> in London* as a proportion of their peak value in January 2021",
        caption="Plot inspired by @PaulMainwood | Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths\n\n*Admissions data is based on the London NHS region, which does not exactly match the government region that cases and deaths data is based on")
 
 dev.off()
