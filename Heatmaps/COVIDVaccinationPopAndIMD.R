@@ -9,6 +9,9 @@ library(extrafont)
 library(ragg)
 library(scales)
 library(ggtext)
+library(gtools)
+
+options(scipen=999999)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -178,19 +181,23 @@ IMD_LTLA <- IMD %>%
   mutate(decile=quantcut(IMDrank, q=10, labels=FALSE))
 
 #######################
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-weekly-announced-vaccinations-09-December-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-weekly-announced-vaccinations-06-January-2022.xlsx"
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-MSOAvax <- read_excel(temp, sheet="MSOA", range="F15:AT6803", col_names=FALSE) %>% 
-  select(c(1, 34:41)) %>% 
-  set_names("MSOA11CD", "<50", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+") %>% 
+MSOAvax <- read_excel(temp, sheet="MSOA", range="F15:AZ6803", col_names=FALSE) %>% 
+  select(c(1, 34:47)) %>% 
+  set_names("MSOA11CD", "Under18", "18-24", "25-29", "30-34", "35-39", "40-44", "45-49", 
+            "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+") %>% 
   merge(IMD_MSOA) %>% 
   select(-pop) %>% 
-  gather(age, boosted, c(2:9)) %>% 
+  mutate(Under18=as.numeric(if_else(Under18=="*", "0", Under18))) %>% 
+  gather(age, boosted, c(2:15)) %>% 
   merge(pop_full %>% 
           gather(age, pop, c(2:92)) %>% 
           mutate(age=case_when(
-            age<50 ~ "<50", age<55 ~ "50-54", age<60 ~ "55-59", age<65 ~ "60-64",
+            age<18 ~ "Under18", age<25 ~ "18-24", age<30 ~ "25-29", age<35 ~ "30-34",
+            age<40 ~ "35-39", age<45 ~ "40-44", age<50 ~ "45-49",
+            age<55 ~ "50-54", age<60 ~ "55-59", age<65 ~ "60-64",
             age<70 ~ "65-69", age<75 ~ "70-74", age<80 ~ "75-79", TRUE ~ "80+")) %>% 
           merge(lookup) %>% 
           group_by(MSOA11CD, age) %>% 
@@ -198,7 +205,8 @@ MSOAvax <- read_excel(temp, sheet="MSOA", range="F15:AT6803", col_names=FALSE) %
           ungroup()) %>% 
   group_by(age, decile) %>% 
   summarise(boosted=sum(boosted), pop=sum(pop)) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(boostpop=boosted/pop)
 
 agg_png("Outputs/COVIDBoostersxIMDxAgev2.png", units="in", res=800, width=10, height=8)
   ggplot(MSOAvax, aes(x=boosted/pop, y=as.factor(decile), fill=as.factor(decile)))+
@@ -220,7 +228,8 @@ MSOAvax %>%
   group_by(decile) %>% 
   summarise(boosted=sum(boosted), pop=sum(pop)) %>% 
   ungroup() %>% 
-  ggplot(aes(x=boosted/pop, y=as.factor(decile), fill=as.factor(decile)))+
+  mutate(boostprop=boosted/pop) %>% 
+  ggplot(aes(x=boostprop, y=as.factor(decile), fill=as.factor(decile)))+
   geom_col(show.legend=FALSE)+
   scale_x_continuous(name="Proportion of population who have received a booster/3rd dose", 
                      labels=label_percent(accuracy=1))+
@@ -228,8 +237,9 @@ MSOAvax %>%
                                                        "10 - least deprived"))+
   scale_fill_paletteer_d("dichromat::BrowntoBlue_10")+
   theme_custom()+
+  theme(plot.title=element_text(size=rel(2)))+
   labs(title="More deprived areas have received fewer boosters",
-       subtitle="Proportion of the population who have received a COVID booster or 3rd vaccination by deciles of\nthe Index of Multiple Deprivation and age in England",
+       subtitle="Proportion of the population who have received a COVID booster or 3rd vaccination by deciles of the Index of Multiple Deprivation and age in England",
        caption="Data from coronavirus.data.gov.uk & ONS | Plot by Colin Angus")
 
 dev.off()
