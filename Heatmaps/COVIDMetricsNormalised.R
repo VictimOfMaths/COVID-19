@@ -87,8 +87,8 @@ usukdata <- read.csv(temp) %>%
   group_by(location) %>% 
   arrange(date) %>% 
   mutate(Cases=roll_mean(new_cases, 7, align="center", fill=NA),
-         Admissions=roll_mean(new_deaths, 7, align="center", fill=NA),
-         Deaths=roll_mean(hosp_patients, 7, align="center", fill=NA)) %>% 
+         Deaths=roll_mean(new_deaths, 7, align="center", fill=NA),
+         Admissions=roll_mean(hosp_patients, 7, align="center", fill=NA)) %>% 
   ungroup() %>% 
   gather(metric, count, c(6:8)) %>% 
   mutate(metric=factor(metric, levels=c("Cases", "Admissions", "Deaths"))) %>% 
@@ -120,7 +120,7 @@ ggplot(usukdata %>% filter(date>as.Date("2020-04-01")),
         panel.grid.major.y=element_line(colour="Grey90"),
         strip.background=element_blank(),
         strip.text=element_text(face="bold", size=rel(1)))+
-  labs(title="The US's Delta wave is far more deadly than the UK's",
+  labs(title="Cases, admissions and deaths have decoupled much less clearly in the US than the UK",
        subtitle="Rolling 7-day average of new COVID <span style='color:#FF0000;'>cases</span>, <span style='color:#00A08A;'>hospital bed occupancy</span> and <span style='color:#F2AD00;'>deaths</span> as a proportion of their peak value in January 2021",
        caption="Plot inspired by @PaulMainwood | Data from Our World In Data | Plot by @VictimOfMaths")
 dev.off()
