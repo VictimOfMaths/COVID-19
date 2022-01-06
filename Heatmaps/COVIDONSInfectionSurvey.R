@@ -457,7 +457,6 @@ ggplot(natdata, aes(x=Date, y=PosProp))+
 
 dev.off()
 
-
 agg_tiff("Outputs/COVIDONSInfSurvWaves.tiff", units="in", width=8, height=6, res=500)
 ggplot(natdata, aes(x=Date, y=PosProp))+
   geom_rect(aes(xmin=as.Date("2020-12-01"), xmax=as.Date("2021-05-01"),
@@ -472,7 +471,7 @@ ggplot(natdata, aes(x=Date, y=PosProp))+
                      labels=label_percent(accuracy=1))+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="<span style='color:#66CCEE;'>Omicron</span> is not like <span style='color:#228833;'>Alpha</span> or <span style='color:#EE6677;'>Delta",
+  labs(title="<span style='color:#66CCEE;'>Omicron</span> is not like <span style='color:#EE6677;'>Alpha</span> or <span style='color:#228833;'>Delta",
        subtitle="Estimated proportion of the population who would test positive for COVID according to the ONS infection survey",
        caption="Data from ONS | Plot by @VictimOfMaths")
 
