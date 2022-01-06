@@ -97,7 +97,7 @@ ggplot(aes(x=no, y=age, fill=dose))+
                     labels=c("3 doses/booster", "2 doses", "1 dose", "Unvaccinated"))+
   theme_custom()+
   labs(title="Many adults in England still haven't received a COVID booster jab",
-       subtitle="Proportion of the population by vaccination status in England as of 13th December 2021",
+       subtitle=paste0("Proportion of the population by vaccination status in England as of ", max(vaxdata$date)),
        caption="Data from coronavirus.data.gov.uk | Population data from ONS | Plot by Colin Angus")
 
 dev.off()
