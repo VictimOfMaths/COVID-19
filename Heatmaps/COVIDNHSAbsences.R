@@ -25,6 +25,10 @@ source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
+#Trust:Region lookup
+lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
+  set_names("Region", "TrustCode")
+
 totalraw <- read_excel(temp, sheet="Total Absences", range="C16:AM163", col_names=FALSE) 
   
 COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:AM163", col_names=FALSE) 
@@ -99,4 +103,51 @@ ggplot(regdata %>% filter(Cause!="Total"), aes(x=Date, y=Count, fill=Cause))+
 
 dev.off()
 
-  
+#Tidy up trust-level data
+trusttotals <- totalraw[c(11:148),] %>%
+  gather(Date, Total, c(3:ncol(.))) %>% 
+  rename(Trust=`...2`, TrustCode=`...1`) %>% 
+  mutate(Date=as.Date("2021-11-29")+days(as.numeric(substr(Date, 4, 6))-3))
+
+trustCOVID <- COVIDraw[c(11:148),] %>% 
+  gather(Date, COVID, c(3:ncol(.))) %>% 
+  rename(Trust=`...2`, TrustCode=`...1`) %>% 
+  mutate(Date=as.Date("2021-11-29")+days(as.numeric(substr(Date, 4, 6))-3))
+
+trustdata <- merge(trusttotals, trustCOVID) %>% 
+  mutate(Other=Total-COVID) %>% 
+  gather(Cause, Count, c(4:6))
+
+#Bring in some denominators
+#Source https://digital.nhs.uk/data-and-information/publications/statistical/nhs-workforce-statistics/september-2021
+source <- "https://files.digital.nhs.uk/18/78CB98/NHS%20Workforce%20Statistics%2C%20September%202021%20England%20and%20Organisation.xlsx"
+temp <- tempfile()
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+staffpops <- read_excel(temp, sheet="2. NHSE, Org & SG - HC", range="C12:E329", col_names=FALSE) %>% 
+  filter(!is.na(`...2`)) %>% 
+  set_names("TrustName", "TrustCode", "Staff")
+
+combined <- merge(trustdata, staffpops) %>% 
+  mutate(AbsProp=Count/Staff) %>% 
+  merge(lookup)
+
+combinedreg <- combined %>% 
+  group_by(Date, Region, Cause) %>% 
+  summarise(Count=sum(Count), Staff=sum(Staff)) %>% 
+  ungroup() %>% 
+  mutate(AbsProp=Count/Staff)
+
+agg_tiff("Outputs/COVIDNHSAbsencePropxReg.tiff", units="in", width=8, height=6, res=500)
+ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp, colour=Region))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of staff absent", limits=c(0,NA),
+                     labels=label_percent(accuracy=1), breaks=c(0,0.02,0.04,0.06,0.08,0.1))+
+  scale_colour_paletteer_d("colorblindr::OkabeIto")+
+  theme_custom()+
+  labs(title="The Midlands and the North have the highest levels of NHS staff absence",
+       subtitle="Proportion of NHS staff currently absent through sickness or isolation in acute trusts in England",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+
+dev.off()
