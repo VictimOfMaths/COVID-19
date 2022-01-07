@@ -10,6 +10,8 @@ library(lubridate)
 library(scales)
 library(ggtext)
 library(geofacet)
+library(snakecase)
+library(ggrepel)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -151,3 +153,144 @@ ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp, colour=Reg
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
 dev.off()
+
+#Bring in bed occupancy data
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220106.xlsx"
+temp <- tempfile()
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+weeklyrange <- "CV"
+
+GACV19 <- read_excel(temp, sheet="Adult G&A Beds Occupied COVID", 
+                          range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, GACV19, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+GAOther <- read_excel(temp, sheet="Adult G&A Bed Occupied NonCOVID", 
+                     range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, GAOther, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+GAUnocc <- read_excel(temp, sheet="Adult G&A Beds Unoccupied", 
+                     range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, GAUnocc, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+CCCV19 <- read_excel(temp, sheet="Adult CC Beds Occupied COVID", 
+                     range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, CCCV19, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+CCOther <- read_excel(temp, sheet="Adult CC Bed Occupied NonCOVID", 
+                     range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, CCOther, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+CCUnocc <- read_excel(temp, sheet="Adult CC Beds Unoccupied", 
+                     range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
+  gather(date, CCUnocc, c(4:ncol(.))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4,7))-4)) %>% 
+  rename(region=`...1`, code=`...2`, trust=`...3`)
+
+#Merge and calculate % of beds currently occupied
+occdata <- GACV19 %>% 
+  merge(GAOther %>% select(date, code, GAOther), by=c("date", "code")) %>% 
+  merge(GAUnocc %>% select(date, code, GAUnocc), by=c("date", "code")) %>% 
+  merge(CCCV19 %>% select(date, code, CCCV19), by=c("date", "code")) %>% 
+  merge(CCOther %>% select(date, code, CCOther), by=c("date", "code")) %>% 
+  merge(CCUnocc %>% select(date, code, CCUnocc), by=c("date", "code")) %>% 
+  mutate(GABeds=GAUnocc+GACV19+GAOther, 
+         CCBeds=CCUnocc+CCCV19+CCOther, 
+         GAOccprop=(GACV19+GAOther)/GABeds,
+         CCOccprop=(CCCV19+CCOther)/CCBeds)
+
+#Download PHE's trust  catchment data from and save as a csv.
+#https://app.box.com/s/qh8gzpzeo1firv1ezfxx2e6c4tgtrudl
+catchments <- read_csv("COVID_LA_Plots/2020 Trust Catchment Populations Worksheet.csv") %>% 
+  filter(CatchmentYear==2018) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop=sum(Catchment)) %>% 
+  ungroup()
+
+
+alldata <- merge(combined, occdata, by.x=c("Date", "TrustCode"),
+                 by.y=c("date", "code")) %>% 
+  merge(catchments)
+
+plotdata <- alldata %>% 
+  filter(Date>=max(Date)-days(7) & Cause=="Total" & CCBeds>=10) %>% 
+  mutate(trust=str_replace(trust, " NHS TRUST", ""),
+         trust=str_replace(trust, "NHS FOUNDATION TRUST", ""),
+         trust=to_any_case(trust, case="title"),
+         trust=str_replace(trust, "King s", "King's"),
+         trust=str_replace(trust, "Guy s", "Guy's"),
+         trust=str_replace(trust, "George s", "George's"),
+         trust=str_replace(trust, "Women s", "Women's"),
+         trust=str_replace(trust, "Children s", "Children's"),
+         trust=str_replace(trust, "Peter s", "Peter's"),
+         trust=str_replace(trust, " Nhs Ft", ""))
+         
+agg_tiff("Outputs/COVIDCCBedsvsAbsences.tiff", units="in", width=9, height=7, res=500)
+ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  #geom_path(data=plotdata,
+  #          aes(x=AbsProp, y=CCOccprop, group=trust, alpha=7-as.integer(max(Date)-Date)),
+  #          colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata %>% filter(Date==max(Date)),
+             aes(x=AbsProp, y=CCOccprop, size=CCBeds, fill=Region), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdata %>% filter(Date==max(Date)), 
+                  aes(x=AbsProp, y=CCOccprop, label=trust), size=rel(3),
+                  box.padding=0.7, point.padding=0)+
+  scale_x_continuous(name="Proportion of NHS staff absent", limits=c(0,NA), 
+                     label=label_percent(accuracy=1))+
+  scale_y_continuous(name="Proportion of Critical Care beds occupied", limits=c(0,NA), 
+                     label=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("colorblindr::OkabeIto", name="")+
+  scale_size(guide="none")+
+  theme_custom()+
+  theme(axis.line=element_blank())+
+  labs(title="Critical care capacity is at risk in many hospitals",
+       subtitle=paste0("Current proportion of Critical Care beds which are occupied compared with the proportion of staff who are absent.\nBubbles are sized by total Critical Care bed capacity. Non-acute trusts and those with fewer than 10 CC beds are excluded.\nData up to ",
+                       max(plotdata$Date)),
+       caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDGABedsvsAbsences.tiff", units="in", width=9, height=7, res=500)
+ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  #geom_path(data=plotdata,
+  #          aes(x=AbsProp, y=GAOccprop, group=trust, alpha=7-as.integer(max(Date)-Date)),
+  #          colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdata %>% filter(Date==max(Date)),
+             aes(x=AbsProp, y=GAOccprop, size=GABeds, fill=Region), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdata %>% filter(Date==max(Date)), 
+                  aes(x=AbsProp, y=GAOccprop, label=trust), size=rel(3),
+                  box.padding=0.7, point.padding=0)+
+  scale_x_continuous(name="Proportion of NHS staff absent", limits=c(0,NA), 
+                     label=label_percent(accuracy=1))+
+  scale_y_continuous(name="Proportion of General & Acute beds occupied", limits=c(0.5,1),
+                     label=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("colorblindr::OkabeIto", name="")+
+  scale_size(guide="none")+
+  theme_custom()+
+  theme(axis.line=element_blank())+
+  labs(title="Most English hospitals have less than 10% of beds unoccupied",
+       subtitle=paste0("Current proportion of General & Acute beds which are occupied compared with the proportion of staff who are absent.\nBubbles are sized by total Critical Care bed capacity. Non-acute trusts and those with fewer than 10 CC beds are excluded.\nData up to ",
+                       max(plotdata$Date)),
+       caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
+
+dev.off()
+
+
+
+
+
+
