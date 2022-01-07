@@ -20,17 +20,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Primary-Diagnosis-Supplement-20211230.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Primary-Diagnosis-Supplement-20220106.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:CN22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:CU22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:CN22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:CU22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -68,9 +68,13 @@ ggplot(data %>% filter(Region=="London" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="London's rising number of COVID patients are both 'with' and 'for' COVID",
+  labs(title="The number of patients being treated 'for' COVID is still rising in London",
        subtitle="Patients in London hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
-       caption="Data from NHS England | Plot by @VictimOfMaths")
+       caption="Data from NHS England | Plot by @VictimOfMaths")+
+  annotate("text", x=as.Date("2021-10-30"), y=920, label="Patients being treated for COVID",
+           colour="#40A0D8", family="Lato")+
+  annotate("text", x=as.Date("2021-09-30"), y=280, label="Patients being treated for other causes, but 'with' COVID",
+           colour="#F89088", family="Lato")
 dev.off()
 
 agg_tiff("Outputs/COVIDAdmissionsCauseLondonStacked.tiff", units="in", width=9, height=7, res=500)
@@ -101,6 +105,22 @@ data %>% filter(type!="incidental" & Region=="London") %>%
        subtitle="Proportion of total COVID-positive patients assessed to be in hospital 'for' rather than 'with' COVID in London NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsCauseNW.tiff", units="in", width=9, height=7, res=500)
+ggplot(data %>% filter(Region=="North West" & type!="with"), 
+       aes(x=date, y=count, colour=type))+
+  #geom_area(position="stack")+
+  geom_line(show.legend=FALSE)+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Number of patients", limits=c(0,NA))+
+  scale_colour_paletteer_d("palettetown::porygon")+
+  theme_custom()+
+  theme(plot.subtitle=element_markdown())+
+  labs(title="London's rising number of COVID patients are both 'with' and 'for' COVID",
+       subtitle="Patients in London hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
 
 agg_tiff("Outputs/COVIDAdmissionsCausePropxReg.tiff", units="in", width=9, height=7, res=500)
 data %>% filter(type!="incidental" & Region!="ENGLAND") %>% 
@@ -135,11 +155,11 @@ ggplot(data %>% filter(Region!="ENGLAND" & type!="with"),
 dev.off()
 
 #Bring in unseparated data to get figures from non-acute trusts
-source2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-daily-admissions-and-beds-20211230.xlsx"
+source2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-daily-admissions-and-beds-20220106.xlsx"
 temp2 <- tempfile()
 temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
 
-combdata <- read_excel(temp2, range="B90:CM97", col_names=FALSE) %>% 
+combdata <- read_excel(temp2, range="B90:CV97", col_names=FALSE) %>% 
   gather(date, alltrusts, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
