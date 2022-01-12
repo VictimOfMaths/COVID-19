@@ -81,7 +81,7 @@ data <- data %>%
   summarise(cases=sum(cases)) %>% 
   mutate(areaName="UK") %>% 
   ungroup() %>% 
-  #Remove this next row if you wanted data for UK nations, not whole country
+  #Comment out this next row if you wanted data for UK nations, not whole country
   #bind_rows(data) %>% 
   #2020 being a leap year messes things up, so remove 31st December 2020 (arbitrarily) 
   #to make all the years the same length
@@ -123,7 +123,7 @@ ggplot()+
             aes(x=yeardays, y=increment), colour="black")+
   geom_line(data=data %>% filter(year==2021),
             aes(x=yeardays, y=increment), colour="black")+
-  geom_line(data=data %>% filter(year==2022 & ! is.na(cases_roll)),
+  geom_line(data=data %>% filter(year==2022 & yeardays<arrowxpos-3),
             aes(x=yeardays, y=increment), colour="black")+
   #Add a couple of tiny segments to patch the holes in the baseline at the end of each year
   geom_segment_straight(aes(x=363.5, xend=0.5, y=seg2021, yend=seg2021+2*spiralincrement), 
@@ -150,7 +150,8 @@ ggplot()+
   labs(title="The eternal spiral of COVID",
        subtitle="COVID case numbers in the UK since the start of the pandemic",
        caption="Data from coronavirus.data.gov.uk | Inspiration from the NYT | Plot by @VictimOfMaths")
-    
+
+  
 dev.off()
 
 #Repeat with hospital admissions. Because why not
@@ -161,45 +162,52 @@ source2 <- "https://api.coronavirus.data.gov.uk/v2/data?areaType=overview&metric
 temp2 <- tempfile()
 temp2 <- curl_download(url=source2, destfile=temp2, quiet=FALSE, mode="wb")
 
+spiralincrement2 <- 20
+
 data2 <- read.csv(temp2) %>% 
   mutate(date=as.Date(date)) %>% 
   arrange(date) %>% 
+  filter(date!=as.Date("2020-12-31")) %>% 
   mutate(adm_roll=roll_mean(newAdmissions, 5, align="center", fill=NA),
          #Create variable to represent the base of each bar - change the number to tighten/relax the spiral
-         increment=20*c(1:n()),
+         increment=spiralincrement2*c(1:n()),
          #Add cases to the base to get the top of each bar
          incrementadm=increment+adm_roll,
          year=year(date)) %>% 
   #Calculate the number of days since the start of the year
   group_by(year) %>% 
   mutate(yeardays=as.numeric(difftime(date ,as.Date(paste0(year, "-01-01")) , units = c("days")))) %>% 
-  ungroup() %>% 
-  #2020 being a leap year messes things up, so remove 31st December 2020 (arbitrarily) 
-  #to make all the years the same length
-  filter(!yeardays==365)
+  ungroup()
+
+seg20212 <- data2$increment[data2$year==2020 & data2$yeardays==364]-spiralincrement2*0.5
+seg21222 <- data2$increment[data2$year==2021 & data2$yeardays==364]-spiralincrement2*0.5
+arrowmin2 <- max(data2$increment[data2$year==2022 & !is.na(data2$adm_roll)])+spiralincrement2*4
+arrowxpos2 <- max(data2$yeardays[data2$year==2022 & !is.na(data2$adm_roll)])+4
 
 agg_tiff("Outputs/COVIDAdmissionsSpiral.tiff", units="in", width=8, height=8, res=800)
 ggplot()+
   #Need to plot each year separately
-  geom_boxplot(data=data2 %>% filter(year=="2020" & ! is.na(adm_roll)), 
-               aes(x=yeardays, ymin=increment, ymax=incrementadm, colour=adm_roll, 
-                   fill=adm_roll, lower=increment, upper=incrementadm, middle=increment, 
-                   group=date), stat = 'identity', show.legend=FALSE)+
-  geom_boxplot(data=data2 %>% filter(year=="2021"), 
-               aes(x=yeardays, ymin=increment, ymax=incrementadm, colour=adm_roll, 
-                   fill=adm_roll, lower=increment, upper=incrementadm, middle=increment, 
-                   group=date), stat = 'identity', show.legend=FALSE)+
-  geom_boxplot(data=data2 %>% filter(year=="2022" & ! is.na(adm_roll)), 
-               aes(x=yeardays, ymin=increment, ymax=incrementadm, colour=adm_roll, 
-                   fill=adm_roll, lower=increment, upper=incrementadm, middle=increment, 
-                   group=date), stat = 'identity', show.legend=FALSE)+
+  geom_rect(data=data2 %>% filter(year==2020 & ! is.na(adm_roll)),
+            aes(xmin=yeardays, xmax=yeardays+1, ymin=increment, ymax=incrementadm, 
+                fill=adm_roll), show.legend=FALSE)+
+  geom_rect(data=data2 %>% filter(year==2021 & ! is.na(adm_roll)),
+            aes(xmin=yeardays, xmax=yeardays+1, ymin=increment, ymax=incrementadm, 
+                fill=adm_roll), show.legend=FALSE)+
+  geom_rect(data=data2 %>% filter(year==2022 & ! is.na(adm_roll)),
+            aes(xmin=yeardays, xmax=yeardays+1, ymin=increment, ymax=incrementadm, 
+                fill=adm_roll), show.legend=FALSE)+
   #negative offset is to cover up the base of the bars
   geom_line(data=data2 %>% filter(year=="2020" & ! is.na(adm_roll)),
-            aes(x=yeardays, y=increment-50), colour="black")+
+            aes(x=yeardays, y=increment), colour="black")+
   geom_line(data=data2 %>% filter(year=="2021"),
-            aes(x=yeardays, y=increment-50), colour="black")+
-  geom_line(data=data2 %>% filter(year=="2022"),
-            aes(x=yeardays, y=increment-50), colour="black")+
+            aes(x=yeardays, y=increment), colour="black")+
+  geom_line(data=data2 %>% filter(year=="2022" & yeardays<arrowxpos2-2),
+            aes(x=yeardays, y=increment), colour="black")+
+  #Add a couple of tiny segments to patch the holes in the baseline at the end of each year
+  geom_segment_straight(aes(x=363.5, xend=0.5, y=seg20212, yend=seg20212+2*spiralincrement2), 
+                        colour="black")+
+  geom_segment_straight(aes(x=363.5, xend=0.5, y=seg21222, yend=seg21222+2*spiralincrement2), 
+                        colour="black")+
   scale_x_continuous(breaks=c(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334),
                      labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
                               "Oct", "Nov", "Dec"))+
@@ -212,9 +220,11 @@ ggplot()+
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
         plot.title.position = "plot", plot.caption.position = "plot")+
   #Add low key legend for a bit of context
-  geom_segment(aes(y=13050, yend=13050+2500, x=5, xend=5), colour="Grey30",
-               arrow = arrow(length=unit(0.10,"cm"), ends="both", type = "closed"))+
-  annotate("text", x=7, y=13100+1250, label="2,500\nadmissions\nper day", hjust=0, colour="Grey30",
+  #Add low key legend for a bit of context
+  geom_segment(aes(y=arrowmin2, yend=arrowmin2+2500, x=arrowxpos2, xend=arrowxpos2), colour="Grey30",
+               arrow = arrow(length=unit(0.20,"cm"), ends="both", type = "closed"))+
+  #Will need to manually tweak the placement of this annotation
+  annotate("text", x=arrowxpos2+3, y=14500, label="2,500\ncases\nper\nday", hjust=0, colour="Grey30",
            size=rel(2.5), family="Lato")+
   labs(title="The eternal spiral of COVID",
        subtitle="Daily new COVID admissions in the UK since the start of the pandemic",
