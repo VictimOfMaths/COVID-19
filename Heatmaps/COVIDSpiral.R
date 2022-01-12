@@ -106,7 +106,7 @@ seg2122 <- data$increment[data$year==2021 & data$yeardays==364]-spiralincrement*
 arrowmin <- max(data$increment[data$year==2022 & !is.na(data$cases_roll)])+spiralincrement*4
 arrowxpos <- max(data$yeardays[data$year==2022 & !is.na(data$cases_roll)])+4
 
-agg_tiff("Outputs/COVIDCasesSpiral.tiff", units="in", width=8, height=8, res=1800)
+agg_tiff("Outputs/COVIDCasesSpiral.tiff", units="in", width=8, height=8, res=800)
 ggplot()+
   #Need to plot each year separately, to 'trick' coord_polar to make a spiral, not a single
   #loop
@@ -222,9 +222,9 @@ ggplot()+
   #Add low key legend for a bit of context
   #Add low key legend for a bit of context
   geom_segment(aes(y=arrowmin2, yend=arrowmin2+2500, x=arrowxpos2, xend=arrowxpos2), colour="Grey30",
-               arrow = arrow(length=unit(0.20,"cm"), ends="both", type = "closed"))+
+               arrow = arrow(length=unit(0.15,"cm"), ends="both", type = "closed"))+
   #Will need to manually tweak the placement of this annotation
-  annotate("text", x=arrowxpos2+3, y=14500, label="2,500\ncases\nper\nday", hjust=0, colour="Grey30",
+  annotate("text", x=arrowxpos2+3, y=14500, label="2,500\nadmissions\nper day", hjust=0, colour="Grey30",
            size=rel(2.5), family="Lato")+
   labs(title="The eternal spiral of COVID",
        subtitle="Daily new COVID admissions in the UK since the start of the pandemic",
