@@ -21,11 +21,11 @@ theme_custom <- function() {
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/Covid-Publication-09-12-2021-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Covid-Publication-13-01-2022-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:PB25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:QK25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
@@ -164,11 +164,12 @@ ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)),
   scale_x_date(name="")+
   scale_y_continuous(name="Age")+
   scale_fill_viridis_d(option="turbo", name="Daily admissions\nper 100,000",
-                       labels=c("<1", "1+", "2+", "3+", "4+", "5+", "6+", "7+", "8+"))+
+                       labels=c("<2", "2+", "4+", "6+", "8+", "10+", "12+", "14+", "16+", "18+",
+  "20+", "22+", "24+"))+
   theme_custom()+
   theme(legend.position="top")+
   guides(fill=guide_legend(nrow=1))+
-  labs(title="COVID admission rates have been falling in older age groups",
+  labs(title="COVID admission rates have been rising in older age groups",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 
@@ -279,7 +280,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age!="Total"), aes(x=date, y=CHR, colour
   facet_wrap(~age, scales="free_y")+
   theme_custom()+
   theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
-  labs(title="The proportion of COVID cases being admitted to hospital is pretty stable in older ages",
+  labs(title="The proportion of COVID cases being admitted to hospital has fallen in older ages",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
        caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
