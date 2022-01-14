@@ -24,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220106.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220113.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "CT"
+admrange <- "DA"
 #Set latest date of admissions data
-admdate <- as.Date("2022-01-02")
+admdate <- as.Date("2022-01-09")
 
 #Read in admissions
 #First data up to 6th April
@@ -89,7 +89,7 @@ MSOA.adm1 <- MSOA.adm %>%
   summarise(msoa_total_catchment1=sum(msoa_total_catchment)) %>% 
   ungroup() 
 
-#2nd lookup for after 4th October
+#2nd lookup for after 4th October 2020
 MSOA.adm2 <- MSOA.adm %>% 
   mutate(TrustCode=case_when(
     TrustCode %in% c("RE9", "RLN") ~ "R0B",
@@ -106,13 +106,77 @@ MSOA.adm2 <- MSOA.adm %>%
   summarise(msoa_total_catchment2=sum(msoa_total_catchment)) %>% 
   ungroup()
 
+#3rd lookup for after 1st April 2021
+MSOA.adm3 <- MSOA.adm %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(CatchmentYear, msoa, TrustCode) %>% 
+  summarise(msoa_total_catchment3=sum(msoa_total_catchment)) %>% 
+  ungroup()
+
+#4th lookup for after 1st June 2021
+MSOA.adm4 <- MSOA.adm %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TrustCode=="RTV" ~ "RW4",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(CatchmentYear, msoa, TrustCode) %>% 
+  summarise(msoa_total_catchment4=sum(msoa_total_catchment)) %>% 
+  ungroup()
+
+#5th lookup for after 1st October 2021
+MSOA.adm5 <- MSOA.adm %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TrustCode=="RTV" ~ "RW4",
+    TrustCode=="RW6" ~ "RM3",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(CatchmentYear, msoa, TrustCode) %>% 
+  summarise(msoa_total_catchment5=sum(msoa_total_catchment)) %>% 
+  ungroup()
+
 temp1 <- data.frame(TrustCode=unique(MSOA.adm1$TrustCode))
 temp2 <- data.frame(TrustCode=unique(MSOA.adm2$TrustCode))
-temp <- bind_rows(temp1, temp2) %>%
+temp3 <- data.frame(TrustCode=unique(MSOA.adm3$TrustCode))
+temp4 <- data.frame(TrustCode=unique(MSOA.adm4$TrustCode))
+temp5 <- data.frame(TrustCode=unique(MSOA.adm5$TrustCode))
+
+temp <- bind_rows(temp1, temp2, temp3, temp4, temp5) %>%
   unique()
 
 MSOA.adm <- merge(temp, MSOA.adm1, by="TrustCode", all=TRUE) %>% 
-  merge(., MSOA.adm2, all=TRUE) 
+  merge(., MSOA.adm2, all=TRUE) %>% 
+  merge(., MSOA.adm3, all=TRUE) %>% 
+  merge(., MSOA.adm4, all=TRUE) %>% 
+  merge(., MSOA.adm5, all=TRUE)
 
 #Bring in MSOA to LTLA lookup
 temp <- tempfile()
@@ -131,11 +195,17 @@ trust.lookup <- MSOA.adm %>%
   filter(CatchmentYear>=2016) %>% 
   group_by(TrustCode, LAD19CD, LAD19NM) %>% 
   summarise(catchment1=sum(msoa_total_catchment1, na.rm=TRUE),
-            catchment2=sum(msoa_total_catchment2, na.rm=TRUE)) %>% 
+            catchment2=sum(msoa_total_catchment2, na.rm=TRUE),
+            catchment3=sum(msoa_total_catchment3, na.rm=TRUE),
+            catchment4=sum(msoa_total_catchment4, na.rm=TRUE),
+            catchment5=sum(msoa_total_catchment5, na.rm=TRUE)) %>% 
   ungroup() %>% 
   group_by(TrustCode) %>% 
   mutate(pop1=sum(catchment1, na.rm=TRUE), popprop1=catchment1/pop1,
-         pop2=sum(catchment2, na.rm=TRUE), popprop2=catchment2/pop2) %>% 
+         pop2=sum(catchment2, na.rm=TRUE), popprop2=catchment2/pop2,
+         pop3=sum(catchment3, na.rm=TRUE), popprop3=catchment3/pop3,
+         pop4=sum(catchment4, na.rm=TRUE), popprop4=catchment4/pop4,
+         pop5=sum(catchment5, na.rm=TRUE), popprop5=catchment5/pop5) %>% 
   ungroup() %>% 
   rename(code=TrustCode)
 
@@ -147,7 +217,10 @@ admissions <- merge(admissions, trust.lookup, by.x="code", by.y="code", all=TRUE
 LAadmissions <- admissions %>% 
   mutate(LA.admissions=case_when(
            date<=as.Date("2020-10-04") ~ admissions*popprop1,
-           TRUE ~ admissions*popprop2)) %>% 
+           date<as.Date("2021-03-31") ~ admissions*popprop2,
+           date<as.Date("2021-05-31") ~ admissions*popprop3,
+           date<as.Date("2021-10-01") ~ admissions*popprop4,
+           TRUE ~ admissions*popprop5)) %>% 
   group_by(LAD19CD, date, LAD19NM) %>% 
   summarise(admissions=sum(LA.admissions, na.rm=TRUE)) %>% 
   ungroup() %>% 
@@ -243,7 +316,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates are highest in the North West",
+  labs(title="COVID admission rates remain highest in the North West",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -269,7 +342,7 @@ plot2 <- ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
   scale_size(guide=FALSE)+
   theme_custom()+
-  labs(title="COVID admissions in London ↘\nCOVID admissions in Bolton/Salford 🚀️",
+  labs(title="COVID admissions are falling in many places, but not everywhere️",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
@@ -288,7 +361,7 @@ catchments <- read_csv("COVID_LA_Plots/2020 Trust Catchment Populations Workshee
   ungroup()
 
 #Sort out trust mergers/recodes
-#1st lookup for admissions up to 4th October, when RD3 and RDZ merged to form R0D in the admissions (but not deaths) data
+#1st lookup for admissions up to 4th October 2020, when RD3 and RDZ merged to form R0D in the admissions (but not deaths) data
 catchments1 <- catchments %>% 
   mutate(TrustCode=case_when(
     TrustCode %in% c("RE9", "RLN") ~ "R0B",
@@ -304,7 +377,7 @@ catchments1 <- catchments %>%
   summarise(catchpop1=sum(catchpop)) %>% 
   ungroup() 
 
-#2nd lookup for after 4th October
+#2nd lookup for after 4th October 2020
 catchments2 <- catchments %>% 
   mutate(TrustCode=case_when(
     TrustCode %in% c("RE9", "RLN") ~ "R0B",
@@ -321,16 +394,82 @@ catchments2 <- catchments %>%
   summarise(catchpop2=sum(catchpop)) %>% 
   ungroup()
 
+
+#3rd lookup for after 1st April 2021 when West Sussex (RYR) and Brighton & Sussex (RXH) trusts merged
+catchments3 <- catchments %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop3=sum(catchpop)) %>% 
+  ungroup()
+
+#4th lookup for after 1st June 2021 when NW boroughs (RTV) and Mersey (RW4) care trusts merged
+catchments4 <- catchments %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TrustCode=="RTV" ~ "RW4",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop4=sum(catchpop)) %>% 
+  ungroup()
+
+#5th lookup for after 1st October 2021 when Pennine (RW6) & Salford (RM3) care trusts merged
+catchments5 <- catchments %>% 
+  mutate(TrustCode=case_when(
+    TrustCode %in% c("RE9", "RLN") ~ "R0B",
+    TrustCode=="R1J" ~ "RTQ",
+    TrustCode=="RQ6" ~ "REM",
+    TrustCode=="RNL" ~ "RNN",
+    TrustCode %in% c("RQ8", "RDD") ~ "RAJ",
+    TrustCode=="RA3" ~ "RA7",
+    TrustCode=="RC1" ~ "RC9",
+    TrustCode=="RBA" ~ "RH5",
+    TrustCode %in% c("RDZ", "RD3") ~ "R0D",
+    TrustCode=="RXH" ~ "RYR",
+    TrustCode=="RTV" ~ "RW4",
+    TrustCode=="RW6" ~ "RM3",
+    TRUE ~ as.character(TrustCode))) %>% 
+  group_by(TrustCode) %>% 
+  summarise(catchpop5=sum(catchpop)) %>% 
+  ungroup()
+
 #Merge into admissions data
 trustadm <- admissions %>% 
   select(code, Region, name, admissions, date) %>%
   distinct() %>% 
   merge(catchments1, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
   merge(catchments2, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
+  merge(catchments3, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
+  merge(catchments4, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
+  merge(catchments5, all.x=TRUE, by.x="code", by.y="TrustCode") %>% 
   rename(trust=name) %>% 
-  group_by(trust) %>% 
+  group_by(code) %>% 
   arrange(date) %>% 
-  mutate(catchpop=if_else(date<=as.Date("2020-10-04"), catchpop1, catchpop2),
+  mutate(catchpop=case_when(
+    date<as.Date("2020-10-04") ~ catchpop1,
+    date<as.Date("2021-03-21") ~ catchpop2,
+    date<as.Date("2021-05-21") ~ catchpop3,
+    date<as.Date("2021-10-01") ~ catchpop4,
+    TRUE ~ catchpop5),
          admrate=admissions*100000/catchpop,
          adm_roll=roll_mean(admrate, 7, align="center", fill=NA, na.rm=TRUE), 
          adm_change=adm_roll-lag(adm_roll, 7),
@@ -364,7 +503,7 @@ plot3 <- ggplot()+
   scale_size(guide="none")+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admissions in the North West are taking off",
+  labs(title="COVID admission rates have fallen in some of the worst affected trusts",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
