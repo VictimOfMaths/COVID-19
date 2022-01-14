@@ -23,7 +23,7 @@ theme_custom <- function() {
 }
 
 #Download latest absence data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Staff-Absences-Web-File-Timeseries.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Staff-Absences-Web-File-Timeseries-1.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -31,9 +31,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
   set_names("Region", "TrustCode")
 
-totalraw <- read_excel(temp, sheet="Total Absences", range="C16:AM163", col_names=FALSE) 
+totalraw <- read_excel(temp, sheet="Total Absences", range="C16:AT163", col_names=FALSE) 
   
-COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:AM163", col_names=FALSE) 
+COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:AT163", col_names=FALSE) 
 
 #Pull out national figures
 nattotals <- totalraw %>% 
@@ -60,7 +60,7 @@ ggplot(natdata %>% filter(Cause!="Total"), aes(x=Date, y=Count, fill=Cause))+
   scale_fill_paletteer_d("lisa::Jean_MichelBasquiat_1")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="NHS staff absences are rising fast",
+  labs(title="NHS staff absences are still running very high",
        subtitle="Staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span> in English acute NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
@@ -154,12 +154,26 @@ ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp, colour=Reg
 
 dev.off()
 
+agg_tiff("Outputs/COVIDNHSAbsencePropxTrust.tiff", units="in", width=8, height=6, res=500)
+ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-09")), 
+       aes(x=AbsProp, y=fct_reorder(Trust, AbsProp), fill=Region))+
+  geom_col()+
+  scale_x_continuous(labels=label_percent(accuracy=1), name="Proportion of staff absent")+
+  scale_y_discrete(name="")+
+  scale_fill_paletteer_d("colorblindr::OkabeIto")+
+  theme_custom()+
+  theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
+  labs(title="Some NHS trusts have more than 15% of staff off work",
+       subtitle="Proportion of NHS staff absent for any reason as of 9th January, by trust (acute trusts only)",
+       caption="Data from NHS England | Plot by @VictimOfMaths")
+dev.off()
+
 #Bring in bed occupancy data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220106.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220113.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-weeklyrange <- "CV"
+weeklyrange <- "DC"
 
 GACV19 <- read_excel(temp, sheet="Adult G&A Beds Occupied COVID", 
                           range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
