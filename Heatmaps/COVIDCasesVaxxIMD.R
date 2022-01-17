@@ -104,9 +104,9 @@ pop_LTLA <- pop_full %>%
 pop_LTLA_vax <- pop_full %>% 
   gather(age, pop, c(2:ncol(.))) %>% 
   mutate(age=case_when(
-    age<18 ~ "<18", age<25 ~ "18_24", age<30 ~ "25_29", age<35 ~ "30_34", age<40 ~ "35_39", 
-    age<45 ~ "40_44", age<50 ~ "45_49", age<55 ~ "50_54", age<60 ~ "55_59", age<65 ~ "60_64", 
-    age<70 ~ "65_69", age<75 ~ "70_74", age<80 ~ "75_79", TRUE ~ "80+")) %>% 
+    age<18 ~ "Under18", age<25 ~ "18-24", age<30 ~ "25-29", age<35 ~ "30-34", age<40 ~ "35-39", 
+    age<45 ~ "40-44", age<50 ~ "45-49", age<55 ~ "50-54", age<60 ~ "55-59", age<65 ~ "60-64", 
+    age<70 ~ "65-69", age<75 ~ "70-74", age<80 ~ "75-79", TRUE ~ "80+")) %>% 
   group_by(age, LSOA11CD) %>% 
   summarise(pop=sum(pop)) %>% 
   ungroup() %>% 
@@ -178,7 +178,7 @@ ggplot(casedata %>% filter(date>as.Date("2021-06-01")),
                            labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                     "10 - least deprived"))+
   theme_custom()+
-  labs(title="Omicron seems to be starting to hit more deprived areas harder",
+  labs(title="Omicron has hit more deprived areas harder",
        subtitle="Rolling 7-day average rate of age-standardised new COVID cases by decile of the Index of Multiple Deprivation",
        caption="Data from coronavirus.data.gov.uk and ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -215,32 +215,35 @@ casedata_LA <- read.csv(temp) %>%
 #Calculate age-standardised vaccination rates by IMD
 
 #Download data from NHS England
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/12/COVID-19-weekly-announced-vaccinations-02-December-2021.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-weekly-announced-vaccinations-13-January-2022.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-vaxdata_LA <- read_excel(temp, sheet="LTLA", range="F15:AJ321", col_names=FALSE) %>% 
-  select(c(1, 2, 18:31)) %>% 
-  gather(age, vaxxed, c(3:16)) %>% 
-  mutate(age=case_when(
-    age=="...18" ~ "<18", age=="...19" ~ "18_24", age=="...20" ~ "25_29",
-    age=="...21" ~ "30_34", age=="...22" ~ "35_39", age=="...23" ~ "40_44",
-    age=="...24" ~ "45_49", age=="...25" ~ "50_54", age=="...26" ~ "55_59",
-    age=="...27" ~ "60_64", age=="...28" ~ "65_69", age=="...29" ~ "70-74",
-    age=="...30" ~ "75_79", age=="...31" ~ "80+")) %>% 
-  set_names("LAD17CD", "areaName", "age", "vaxxed") %>% 
+vaxdata_LA <- read_excel(temp, sheet="LTLA", range="F15:AZ321", col_names=FALSE) %>% 
+  select(c(1:17, 19:32, 34:47)) %>% 
+  set_names("LAD17CD", "areaName", "12-15_1st", "16-17_1st", "18-24_1st", "25-29_1st", "30-34_1st", 
+            "35-39_1st", "40-44_1st", "45-49_1st", "50-54_1st", "55-59_1st", "60-64_1st", 
+            "65-69_1st", "70-74_1st", "75-79_1st", "80+_1st", "Under18_2nd", "18-24_2nd", 
+            "25-29_2nd", "30-34_2nd", "35-39_2nd", "40-44_2nd", "45-49_2nd", "50-54_2nd", 
+            "55-59_2nd", "60-64_2nd", "65-69_2nd", "70-74_2nd", "75-79_2nd", "80+_2nd", 
+            "Under18_3rd", "18-24_3rd", "25-29_3rd", "30-34_3rd", "35-39_3rd",  "40-44_3rd", 
+            "45-49_3rd", "50-54_3rd", "55-59_3rd", "60-64_3rd", "65-69_3rd", "70-74_3rd", 
+            "75-79_3rd", "80+_3rd") %>% 
+  mutate(`Under18_1st`=`12-15_1st`+`16-17_1st`) %>% 
+  select(-c("12-15_1st", "16-17_1st")) %>% 
+  pivot_longer(cols=c(3:44), names_to=c("age", "dose"), names_sep="_", values_to="vaxxed") %>% 
   merge(pop_LTLA_vax) %>% 
   mutate(vaxrate=vaxxed/pop,
          stdpop=case_when(
-           age=="<18" ~ 5000+5500+5500+5500*4/5,
-           age=="18_24" ~ 5500*4/5+6000,
-           age %in% c("25_29", "60_64") ~ 6000,
-           age %in% c("30_34", "55_59") ~ 6500,
-           age %in% c("35_39", "40_44", "45_49", "50_54") ~ 7000,
-           age=="65_69" ~ 5500,
-           age=="70_74" ~ 5000,
-           age=="75_79" ~ 4000,
+           age=="Under18" ~ 5000+5500+5500+5500*4/5,
+           age=="18-24" ~ 5500*4/5+6000,
+           age %in% c("25-29", "60-64") ~ 6000,
+           age %in% c("30-34", "55-59") ~ 6500,
+           age %in% c("35-39", "40-44", "45-49", "50-54") ~ 7000,
+           age=="65-69" ~ 5500,
+           age=="70-74" ~ 5000,
+           age=="75-79" ~ 4000,
            age=="80+" ~ 2500+1500+1000)) %>% 
-  group_by(LAD17CD) %>% 
+  group_by(LAD17CD, dose) %>% 
   summarise(as_vaxrate=weighted.mean(vaxrate, stdpop)) %>% 
   ungroup() 
 
@@ -249,7 +252,7 @@ LAcasesxvax <- casedata_LA %>%
   merge(vaxdata_LA, by.x="areaCode", by.y="LAD17CD") %>% 
   merge(IMD_LTLA, by.x="areaCode", by.y="LAD17CD")
 
-agg_tiff("Outputs/COVIDCasesxVaxIMDAS.tiff", units="in", width=8, height=6, res=800)
+agg_tiff("Outputs/COVIDCasesxVaxIMDAS.tiff", units="in", width=12, height=6, res=800)
 ggplot(LAcasesxvax, aes(x=as_vaxrate, y=as_caserate_roll, fill=as.factor(decile)))+
   geom_point(shape=21)+
   scale_y_continuous(name="Cases per 100,000 (age-standardised)", limits=c(0,NA))+
@@ -258,8 +261,27 @@ ggplot(LAcasesxvax, aes(x=as_vaxrate, y=as_caserate_roll, fill=as.factor(decile)
   scale_fill_paletteer_d("dichromat::BrowntoBlue_10", name="",
                            labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                     "10 - least deprived"))+
+  facet_wrap(~dose)+
   theme_custom()+
   labs(title="Less deprived Local Authorities have higher vaccination rates, but more cases",
        subtitle="Rolling 7-day average age-standardised rate of new COVID cases and age-standardised vaccination rates for\nEnglish Local Authorities",
        caption="Data from coronavirus.data.gov.uk, NHS England and ONS | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxVaxIMDAS3rdDose.tiff", units="in", width=8, height=6, res=800)
+ggplot(LAcasesxvax %>% filter(dose=="3rd"), 
+       aes(x=as_vaxrate, y=as_caserate_roll, fill=as.factor(decile)))+
+  geom_point(shape=21)+
+  scale_y_continuous(name="Cases per 100,000 (age-standardised)", limits=c(0,NA))+
+  scale_x_continuous(name="Age-standardised vaccination rate (two doses)",
+                     labels=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("dichromat::BrowntoBlue_10", name="",
+                         labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
+                                  "10 - least deprived"))+
+  theme_custom()+
+  labs(title="More deprived areas have lower booster coverage and more cases",
+       subtitle="Rolling 7-day average age-standardised rate of new COVID cases and age-standardised 3rd dose/booster vaccination\nrates for English Local Authorities",
+       caption="Data from coronavirus.data.gov.uk, NHS England and ONS | Plot by @VictimOfMaths")
+
 dev.off()
