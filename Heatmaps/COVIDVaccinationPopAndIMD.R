@@ -134,7 +134,7 @@ dev.off()
 #Start by calculating IMD at MSOA level
 #Download IMD data
 temp <- tempfile()
-source <- ("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833970/File_1_-_IMD2019_Index_of_Multiple_Deprivation.xlsx")
+source <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833970/File_1_-_IMD2019_Index_of_Multiple_Deprivation.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 IMD <- read_excel(temp, sheet="IMD2019", range="A2:F32845", col_names=FALSE) %>% 
@@ -181,7 +181,7 @@ IMD_LTLA <- IMD %>%
   mutate(decile=quantcut(IMDrank, q=10, labels=FALSE))
 
 #######################
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-weekly-announced-vaccinations-06-January-2022.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-weekly-announced-vaccinations-13-January-2022.xlsx"
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
 MSOAvax <- read_excel(temp, sheet="MSOA", range="F15:AZ6803", col_names=FALSE) %>% 
@@ -206,7 +206,9 @@ MSOAvax <- read_excel(temp, sheet="MSOA", range="F15:AZ6803", col_names=FALSE) %
   group_by(age, decile) %>% 
   summarise(boosted=sum(boosted), pop=sum(pop)) %>% 
   ungroup() %>% 
-  mutate(boostpop=boosted/pop)
+  mutate(boostpop=boosted/pop,
+         age=factor(age, levels=c("Under18", "18-24", "25-29", "30-34", "35-39", "40-44", "45-49", 
+                                  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+")))
 
 agg_png("Outputs/COVIDBoostersxIMDxAgev2.png", units="in", res=800, width=10, height=8)
   ggplot(MSOAvax, aes(x=boosted/pop, y=as.factor(decile), fill=as.factor(decile)))+
