@@ -9,6 +9,7 @@ library(ragg)
 library(paletteer)
 library(readxl)
 library(geofacet)
+library(scales)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -24,6 +25,42 @@ temp <- tempfile()
 #Surely there is a sensible full time series of this???
 #Downloading each week's data individually seems kind of daft, but hey ho...
 #I'm sure I'm missing something obvious here...
+
+#12th Jan
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fconditionsanddiseases%2fdatasets%2fcoronaviruscovid19infectionsurveyheadlineresultsuk%2f2022/20220119covidinfectionsurveyheadlinedataset19012022102636.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+regdata120122 <- read_excel(temp, sheet="1b", range="A5:E14") %>% 
+  mutate(date=as.Date("2022-01-12")) %>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+agedata120122 <- read_excel(temp, sheet="1c", range="A5:D12") %>% 
+  mutate(date=as.Date("2022-01-12"))%>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+
+#3rd Jan
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/20220107covid19infectionsurveydatasetsengland.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+regdata030122 <- read_excel(temp, sheet="1e", range="A5:E14") %>% 
+  mutate(date=as.Date("2022-01-03")) %>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+agedata030122 <- read_excel(temp, sheet="1g", range="A5:D12") %>% 
+  mutate(date=as.Date("2022-01-03"))%>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+
+#31st Dec
+source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveydata/2021/20220107covid19infectionsurveydatasetsengland.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+regdata311221 <- read_excel(temp, sheet="1e", range="A5:E14") %>% 
+  mutate(date=as.Date("2021-12-31"))%>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+agedata311221 <- read_excel(temp, sheet="1g", range="A5:D12") %>% 
+  mutate(date=as.Date("2021-12-31"))%>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
 
 #28th Dec
 source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fconditionsanddiseases%2fdatasets%2fcoronaviruscovid19infectionsurveyheadlineresultsuk%2f2021/20220105covidinfectionsurveyheadlinedataset.xlsx"
@@ -356,7 +393,8 @@ agedataold <- read_excel(temp, sheet="1i", range="C8:W31", col_names=FALSE) %>%
   mutate(Age=gsub("_", " ", Age))
 
 #Combine and plot
-regdata <- bind_rows(regdata281221, regdata161221, regdata081221, regdata281121,
+regdata <- bind_rows(regdata120122, regdata030122, regdata311221, 
+                     regdata281221, regdata161221, regdata081221, regdata281121,
                      regdata241121, regdata171121, regdata101121, regdata031121,
                      regdata271021, regdata191021, regdata131021, regdata061021,
                      regdata290921, regdata220921, regdata150921, regdata080921,
@@ -370,7 +408,8 @@ regdata <- bind_rows(regdata281221, regdata161221, regdata081221, regdata281121,
               set_names(c("Region", "Pop", "PosProp", "LowerCI", "UpperCI", "Date"))) %>% 
   bind_rows(regdata050521, regdata290421, regdata210421, regdata130421, regdataold)
 
-agedata <- bind_rows(agedata281221, agedata161221, agedata081221, agedata281121,
+agedata <- bind_rows(agedata120122, agedata030122, agedata311221, 
+                     agedata281221, agedata161221, agedata081221, agedata281121,
                      agedata241121, agedata171121, agedata101121, agedata031121,
                      agedata271021, agedata191021, agedata131021, agedata061021,
                      agedata290921, agedata220921, agedata150921, agedata080921,
@@ -392,6 +431,8 @@ mygrid <- data.frame(name=c("North East", "North West", "Yorkshire and The Humbe
                             "South West", "London", "South East"),
                      row=c(1,2,2,3,3,3,4,4,4), col=c(2,1,2,1,2,3,1,2,3),
                      code=c(1:9))
+
+maxdate <- max(regdata$Date)
   
 agg_tiff("Outputs/COVIDONSInfSurvxReg.tiff", units="in", width=10, height=8, res=500)
 ggplot(regdata, aes(x=Date, y=PosProp, ymin=LowerCI, ymax=UpperCI, colour=Region, fill=Region))+
@@ -407,8 +448,8 @@ ggplot(regdata, aes(x=Date, y=PosProp, ymin=LowerCI, ymax=UpperCI, colour=Region
   theme(strip.text=element_blank(), plot.title=element_text(size=rel(2.2)))+
   geom_text(aes(x=as.Date("2021-02-02"), y=0.05, label=Region), family="Lato", fontface="bold",
             size=rel(4), show.legend=FALSE)+
-  labs(title="Omicron is not like Alpha or Delta",
-       subtitle="Estimated proportion of the population who would test positive for COVID according to the ONS infection survey",
+  labs(title="ONS data confirms falling prevalence in some, but not all, regions",
+       subtitle=paste0("Estimated proportion of the population who would test positive for COVID according to the ONS infection survey.\nData up to ", maxdate),
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
 
@@ -426,8 +467,8 @@ ggplot(agedata, aes(x=Date, y=PosProp, ymin=LowerCI, ymax=UpperCI, colour=Age, f
   theme(strip.text=element_blank(), plot.title=element_text(size=rel(2.2)))+
   geom_text(aes(x=as.Date("2021-01-20"), y=0.05, label=Age), family="Lato", fontface="bold",
             size=rel(4), show.legend=FALSE)+
-  labs(title="Omicron is not like Alpha or Delta",
-       subtitle="Estimated proportion of the population who would test positive for COVID according to the ONS infection survey",
+  labs(title="Prevalence was still rising last week in the very young and very old",
+       subtitle=paste0("Estimated proportion of the population who would test positive for COVID according to the ONS infection survey.\nData up to ", maxdate),
        caption="Data from ONS | Plot by @VictimOfMaths")
 
 dev.off()
@@ -457,13 +498,14 @@ ggplot(natdata, aes(x=Date, y=PosProp))+
 
 dev.off()
 
+
 agg_tiff("Outputs/COVIDONSInfSurvWaves.tiff", units="in", width=8, height=6, res=500)
 ggplot(natdata, aes(x=Date, y=PosProp))+
   geom_rect(aes(xmin=as.Date("2020-12-01"), xmax=as.Date("2021-05-01"),
                 ymin=0, ymax=0.065), fill="#EE6677", alpha=0.01)+
   geom_rect(aes(xmin=as.Date("2021-05-01"), xmax=as.Date("2021-12-10"),
                 ymin=0, ymax=0.065), fill="#228833", alpha=0.01)+
-  geom_rect(aes(xmin=as.Date("2021-12-10"), xmax=as.Date("2022-01-01"),
+  geom_rect(aes(xmin=as.Date("2021-12-10"), xmax=as.Date("2022-01-03"),
                 ymin=0, ymax=0.065), fill="#66CCEE", alpha=0.01)+
   geom_line(colour="Black", size=1)+
   scale_x_date(name="", limits=c(as.Date("2020-12-01"), NA_Date_))+
