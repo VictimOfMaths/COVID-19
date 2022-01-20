@@ -16,14 +16,14 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-daily-admissions-and-beds-20220113.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-daily-admissions-and-beds-20220119.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220113.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220120.xlsx"
 #Increment by one each day
-dailyrange <- "DA"
-dailyoccrange <- "DC"
+dailyrange <- "DG"
+dailyoccrange <- "DI"
 #Increment by seven each week
-weeklyrange <- "DC"
+weeklyrange <- "DJ"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -143,7 +143,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-09-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="The number of people in hospitals in London with COVID has only just started to fall",
+  labs(title="All COVID hospital metrics are falling *almost* everywhere in England",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
