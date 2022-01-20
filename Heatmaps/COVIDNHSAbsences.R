@@ -12,6 +12,7 @@ library(ggtext)
 library(geofacet)
 library(snakecase)
 library(ggrepel)
+library(RcppRoll)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -23,7 +24,7 @@ theme_custom <- function() {
 }
 
 #Download latest absence data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Staff-Absences-Web-File-Timeseries-1.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Staff-Absences-Web-File-Timeseries-2.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -31,9 +32,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
   set_names("Region", "TrustCode")
 
-totalraw <- read_excel(temp, sheet="Total Absences", range="C16:AT163", col_names=FALSE) 
+totalraw <- read_excel(temp, sheet="Total Absences", range="C16:BA163", col_names=FALSE) 
   
-COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:AT163", col_names=FALSE) 
+COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:BA163", col_names=FALSE) 
 
 #Pull out national figures
 nattotals <- totalraw %>% 
@@ -50,18 +51,21 @@ natCOVID <- COVIDraw %>%
 
 natdata <- merge(nattotals, natCOVID) %>% 
   mutate(Other=Total-COVID) %>% 
-  gather(Cause, Count, c(2:4))
+  gather(Cause, Count, c(2:4)) %>% 
+  group_by(Cause) %>% 
+  mutate(Count_roll=roll_mean(Count, 7, align="center", fill=NA)) %>% 
+  ungroup()
 
 agg_tiff("Outputs/COVIDNHSAbsences.tiff", units="in", width=8, height=6, res=500)
-ggplot(natdata %>% filter(Cause!="Total"), aes(x=Date, y=Count, fill=Cause))+
+ggplot(natdata %>% filter(Cause!="Total"), aes(x=Date, y=Count_roll, fill=Cause))+
   geom_area(show.legend=FALSE)+
   scale_x_date(name="")+
   scale_y_continuous(name="Total staff absent")+
   scale_fill_paletteer_d("lisa::Jean_MichelBasquiat_1")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="NHS staff absences are still running very high",
-       subtitle="Staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span> in English acute NHS trusts",
+  labs(title="NHS staff absences are falling, but still high",
+       subtitle="Rolling 7-day average number of staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span><br>in English acute NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
 dev.off()
@@ -81,7 +85,10 @@ regCOVID <- COVIDraw[c(3:9),] %>%
 
 regdata <- merge(regtotals, regCOVID) %>% 
   mutate(Other=Total-COVID) %>% 
-  gather(Cause, Count, c(3:5))
+  gather(Cause, Count, c(3:5)) %>% 
+  group_by(Cause, Region) %>% 
+  mutate(Count_roll=roll_mean(Count, 7, align="center", fill=NA)) %>% 
+  ungroup()
 
 #Set up geofacet grid of NHS regions
 mygrid <- data.frame(name=c("North West", "North East and Yorkshire", 
@@ -91,7 +98,7 @@ mygrid <- data.frame(name=c("North West", "North East and Yorkshire",
                      code=c(1:7))
 
 agg_tiff("Outputs/COVIDNHSAbsencesxReg.tiff", units="in", width=8, height=6, res=500)
-ggplot(regdata %>% filter(Cause!="Total"), aes(x=Date, y=Count, fill=Cause))+
+ggplot(regdata %>% filter(Cause!="Total"), aes(x=Date, y=Count_roll, fill=Cause))+
   geom_area(show.legend=FALSE)+
   scale_x_date(name="")+
   scale_y_continuous(name="Total staff absent")+
@@ -100,7 +107,7 @@ ggplot(regdata %>% filter(Cause!="Total"), aes(x=Date, y=Count, fill=Cause))+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
   labs(title="NHS staff absences are most acute in the Midlands and North of England",
-       subtitle="Staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span> in English acute NHS trusts",
+       subtitle="Rolling 7-day average number of staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span><br>in English acute NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
 dev.off()
@@ -118,7 +125,10 @@ trustCOVID <- COVIDraw[c(11:148),] %>%
 
 trustdata <- merge(trusttotals, trustCOVID) %>% 
   mutate(Other=Total-COVID) %>% 
-  gather(Cause, Count, c(4:6))
+  gather(Cause, Count, c(4:6)) %>% 
+  group_by(TrustCode, Trust, Cause) %>% 
+  mutate(Count_roll=roll_mean(Count, 7, align="center", fill=NA)) %>% 
+  ungroup()
 
 #Bring in some denominators
 #Source https://digital.nhs.uk/data-and-information/publications/statistical/nhs-workforce-statistics/september-2021
@@ -128,24 +138,30 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
 staffpops <- read_excel(temp, sheet="2. NHSE, Org & SG - HC", range="C12:E329", col_names=FALSE) %>% 
   filter(!is.na(`...2`)) %>% 
-  set_names("TrustName", "TrustCode", "Staff")
+  set_names("TrustName", "TrustCode", "Staff") %>% 
+  mutate(TrustCode=if_else(TrustCode=="RW6", "RM3", TrustCode),
+         TrustName=if_else(TrustCode=="RM3", "Northern Healthcare Alliance NHS Foundation Trust",
+                            TrustName)) %>% 
+  group_by(TrustName, TrustCode) %>% 
+  summarise(Staff=sum(Staff)) %>% 
+  ungroup()
 
 combined <- merge(trustdata, staffpops) %>% 
-  mutate(AbsProp=Count/Staff) %>% 
+  mutate(AbsProp=Count/Staff, AbsProp_roll=Count_roll/Staff) %>% 
   merge(lookup)
 
 combinedreg <- combined %>% 
   group_by(Date, Region, Cause) %>% 
-  summarise(Count=sum(Count), Staff=sum(Staff)) %>% 
+  summarise(Count=sum(Count), Staff=sum(Staff), Count_roll=sum(Count_roll)) %>% 
   ungroup() %>% 
-  mutate(AbsProp=Count/Staff)
+  mutate(AbsProp=Count/Staff, AbsProp_roll=Count_roll/Staff)
 
 agg_tiff("Outputs/COVIDNHSAbsencePropxReg.tiff", units="in", width=8, height=6, res=500)
-ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp, colour=Region))+
+ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp_roll, colour=Region))+
   geom_line()+
   scale_x_date(name="")+
   scale_y_continuous(name="Proportion of staff absent", limits=c(0,NA),
-                     labels=label_percent(accuracy=1), breaks=c(0,0.02,0.04,0.06,0.08,0.1))+
+                     labels=label_percent(accuracy=1), breaks=c(0,0.02,0.04,0.06,0.08,0.1, 0.12))+
   scale_colour_paletteer_d("colorblindr::OkabeIto")+
   theme_custom()+
   labs(title="The Midlands and the North have the highest levels of NHS staff absence",
@@ -155,7 +171,7 @@ ggplot(combinedreg %>% filter(Cause=="Total"), aes(x=Date, y=AbsProp, colour=Reg
 dev.off()
 
 agg_tiff("Outputs/COVIDNHSAbsencePropxTrust.tiff", units="in", width=8, height=6, res=500)
-ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-09")), 
+ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-16")), 
        aes(x=AbsProp, y=fct_reorder(Trust, AbsProp), fill=Region))+
   geom_col()+
   scale_x_continuous(labels=label_percent(accuracy=1), name="Proportion of staff absent")+
@@ -163,17 +179,17 @@ ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-09")),
   scale_fill_paletteer_d("colorblindr::OkabeIto")+
   theme_custom()+
   theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
-  labs(title="Some NHS trusts have more than 15% of staff off work",
-       subtitle="Proportion of NHS staff absent for any reason as of 9th January, by trust (acute trusts only)",
+  labs(title="Some NHS trusts have more than 10% of staff off work",
+       subtitle="Proportion of NHS staff absent for any reason as of 16th January, by trust (acute trusts only)",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 #Bring in bed occupancy data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220113.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220120.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-weeklyrange <- "DC"
+weeklyrange <- "DJ"
 
 GACV19 <- read_excel(temp, sheet="Adult G&A Beds Occupied COVID", 
                           range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
