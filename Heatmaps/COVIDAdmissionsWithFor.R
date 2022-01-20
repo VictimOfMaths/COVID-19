@@ -21,17 +21,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Primary-Diagnosis-Supplement-20220113.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Primary-Diagnosis-Supplement-20220120.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:DB22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:DI22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:DB22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:DI22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -76,7 +76,7 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The number of patients being treated 'for' COVID appears to have levelled off",
+  labs(title="The number of patients being treated 'for' COVID is now falling",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-30"), y=11500, label="Patients being treated for COVID",
@@ -95,7 +95,7 @@ ggplot(data %>% filter(Region=="London" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Half of London's COVID patients are being treated 'with' COVID",
+  labs(title="The majority of COVID patients in London are now 'with', not 'for' COVID",
        subtitle="Patients in London's acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-30"), y=920, label="Patients being treated for COVID",
