@@ -192,7 +192,7 @@ ggplot(popheatmap)+
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioHeatmapRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
@@ -204,7 +204,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The Omicron wave has shifted into older, more vulnerable ages",
+  labs(title="The fall in COVID cases is slowing across age groups",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -303,7 +303,7 @@ ratesdata <- caseratios %>%
   mutate(rates_roll=cases_roll*100000/pop)
 
 agg_png("Outputs/COVIDCasesHeatmapxAge.png", units="in", width=10, height=6, res=500)
-ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max(date)-days(1)),
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max(date)-days(1)),
        aes(x=date, y=age, fill=rates_roll))+
   geom_tile()+
   scale_x_date(name="")+
@@ -313,14 +313,14 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5, 
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases are working their way up the age groups",
+  labs(title="The Omicron wave in cases is subsiding (except in schoolkids)",
        subtitle="Rolling 7-day average rates of new COVID-19 cases by age in England",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_png("Outputs/COVIDCaseRatesLineRecent.png", units="in", width=10, height=6, res=500)
-ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max(date)-days(1)), 
+ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max(date)-days(1)), 
        aes(x=date, y=rates_roll, colour=age))+
 
   geom_line()+
@@ -328,7 +328,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-10-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Current case rates have risen in all adult age groups",
+  labs(title="The fall in COVID case rates is slowing down",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -379,13 +379,13 @@ dev.off()
 
 #Line chart of CRRs
 agg_tiff("Outputs/COVIDCaseRatioLineRecent.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-07"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-08"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, colour=age))+
   scale_x_date(name="")+
@@ -394,7 +394,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="COVID cases are growing at different rates in different age groups",
+  labs(title="The fall in COVID case rates in adults is slowing down.",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -540,17 +540,17 @@ dev.off()
 
 #Positivity rates by sex (pillar 2 only)
 #Data from weekly surveillance reports #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1045378/Weekly_Influenza_and_COVID19_report_data_W1_v2.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1048533/Weekly_Influenza_and_COVID19_report_data_w3.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
 posdata.m <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C121:L174") %>% 
-  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index)) %>% 
+  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
   gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
   mutate(ageband=gsub("_", "-", ageband), sex="Male")
 
 posdata.f <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C177:L230") %>% 
-  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index)) %>% 
+  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
   gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
   mutate(ageband=gsub("_", "-", ageband), sex="Female")
 
@@ -585,14 +585,14 @@ ggplot(sexratio, aes(x=date, y=sexratio, colour=ageband))+
   geom_text_repel(data=sexratio %>% filter(date==max(date)),
                   aes(x=max(date), y=sexratio, label = ageband, 
                       colour=ageband),
-                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-01-01"), NA),
+                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-01-20"), NA),
                   hjust = 0, segment.size = .7,
                   segment.alpha = .5,
                   segment.linetype = "dotted",
                   segment.curvature = -0.1,
                   segment.ncp = 3,
                   segment.angle = 20, box.padding = .3, show.legend = FALSE)+
-  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-01-10")))+
+  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-01-30")))+
   scale_y_continuous(trans="log10", name="Female:Male positivity rate ratio\n(log scale)",
                      breaks=c(0.25, 0.5, 1, 2), limits=c(NA, 2))+
   scale_colour_paletteer_d("rcartocolor::Prism")+
