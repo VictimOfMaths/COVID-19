@@ -204,7 +204,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The fall in COVID cases is slowing across age groups",
+  labs(title="COVID case rates are still rising in primary schoolchildren and their parents' age group",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -328,7 +328,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="The fall in COVID case rates is slowing down",
+  labs(title="COVID case rates are highest in 5-14 and 30-44 year olds",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -394,27 +394,27 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="The fall in COVID case rates in adults is slowing down.",
+  labs(title="The big drop in COVID case rates is over (for now)",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent019.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   #geom_rect(aes(xmin=as.Date("2021-10-25"), xmax=as.Date("2021-10-29"),
   #              ymin=0.5, ymax=2), fill="Grey90", colour="Grey90")+
   #geom_text(aes(x=as.Date("2021-10-23"), y=1.5, label="Half term"),
   #          colour="Grey70", angle=90)+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date) &
                                          age %in% c("0 to 4", "5 to 9", "10 to 14",
                                                     "15 to 19")),
             aes(x=date, y=caseratio, colour=age))+
@@ -425,23 +425,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rate ratios are low but rising in <span style='color:#c51b8a;'>the under 20s</span>",
+  labs(title="COVID case rate ratios are not following a consistent pattern in <span style='color:#c51b8a;'>the under 20s</span>",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent2039.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date) &
                                          age %in% c("20 to 24", "25 to 29", "30 to 34",
                                                     "35 to 39")),
             aes(x=date, y=caseratio, colour=age))+
@@ -452,23 +452,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="Case growth in <span style='color:#c51b8a;'>20-39 year olds</span> has slowed hugely since Omicron first hit",
+  labs(title="Case growth in <span style='color:#c51b8a;'>20-39 year olds</span> has more or less plateaued",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent4059.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date) &
                                          age %in% c("40 to 44", "45 to 49", "50 to 54",
                                                     "55 to 59")),
             aes(x=date, y=caseratio, colour=age))+
@@ -479,23 +479,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID cases are growing rapidly in <span style='color:#c51b8a;'>40-59 year olds",
+  labs(title="COVID cases rate ratios are also levelling off in <span style='color:#c51b8a;'>40-59 year olds",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent6579.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date) &
                                          age %in% c("60 to 64", "65 to 69", "70 to 74",
                                                     "75 to 79")),
             aes(x=date, y=caseratio, colour=age))+
@@ -506,23 +506,23 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#fa9fb5", "#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates in <span style='color:#c51b8a;'>60-79 year olds</span> are doubling every week",
+  labs(title="COVID case rates in <span style='color:#c51b8a;'>60-79 year olds</span> are still falling",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
 agg_tiff("Outputs/COVIDCaseRatioLineRecent80Plus.tiff", units="in", width=10, height=6, res=800)
-ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
+ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-10-10"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-10-10"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2021-12-10"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, group=age), colour="Grey80")+
-  geom_line(data=popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date) &
+  geom_line(data=popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date) &
                                          age %in% c("80 to 84", "85 to 89", "90+")),
             aes(x=date, y=caseratio, colour=age))+
   scale_x_date(name="")+
@@ -532,7 +532,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-10-01") & date<max(date)))+
   scale_colour_manual(values=c("#f768a1", "#c51b8a", "#7a0177"), name="Age")+
   theme_custom()+
   theme(plot.title=element_markdown())+
-  labs(title="COVID case rates are more than doubling each week in <span style='color:#c51b8a;'>the over 80s</span>",
+  labs(title="COVID case rates are now falling fastest in <span style='color:#c51b8a;'>the over 80s</span>",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
