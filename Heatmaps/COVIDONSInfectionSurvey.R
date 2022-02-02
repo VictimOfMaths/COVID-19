@@ -25,6 +25,20 @@ temp <- tempfile()
 #Surely there is a sensible full time series of this???
 #Downloading each week's data individually seems kind of daft, but hey ho...
 #I'm sure I'm missing something obvious here...
+#26th Jan
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fconditionsanddiseases%2fdatasets%2fcoronaviruscovid19infectionsurveyheadlineresultsuk%2f2022/20220202covidinfectionsurveyheadlinedataset.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+regdata260122 <- read_excel(temp, sheet="1b", range="A5:E14") %>% 
+  mutate(date=as.Date("2022-01-26")) %>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`)
+agedata260122 <- read_excel(temp, sheet="1c", range="A5:D12") %>% 
+  mutate(date=as.Date("2022-01-26"))%>% 
+  rename(`95% Lower credible Interval`=`95% Lower credible interval`,
+         `95% Upper credible Interval`=`95% Upper credible interval`,
+         `Grouped age`=`Age/school year group`)
+
+
 #19th Jan
 source <- "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/conditionsanddiseases/datasets/coronaviruscovid19infectionsurveyheadlineresultsuk/2022/20220126covidinfectionsurveyheadlinedataset.xlsx"
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
@@ -404,7 +418,7 @@ agedataold <- read_excel(temp, sheet="1i", range="C8:W31", col_names=FALSE) %>%
   mutate(Age=gsub("_", " ", Age))
 
 #Combine and plot
-regdata <- bind_rows(regdata190122, regdata120122, regdata030122, regdata311221, 
+regdata <- bind_rows(regdata260122, regdata190122, regdata120122, regdata030122, regdata311221, 
                      regdata281221, regdata161221, regdata081221, regdata281121,
                      regdata241121, regdata171121, regdata101121, regdata031121,
                      regdata271021, regdata191021, regdata131021, regdata061021,
@@ -419,7 +433,7 @@ regdata <- bind_rows(regdata190122, regdata120122, regdata030122, regdata311221,
               set_names(c("Region", "Pop", "PosProp", "LowerCI", "UpperCI", "Date"))) %>% 
   bind_rows(regdata050521, regdata290421, regdata210421, regdata130421, regdataold)
 
-agedata <- bind_rows(agedata190122, agedata120122, agedata030122, agedata311221, 
+agedata <- bind_rows(agedata260122, agedata190122, agedata120122, agedata030122, agedata311221, 
                      agedata281221, agedata161221, agedata081221, agedata281121,
                      agedata241121, agedata171121, agedata101121, agedata031121,
                      agedata271021, agedata191021, agedata131021, agedata061021,
@@ -459,7 +473,7 @@ ggplot(regdata, aes(x=Date, y=PosProp, ymin=LowerCI, ymax=UpperCI, colour=Region
   theme(strip.text=element_blank(), plot.title=element_text(size=rel(2.2)))+
   geom_text(aes(x=as.Date("2021-02-02"), y=0.05, label=Region), family="Lato", fontface="bold",
             size=rel(4), show.legend=FALSE)+
-  labs(title="ONS data confirms falling prevalence everywhere",
+  labs(title="ONS data suggests the South West is a bit of an outlier",
        subtitle=paste0("Estimated proportion of the population who would test positive for COVID according to the ONS infection survey.\nData up to ", maxdate),
        caption="Data from ONS | Plot by @VictimOfMaths")
 dev.off()
@@ -503,7 +517,7 @@ ggplot(natdata, aes(x=Date, y=PosProp))+
   scale_y_continuous(name="Proportion of population testing positive", limits=c(0,NA),
                      labels=label_percent(accuracy=1))+
   theme_custom()+
-  labs(title="Omicron is not like Alpha or Delta",
+  labs(title="COVID prevalence has plateaued in the last week",
        subtitle="Estimated proportion of the population who would test positive for COVID according to the ONS infection survey",
        caption="Data from ONS | Plot by @VictimOfMaths")
 
