@@ -130,7 +130,7 @@ cases_MSOA <- read.csv(temp.cases) %>%
   merge(IMD_MSOA) %>% 
   rename(allpop=pop)
 
-agg_tiff("Outputs/COVIDCasesxIMD.tiff", units="in", width=8, height=6, res=800)
+agg_png("Outputs/COVIDCasesxIMD.png", units="in", width=8, height=6, res=800)
 ggplot(cases, aes(x=date, y=caserate, colour=as.factor(decile)))+
   geom_line()+
   scale_x_date(name="")+
@@ -140,8 +140,8 @@ ggplot(cases, aes(x=date, y=caserate, colour=as.factor(decile)))+
                                     "10 - least deprived"))+
   theme_custom()+
   labs(title="The socioeconomic profile of COVID cases has recently reversed",
-       subtitle="Weekly rate of new COVID cases in England based on MSOA-level data.\nCase data is not available for neighbourhoods with fewer than 3 cases in any given week.",
-       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+       subtitle="Weekly rate of new COVID cases in England based on neighbourhood-level data.\nCase data is not available for neighbourhoods with fewer than 3 cases in any given week.",
+       caption="Data from coronavirus.data.gov.uk | Plot by Colin Angus")
 
 dev.off()
 
@@ -202,6 +202,7 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 LAcases <- read.csv(temp) %>% 
   rename(cases=newCasesBySpecimenDate, deaths=newDeaths28DaysByDeathDate) %>%  
   mutate(date=as.Date(date)) %>% 
+  filter(date<max(date)-days(3)) %>% 
   merge(IMD_LTLA, by.x="areaCode", by.y="LAD17CD") %>% 
   group_by(decile, date) %>% 
   summarise(cases=sum(cases), deaths=sum(deaths), pop=sum(pop)) %>% 
@@ -311,28 +312,50 @@ ggplot(LAcases %>% filter(date>as.Date("2021-05-01")),
 dev.off()
 
 #Bring in u18 vaccine uptake
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021/11/COVID-19-weekly-announced-vaccinations-18-November-2021.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/COVID-19-weekly-announced-vaccinations-13-January-2022.xlsx"
 
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-vaxdata <- read_excel(temp, sheet="MSOA", range="F15:H6803", col_names=FALSE) %>% 
-  set_names("MSOA11CD", "areaName", "vaccinated") %>% 
-  merge(pop_full %>% select(c(1:19)) %>% 
-          gather(age, pop, c(2:19)) %>% 
-          merge(lookup) %>% 
-          group_by(MSOA11CD) %>% 
+vaxdata <- read_excel(temp, sheet="MSOA", range="F15:I6803", col_names=FALSE, 
+                      col_types="text") %>% 
+  set_names("MSOA11CD", "areaName", "12-15", "16-17") %>%
+  mutate(`12-15`=as.numeric(`12-15`),
+         `16-17`=as.numeric(`16-17`),
+         `12-17`=`12-15`+`16-17`) %>% 
+  gather(age, vaccinated, c(3:5)) %>% 
+  merge(pop_full %>% select(c(1,14:19)) %>% 
+          gather(age, pop, c(2:7)) %>% 
+          mutate(age=case_when(
+            age<16 ~ "12-15",
+            TRUE ~ "16-17")) %>% 
+          group_by(LSOA11CD, age) %>% 
           summarise(pop=sum(pop)) %>% 
-          ungroup()) %>% 
+          ungroup() %>% 
+          merge(lookup) %>% 
+          group_by(MSOA11CD, age) %>% 
+          summarise(pop=sum(pop)) %>% 
+          ungroup() %>% 
+          spread(age, pop) %>% 
+          mutate(`12-17`=`12-15`+`16-17`) %>% 
+          gather(age, pop, c(2:4))) %>% 
   merge(IMD_MSOA %>% select(MSOA11CD, decile)) %>% 
-  group_by(decile) %>% 
-  summarise(vaccinated=sum(vaccinated), vaxpop=sum(pop)) %>% 
+  group_by(age, decile) %>% 
+  summarise(vaccinated=sum(vaccinated, na.rm=TRUE), vaxpop=sum(pop)) %>% 
   ungroup() %>% 
   mutate(vaxrate=vaccinated/vaxpop)
 
-vaxdata_MSOA <- read_excel(temp, sheet="MSOA", range="F15:H6803", col_names=FALSE) %>% 
-  set_names("MSOA11CD", "areaName", "vaccinated") %>% 
-  merge(pop_full %>% select(c(1:19)) %>% 
-          gather(age, pop, c(2:19)) %>% 
+vaxdata_MSOA <- read_excel(temp, sheet="MSOA", range="F15:I6803", col_names=FALSE, 
+                           col_types="text") %>% 
+  set_names("MSOA11CD", "areaName", "12-15", "16-17") %>% 
+  mutate(`12-15`=as.numeric(`12-15`),
+         `16-17`=as.numeric(`16-17`),
+         `12-17`=`12-15`+`16-17`) %>% 
+  gather(age, vaccinated, c(3:5)) %>% 
+  merge(pop_full %>% select(c(1,14:19)) %>% 
+          gather(age, pop, c(2:7)) %>% 
+          mutate(age=case_when(
+            age<16 ~ "12-15",
+            TRUE ~ "16-17")) %>% 
           merge(lookup) %>% 
           group_by(MSOA11CD) %>% 
           summarise(pop=sum(pop)) %>% 
@@ -340,15 +363,16 @@ vaxdata_MSOA <- read_excel(temp, sheet="MSOA", range="F15:H6803", col_names=FALS
   merge(IMD_MSOA %>% select(MSOA11CD, decile)) %>% 
   mutate(vaxprop=vaccinated/pop)
 
-agg_tiff("Outputs/COVIDVaxU18xIMDONS.tiff", units="in", width=8, height=6, res=500)
-ggplot(vaxdata, aes(x=vaxrate, y=as.factor(decile), fill=as.factor(decile)))+
+agg_tiff("Outputs/COVIDVaxU18xIMDONS.tiff", units="in", width=10, height=6, res=500)
+ggplot(vaxdata %>% filter(age!="12-17"), aes(x=vaxrate, y=as.factor(decile), fill=as.factor(decile)))+
   geom_col(show.legend=FALSE)+
-  scale_x_continuous(name="Proportion of under 18s vaccinated", labels=label_percent(accuracy=1))+
+  scale_x_continuous(name="Proportion of age group vaccinated", labels=label_percent(accuracy=1))+
   scale_y_discrete(name="IMD decile", labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                                "10 - least deprived"))+
   scale_fill_paletteer_d("dichromat::BrowntoBlue_10", name="",
                          labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                   "10 - least deprived"))+
+  facet_wrap(~age)+
   theme_custom()+
   labs(title="Child vaccination rates are lowest in deprived areas",
        subtitle="Proportion of under 18s who have received at least one COVID-19 vaccine dose",
@@ -356,13 +380,10 @@ ggplot(vaxdata, aes(x=vaxrate, y=as.factor(decile), fill=as.factor(decile)))+
 
 dev.off()
 
-agg_tiff("Outputs/COVIDVaxU18AdjxIMDONS.tiff", units="in", width=8, height=6, res=500)
-vaxdata %>% merge(u18xIMD %>% filter(ageband=="Under 12") %>% 
-                    select(IMDdecile, prop), by.x="decile", by.y="IMDdecile") %>% 
-  mutate(vaxprop.adj=vaccinated/(vaxpop*(1-prop))) %>% 
-  ggplot(aes(x=vaxprop.adj, y=as.factor(decile), fill=as.factor(decile)))+
+agg_tiff("Outputs/COVIDVax1217xIMDONS.tiff", units="in", width=8, height=6, res=500)
+ggplot(vaxdata %>% filter(age=="12-17"), aes(x=vaxrate, y=as.factor(decile), fill=as.factor(decile)))+
   geom_col(show.legend=FALSE)+
-  scale_x_continuous(name="Proportion of 12-17 year olds vaccinated", labels=label_percent(accuracy=1))+
+  scale_x_continuous(name="Proportion of age group vaccinated", labels=label_percent(accuracy=1))+
   scale_y_discrete(name="IMD decile", labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                                "10 - least deprived"))+
   scale_fill_paletteer_d("dichromat::BrowntoBlue_10", name="",
@@ -370,8 +391,9 @@ vaxdata %>% merge(u18xIMD %>% filter(ageband=="Under 12") %>%
                                   "10 - least deprived"))+
   theme_custom()+
   labs(title="Child vaccination rates are lowest in deprived areas",
-       subtitle="Estimated proportion of 12-17 year olds who have received at least one COVID-19 vaccine dose",
+       subtitle="Proportion of 12-17 year olds who have received at least one COVID-19 vaccine dose",
        caption="Vaccination data from NHS England, population data from ONS\nPlot by @VictimOfMaths")
+
 dev.off()
 
 ########
@@ -382,32 +404,33 @@ combined <- vaxdata_MSOA %>%
   mutate(caserate=cases*100000/allpop)
 
 agg_tiff("Outputs/COVIDVaxU18xCasesxIMDBW.tiff", units="in", width=9, height=6, res=500)
-ggplot(combined, aes(x=caserate, y=vaxprop))+
+ggplot(combined %>% filter(age=="12-17"), aes(x=caserate, y=vaxprop))+
   geom_point(alpha=0.6)+
   geom_smooth(method="lm")+
   scale_x_continuous(name="Cases per 100,000 in the past week")+
-  scale_y_continuous(name="Proportion of under 18s vaccinated", labels=label_percent(accuracy=1))+
+  scale_y_continuous(name="Proportion of 12-17 year-olds vaccinated", labels=label_percent(accuracy=1))+
   theme_custom()+
   labs(title="Areas with higher cases have higher child vaccination rates",
-       subtitle="Association between the latest weekly COVID case rates and the proportion of the under 18 population who have received\nat least one vaccine dose",
+       subtitle="Association between the latest weekly COVID case rates and the proportion of 12-17 year-olds who have received\nat least one vaccine dose in English neighbourhoods (MSOAs)",
        caption="Data from NHS England, ONS and coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDVaxU18xCasesxIMD.tiff", units="in", width=9, height=6, res=500)
-ggplot(combined, aes(x=caserate, y=vaxprop, colour=as.factor(decile)))+
+ggplot(combined %>% filter(age=="12-17"), aes(x=caserate, y=vaxprop, colour=as.factor(decile)))+
   geom_point(alpha=0.6)+
   scale_x_continuous(name="Cases per 100,000 in the past week")+
-  scale_y_continuous(name="Proportion of under 18s vaccinated", labels=label_percent(accuracy=1))+
+  scale_y_continuous(name="Proportion of 12-17 year-olds vaccinated", labels=label_percent(accuracy=1))+
   scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="",
                          labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
                                   "10 - least deprived"))+
   theme_custom()+
   labs(title="Areas with higher cases are more affluent and have higher child vaccination rates",
-       subtitle="Association between the latest weekly COVID case rates and the proportion of the under 18 population\nwho have received at least one vaccine dose, coloured by deprivation decile",
+       subtitle="Association between the latest weekly COVID case rates and the proportion of 12-17 year-olds\nwho have received at least one vaccine dose, coloured by deprivation decile, in English neighbourhoods (MSOAs)",
        caption="Data from NHS England, ONS and coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
-model <- lm(caserate ~ vaxprop + decile, combined)
+model <- lm(caserate ~ vaxprop + decile, combined %>% filter(age=="12-17"))
 
 af <- anova(model)
 afss <- af$"Sum Sq"
@@ -420,6 +443,7 @@ temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 cases_age <- read.csv(temp) %>% 
   filter(!age %in% c("00_59", "60+", "unassigned")) %>% 
   mutate(date=as.Date(date)) %>% 
+  #filter(date<max(date)-days(3)) %>% 
   merge(IMD_LTLA, by.x="areaCode", by.y="LAD17CD") %>% 
   group_by(age, decile, date) %>% 
   summarise(cases=sum(cases), pop=sum(pop)) %>% 
@@ -509,5 +533,59 @@ ggplot(cases_age %>% filter(date>=as.Date("2021-05-01") &
   labs(title="The socioeconomic gradient in 40-59 year olds has reversed",
        subtitle="7-day rolling average rate of new COVID cases by age and IMD decile, based on average deprivation across each Local Authority",
        caption="Data from coronavirus.data.gov.uk & ONS | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgexIMD6079.tiff", units="in", width=11, height=6, res=500)
+ggplot(cases_age %>% filter(date>=as.Date("2021-05-01") & 
+                              age %in% c("60-64", "65-69", "70-74", "75-79")), 
+       aes(x=date, y=caserate_roll, colour=as.factor(decile)))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="",
+                           labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
+                                    "10 - least deprived"))+
+  facet_wrap(~age)+
+  theme_custom()+
+  labs(title="The socioeconomic gradient in 60-79 year olds has reversed",
+       subtitle="7-day rolling average rate of new COVID cases by age and IMD decile, based on average deprivation across each Local Authority",
+       caption="Data from coronavirus.data.gov.uk & ONS | Plot by @VictimOfMaths")
+dev.off()
+
+agg_tiff("Outputs/COVIDCasesxAgexIMD80Plus.tiff", units="in", width=11, height=6, res=500)
+ggplot(cases_age %>% filter(date>=as.Date("2021-05-01") & 
+                              age %in% c("80-84", "85-89", "90+")), 
+       aes(x=date, y=caserate_roll, colour=as.factor(decile)))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily cases per 100,000")+
+  scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="",
+                           labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
+                                    "10 - least deprived"))+
+  facet_wrap(~age)+
+  theme_custom()+
+  labs(title="The socioeconomic gradient in 80+ year olds has reversed",
+       subtitle="7-day rolling average rate of new COVID cases by age and IMD decile, based on average deprivation across each Local Authority",
+       caption="Data from coronavirus.data.gov.uk & ONS | Plot by @VictimOfMaths")
+dev.off()
+
+#Cases x age
+agedata <- cases_age %>% 
+  group_by(age, date) %>% 
+  summarise(cases=sum(cases), pop=sum(pop)) %>% 
+  mutate(cases_roll=roll_mean(cases, 7, align="center", fill=NA)) %>% 
+  ungroup() %>% 
+  mutate(caserate=cases*100000/pop)
+
+agg_tiff("Outputs/COVIDCasesxAgeProportion.tiff", units="in", width=11, height=6, res=500)
+ggplot(agedata %>% filter(date>as.Date("2020-03-01")), aes(x=date, y=cases_roll, fill=age))+
+  geom_col(position="fill")+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of cases", labels=label_percent(accuracy=1))+
+  scale_fill_paletteer_d("pals::stepped", name="Age")+
+  theme_custom()+
+  labs(title="The shifting age dynamics of the pandemic",
+       subtitle="Proportion of confirmed COVID-19 cases (based on a 7-day rolling average) in England by age group",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
