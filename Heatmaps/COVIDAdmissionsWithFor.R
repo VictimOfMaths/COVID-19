@@ -21,17 +21,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Primary-Diagnosis-Supplement-20220120.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/02/Primary-Diagnosis-Supplement-20220203.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:DI22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:DW22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:DI22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:DW22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -76,7 +76,7 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The number of patients being treated 'for' COVID is now falling",
+  labs(title="More patients are being treated 'with' than 'for' COVID",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-30"), y=11500, label="Patients being treated for COVID",
@@ -128,7 +128,7 @@ data %>% filter(type!="incidental" & Region=="London") %>%
   scale_y_continuous(name="Proportion of COVID patients for whom\nCOVID is the main cause of hospitalisation",
                      limits=c(0,NA), labels=label_percent(accuracy=1))+
   theme_custom()+
-  labs(title="COVID remains the main reason people with COVID end up in hospital in London",
+  labs(title="Only around a third of London's COVID patients are being treated 'for' COVID",
        subtitle="Proportion of total COVID-positive patients assessed to be in hospital 'for' rather than 'with' COVID in London NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
@@ -183,7 +183,7 @@ ggplot(data %>% filter(Region!="ENGLAND" & Region !="England" & type!="with"),
   facet_geo(~Region, scales="free_y", grid=mygrid)+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Admissions 'with' have caught up with admissions 'for' COVID in several regions",
+  labs(title="The balance between patients 'with' and 'for' COVID varies by region",
        subtitle="Patients in London hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
