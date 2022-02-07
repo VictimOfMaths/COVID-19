@@ -9,6 +9,7 @@ library(extrafont)
 library(ragg)
 library(paletteer)
 library(readxl)
+library(readODS)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -16,7 +17,13 @@ theme_custom <- function() {
           strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
           plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
                                   margin=margin(0,0,5.5,0)),
-          text=element_text(family="Lato"))
+          text=element_text(family="Lato"),
+          plot.subtitle=element_text(colour="Grey40", hjust=0, vjust=1),
+          plot.caption=element_text(colour="Grey40", hjust=1, vjust=1, size=rel(0.8)),
+          axis.text=element_text(colour="Grey40"),
+          axis.title=element_text(colour="Grey20"),
+          legend.text=element_text(colour="Grey40"),
+          legend.title=element_text(colour="Grey20"))
 }
 
 #Download data (have to do this separately for male and females because the dashboard is weird)
@@ -110,7 +117,7 @@ ggplot(heatmapdata %>% filter(date>as.Date("2021-05-25") & date<max(date)-days(3
   theme(legend.position = "top", plot.subtitle=element_markdown())+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID cases in working age adults have become more female-dominated",
+  labs(title="COVID cases in working age adults are slowly becoming less female-dominated",
        subtitle="Ratio of <span style='color:#1b7837;'>female</span> to <span style='color:#762a83;'>male</span> cases in England, based on a 7-day rolling average",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
@@ -196,7 +203,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_tile(aes(x=date, y=age, fill=caseratio))+
   scale_x_date(name="")+
   scale_y_discrete(name="Age")+
-  scale_fill_paletteer_c("pals::warmcool", limit=c(1/3.1,3.1), direction=-1 ,
+  scale_fill_paletteer_c("pals::warmcool", limit=c(1/3.3,3.3), direction=-1 ,
                          trans="log", breaks=c(0.5, 1, 1.9999), 
                          labels=c("-50%", "No change", "+100%"),
                          name="Change in cases in the past week")+
@@ -204,7 +211,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID case rates are still rising in primary schoolchildren and their parents' age group",
+  labs(title="COVID case rates have turned a corner in recent days",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot inspired by @danc00ks0n & @russss | Plot by @VictimOfMaths")
 
@@ -313,7 +320,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5, 
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="The Omicron wave in cases is subsiding (except in schoolkids)",
+  labs(title="The Omicron wave in cases seems to be subsiding",
        subtitle="Rolling 7-day average rates of new COVID-19 cases by age in England",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -328,7 +335,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="COVID case rates are highest in 5-14 and 30-44 year olds",
+  labs(title="COVID case rates are falling fastest in schoolchildren",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -394,7 +401,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="The big drop in COVID case rates is over (for now)",
+  labs(title="Case rates are now lower in every age group than 7 days ago",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -540,19 +547,34 @@ dev.off()
 
 #Positivity rates by sex (pillar 2 only)
 #Data from weekly surveillance reports #https://www.gov.uk/government/statistics/national-flu-and-covid-19-surveillance-reports-2021-to-2022-season
-url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1048533/Weekly_Influenza_and_COVID19_report_data_w3.xlsx"
+url <- "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1052282/Weekly_Influenza_and_COVID19_report_data_w5.ods"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-posdata.m <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C121:L174") %>% 
+#posdata.m <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C121:L174") %>% 
+#mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
+#gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
+#mutate(ageband=gsub("_", "-", ageband), sex="Male")
+posdata.m <- read_ods(temp, sheet="Figure_7__Positivity_by_age", range="C122:L174", 
+                      col_names=FALSE) %>% 
+  set_names("0-4", "5-9", "10-19", "20-29", "30-39", "40-49",
+            "50-59", "60-69", "70-79", "80+") %>% 
   mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
   gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
-  mutate(ageband=gsub("_", "-", ageband), sex="Male")
+  mutate(sex="Male")
 
-posdata.f <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C177:L230") %>% 
+#posdata.f <- read_excel(temp, sheet="Figure 7. Positivity by age", range="C177:L230") %>% 
+#  mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
+#  gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
+#  mutate(ageband=gsub("_", "-", ageband), sex="Female")
+
+posdata.f <- read_ods(temp, sheet="Figure_7__Positivity_by_age", range="C178:L230", 
+                      col_names=FALSE) %>% 
+  set_names("0-4", "5-9", "10-19", "20-29", "30-39", "40-49",
+            "50-59", "60-69", "70-79", "80+") %>% 
   mutate(index=0:(nrow(.)-1), date=as.Date("2020-12-14")+weeks(index+4)) %>% 
   gather(ageband, posrate, c(1:(ncol(.)-2))) %>% 
-  mutate(ageband=gsub("_", "-", ageband), sex="Female")
+  mutate(sex="Female")
 
 posdata <- bind_rows(posdata.m, posdata.f) %>% 
   select(-index) %>% 
