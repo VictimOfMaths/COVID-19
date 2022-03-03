@@ -275,7 +275,10 @@ ridgedata <- finaldata %>%
     age=="40_44" ~ 42, age=="45_49" ~ 47, age=="50_54" ~ 52, age=="55_59" ~ 57,
     age=="60_64" ~ 62, age=="65_69" ~ 67, age=="70_74" ~ 72, age=="75_79" ~ 77,
     age=="80_84" ~ 82, age=="85_89" ~ 87, age=="90+" ~ 92),
-    week=if_else(year(date)==2020, week(date), week(date)+53)) %>% 
+    week=case_when(
+      year(date)==2020 ~ week(date), 
+      year(date)==2021 ~ week(date)+53,
+      TRUE ~ week(date)+105)) %>% 
   group_by(contage, week, dose) %>% 
   summarise(no=sum(no)) %>% 
   ungroup()
@@ -309,14 +312,15 @@ smoothdata <- finaldata %>%
     age=="40_44" ~ 40, age=="45_49" ~ 45, age=="50_54" ~ 50, age=="55_59" ~ 55,
     age=="60_64" ~ 60, age=="65_69" ~ 65, age=="70_74" ~ 70, age=="75_79" ~ 75,
     age=="80_84" ~ 80, age=="85_89" ~ 85, age=="90+" ~ 90),
-    week=if_else(year(date)==2020, week(date), week(date)+53)) %>% 
+    week=case_when(
+      year(date)==2020 ~ week(date), 
+      year(date)==2021 ~ week(date)+53,
+      TRUE ~ week(date)+105)) %>% 
   #filter(dose=="dose1" & week=="55") %>% 
   group_by(age, contage, week, dose) %>% 
   summarise(no=sum(no)) %>% 
   ungroup() %>% 
   merge(ONSpop)
-
-
 
 smootheddata <- data.frame(dose=character(), week=integer(), age=integer(),
                             smoothedno=double())
@@ -368,9 +372,9 @@ ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, f
   geom_segment(aes(x = 5, y = 35, xend = 5, yend = 25),
                arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
   scale_x_continuous(name="Age", limits=c(0,105))+
-  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110),
                    labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                            "Oct", "Nov", "Dec"), name="")+
+                            "Oct", "Nov", "Dec", "Jan\n2022", "Feb"), name="")+
   scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
                          labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
   annotate("text", x=3, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
@@ -379,5 +383,26 @@ ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, f
   labs(title="Vaccine rollout down the age groups",
        subtitle="Age distribution of COVID vaccines delivered each week in England by dose",
        caption="Data from coronavirus.data.gov.uk | Inspired by @MathiasLeroy_ | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDVaxRidgesxAgexDoseSmoothedv3.tiff", units="in", width=8, height=8, res=500)
+ggplot(smootheddata, aes(x=age, y=as.factor(week), height=smoothedno, fill=dose))+
+  geom_density_ridges(stat="identity", scale=10, alpha=0.4, colour=NA)+
+  geom_segment(aes(x = 5, y = 25, xend = 5, yend = 35),
+               arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
+  scale_x_continuous(name="Age", limits=c(0,105))+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+                   labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec"), name="")+
+  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+  annotate("text", x=3, y=30, label="More recent", family="Lato", colour="Grey40")+
+  theme_custom()+
+  theme(axis.line.y=element_blank())+
+  labs(title="Vaccine rollout down the age groups",
+       subtitle="Age distribution of COVID vaccines delivered each week in England by dose",
+       caption="Data from coronavirus.data.gov.uk | Inspired by @MathiasLeroy_ | Plot by @VictimOfMaths")+
+  coord_flip()
 
 dev.off()
