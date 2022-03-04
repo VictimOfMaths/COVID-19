@@ -335,7 +335,7 @@ ggplot(ratesdata %>% filter(sex=="Total" & date>as.Date("2021-12-01") & date<max
   scale_y_continuous(name="New COVID cases per 100,000")+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="COVID case rates are falling fastest in schoolchildren",
+  labs(title="COVID case rates are much lower than they were",
        subtitle="Rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -390,9 +390,9 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
   geom_hline(yintercept=1, colour="Grey50")+
   geom_hline(yintercept=0.5, colour="Grey70", linetype=2)+
   geom_hline(yintercept=2, colour="Grey70", linetype=2)+
-  geom_text(aes(x=as.Date("2021-12-07"), y=0.52, label="Cases halving each week"),
+  geom_text(aes(x=as.Date("2021-12-15"), y=0.52, label="Cases halving each week"),
             colour="Grey70")+
-  geom_text(aes(x=as.Date("2021-12-08"), y=2.1, label="Cases doubling each week"),
+  geom_text(aes(x=as.Date("2022-02-20"), y=2.1, label="Cases doubling each week"),
             colour="Grey70")+
   geom_line(aes(x=date, y=caseratio, colour=age))+
   scale_x_date(name="")+
@@ -401,7 +401,7 @@ ggplot(popheatmap %>% filter(date>as.Date("2021-12-01") & date<max(date)))+
                      labels=c("-50%", "No change", "+100%"))+
   scale_colour_paletteer_d("pals::stepped", name="Age")+
   theme_custom()+
-  labs(title="Case rates are now lower in every age group than 7 days ago",
+  labs(title="The fall in COVID cases has started slowing in the last few days",
        subtitle="Weekly change in the rolling 7-day average number of new COVID cases in England, by age group",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
