@@ -56,15 +56,9 @@ olddata_from <- read_excel(temp, sheet=2, range="C14:DD22", col_names=FALSE) %>%
 
 data <- bind_rows(olddata_with, newdata_with) %>% 
   merge(bind_rows(olddata_from, newdata_from)) %>% 
-  mutate(incidental=with-from) %>% 
+  mutate(incidental=with-from,
+         Region=if_else(Region=="ENGLAND", "England", "Region")) %>% 
   gather(type, count, c("with", "from", "incidental"))
-
-data <- data %>% 
-  group_by(date, type) %>% 
-  summarise(count=sum(count)) %>% 
-  mutate(Region="England") %>% 
-  ungroup() %>% 
-  bind_rows(data)
 
 agg_tiff("Outputs/COVIDAdmissionsCause.tiff", units="in", width=9, height=7, res=500)
 ggplot(data %>% filter(Region=="England" & type!="with"), 
