@@ -17,20 +17,50 @@ theme_custom <- function() {
           strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
           plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
                                   margin=margin(0,0,5.5,0)),
-          text=element_text(family="Lato"))
+          text=element_text(family="Lato"),
+          plot.subtitle=element_text(colour="Grey40", hjust=0, vjust=1),
+          plot.caption=element_text(colour="Grey40", hjust=1, vjust=1, size=rel(0.8)),
+          axis.text=element_text(colour="Grey40"),
+          axis.title=element_text(colour="Grey20"),
+          legend.text=element_text(colour="Grey40"),
+          legend.title=element_text(colour="Grey20"))
 }
 
 #Read in latest monthly age-stratified admissions data from NHS England website
-url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Covid-Publication-13-01-2022-Supplementary-Data.xlsx"
+url <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Covid-Publication-10-03-2022-Supplementary-Data.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=url, destfile=temp, quiet=FALSE, mode="wb")
 
-rawdata <- read_excel(temp, range="D16:QK25", col_names=FALSE) %>% 
+rawdata <- read_excel(temp, range="D16:EY25", col_names=FALSE) %>% 
+  mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
+  gather(date, admissions, c(1:(ncol(.)-1))) %>% 
+  mutate(date=as.Date("2021-10-01")+days(as.integer(substr(date, 4, 6))-1),
+         age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
+                                  "75-84", "85+")))
+
+#Previous data 1
+url1 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/02/Covid-Publication-13-01-2022-Supplementary-Data-210407-210930.xlsx"
+temp <- curl_download(url=url1, destfile=temp, quiet=FALSE, mode="wb")
+
+rawdataold1 <- read_excel(temp, range="D16:FX25", col_names=FALSE) %>% 
+  mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
+  gather(date, admissions, c(1:(ncol(.)-1))) %>% 
+  mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-1),
+         age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
+                                  "75-84", "85+")))
+
+#Previous data 2
+url2 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/02/Covid-Publication-13-01-2022-Supplementary-Data-up-to-210406.xlsx"
+temp <- curl_download(url=url2, destfile=temp, quiet=FALSE, mode="wb")
+
+rawdataold2 <- read_excel(temp, range="D16:FX25", col_names=FALSE) %>% 
   mutate(age=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")) %>% 
   gather(date, admissions, c(1:(ncol(.)-1))) %>% 
   mutate(date=as.Date("2020-10-12")+days(as.integer(substr(date, 4, 6))-1),
          age=factor(age, levels=c("0-5", "6-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", 
                                   "75-84", "85+")))
+
+rawdata <- bind_rows(rawdata, rawdataold1, rawdataold2)
 
 agg_tiff("Outputs/COVIDAdmissionsHeatmap.tiff", units="in", width=9, height=6, res=800)
 ggplot(rawdata, aes(x=date, y=age, fill=admissions))+
@@ -47,7 +77,7 @@ ggplot(rawdata, aes(x=date, y=age, fill=admissions))+
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
-#Version of Delta wave only
+#Version of Delta/Omicron wave only
 agg_tiff("Outputs/COVIDAdmissionsHeatmapRecent.tiff", units="in", width=9, height=6, res=800)
 ggplot(rawdata %>% filter(date>as.Date("2021-06-01")), aes(x=date, y=age, fill=admissions))+
   geom_tile()+
@@ -103,6 +133,7 @@ ggplot(data, aes(x=date, y=age, fill=admrate))+
   labs(title="COVID admission rates have been much lower and younger in the latest wave",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDAdmissionsHeatmapRateRecent.tiff", units="in", width=9, height=6, res=800)
@@ -118,6 +149,7 @@ ggplot(data %>% filter(date>as.Date("2021-06-01")), aes(x=date, y=age, fill=admr
   labs(title="COVID admission rates have been rising in older age groups",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
 dev.off()
 
 ################
@@ -151,9 +183,29 @@ ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)),
   theme(legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates have been falling in older age groups",
+  labs(title="COVID admission rates during the Delta and Omicron waves",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
+dev.off()
+
+agg_tiff("Outputs/COVIDAdmissionsHeatmapRateSmoothed.tiff", 
+         units="in", width=9, height=6, res=800)
+ggplot(rolldata %>% filter(!is.na(admrate_roll)), 
+       aes(x=date, y=age, fill=admrate_roll))+
+  geom_tile()+
+  scale_x_date(name="")+
+  scale_y_discrete(name="Age group")+
+  scale_fill_paletteer_c("viridis::inferno", name="Daily admissions per 100,000",
+                         limits=c(0,NA))+
+  theme_custom()+
+  theme(legend.position="top")+
+  guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
+                               barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
+  labs(title="COVID admission rates have been *much* lower this winter",
+       subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
+       caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
+
 dev.off()
 
 agg_tiff("Outputs/COVIDAdmissionsContourRateRecentSmoothed.tiff", 
@@ -168,8 +220,8 @@ ggplot(rolldata %>% filter(date>as.Date("2021-06-01") & !is.na(admrate_roll)),
   "20+", "22+", "24+"))+
   theme_custom()+
   theme(legend.position="top")+
-  guides(fill=guide_legend(nrow=1))+
-  labs(title="COVID admission rates have been rising in older age groups",
+  guides(fill=guide_legend(nrow=2))+
+  labs(title="COVID admission rates have been slow to fall since Omicron arrived",
        subtitle="Rate of new daily admissions to hospital of patients with a positive COVID test, or new COVID diagnoses in hospital in England",
        caption="Admissions data from NHS England | Population date from ONS | Plot by @VictimOfMaths")
 
@@ -254,7 +306,7 @@ ggplot(alldata %>% filter(!is.na(CHR) & age=="Total"), aes(x=date, y=CHR))+
   theme_custom()+
   labs(title="The proportion of COVID cases being admitted to hospital has been fairly steady recently",
        subtitle="Rolling 7-day average COVID admission rate in English hospitals compared to the rolling 7-day average case rate,\nassuming an 8-day lag between testing positive and hospital admission",
-       caption="Data from NHS England and coronavirues.data.gov.uk | Plot and analysis by Colin Angus")
+       caption="Data from NHS England and coronavirues.data.gov.uk | Plot by @VictimOfMaths")
 dev.off()
 
 agg_tiff("Outputs/COVIDCHRxAge.tiff", units="in", width=9, height=6, res=500)
