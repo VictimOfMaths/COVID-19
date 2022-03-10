@@ -233,15 +233,35 @@ ggplot()+
 dev.off()
 
 #And a sensible version
+agg_tiff("Outputs/COVIDAdmissionsPolar.tiff", units="in", width=8, height=8, res=800)
 ggplot(data2, aes(x=yeardays, y=adm_roll, colour=as.factor(year)))+
   geom_line()+
   scale_x_continuous(breaks=c(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334),
                      labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
                               "Oct", "Nov", "Dec"))+
   coord_polar()+
+  scale_colour_paletteer_d("wesanderson::Darjeeling1", name="")+
   theme_void()+
   theme(panel.grid.major.x=element_line(colour="Grey90"),
         axis.text.x=element_text(colour="Grey60"),
         text=element_text(family="Lato"), plot.title=element_text(face="bold", size=rel(1.8)),
-        plot.title.position = "plot", plot.caption.position = "plot")
+        plot.title.position = "plot", plot.caption.position = "plot")+
+  labs(title="Seasonal (?) patterns in COVID hosptial admissions",
+       subtitle="Rolling 7-day average of new COVID hospital admissions in England",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
 
+
+agg_tiff("Outputs/COVIDAdmissionsLinear.tiff", units="in", width=8, height=6, res=800)
+ggplot(data2, aes(x=yeardays, y=adm_roll, colour=as.factor(year)))+
+  geom_line()+
+  scale_x_continuous(breaks=c(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334),
+                     labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                              "Oct", "Nov", "Dec"), name="")+
+  scale_y_continuous(name="Daily new hospital admissions")+
+  scale_colour_paletteer_d("wesanderson::Darjeeling1", name="")+
+  theme_custom()+
+  labs(title="Seasonal (?) patterns in COVID hospital admissions",
+       subtitle="Rolling 7-day average of new COVID hospital admissions in England",
+       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+dev.off()
