@@ -117,7 +117,7 @@ plot <- ggplot()+
         plot.title=element_text(face="bold", size=rel(1.6)),
         legend.text = element_text(face="bold", size=rel(1)))+
   guides(fill=guide_legend(override.aes=list(size=3)))+
-  labs(title="COVID case rates in London are heading skywards",
+  labs(title="Heading in the wrong direction",
        subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
@@ -150,7 +150,7 @@ regplot <- ggplot()+
         legend.text = element_text(face="bold", size=rel(1)),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   guides(fill=guide_legend(override.aes=list(size=3)))+
-  labs(title="COVID case rates are threatening to take off in many English regions",
+  labs(title="The explosion in COVID cases is slowing down everywhere",
        subtitle=paste0("COVID case rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
@@ -183,7 +183,7 @@ regplot <- ggplot()+
         legend.text = element_text(face="bold", size=rel(1)),
         strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)))+
   guides(fill=guide_legend(override.aes=list(size=3)))+
-  labs(title="COVID case rates are threatening to take off in many English regions",
+  labs(title="COVID case rates are threatening to take off away from London/the South East",
        subtitle=paste0("COVID case rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        maxdate),
        caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
@@ -191,6 +191,94 @@ regplot <- ggplot()+
 agg_tiff("Outputs/COVIDCasesLTLAChangeScatterPathsxRegionv2.tiff", units="in", width=10, height=10, res=500)
 regplot
 dev.off()
+
+#Whole region/nation version (i.e. one dot per region)
+plotdatareg <- plotdata %>% 
+  mutate(cases=caserate*pop/100000, change=change*pop/100000) %>% 
+  group_by(Region, date, dayssince) %>% 
+  summarise(cases=sum(cases), pop=sum(pop)) %>% 
+  mutate(caserate=cases*100000/pop) %>% 
+  ungroup() %>% 
+  group_by(Region) %>% 
+  mutate(change=caserate-lag(caserate,7)) %>% 
+  ungroup() %>% 
+  mutate(Country=case_when(
+    Region=="Scotland" ~ "Scotland",
+    Region=="Wales" ~ "Wales",
+    Region=="Northern Ireland" ~ "Northern Ireland",
+    TRUE ~ "England"))
+
+agg_tiff("Outputs/COVIDCasesRegionChangeScatter.tiff", units="in", width=8, height=7, res=800)
+ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdatareg %>% filter(date>=maxdate-days(30)), 
+            aes(x=caserate, y=change, group=Region, alpha=30-dayssince),
+            colour="Grey50", show.legend=FALSE)+
+  geom_point(data=plotdatareg %>% filter(date==maxdate),
+             aes(x=caserate, y=change, size=pop), fill="White", shape=21)+
+  geom_point(data=plotdatareg %>% filter(date==maxdate),
+             aes(x=caserate, y=change, fill=Country, size=pop), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdatareg %>% filter(date==maxdate), 
+                  aes(x=caserate, y=change, label=Region), size=rel(2.3))+
+  scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in case rate compared to the preceding week")+
+  scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  scale_size(guide=FALSE)+
+  theme_classic()+
+  theme(axis.line=element_blank(), text=element_text(family="Lato"),
+        legend.position = "top", plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="Case numbers are rising again",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past month.\nData up to ",
+                       maxdate),
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
+dev.off()
+
+#Whole region/nation version (i.e. one dot per region)
+plotdatanat <- plotdata %>% 
+  mutate(cases=caserate*pop/100000, change=change*pop/100000,
+         Country=case_when(
+           Region=="Scotland" ~ "Scotland",
+           Region=="Wales" ~ "Wales",
+           Region=="Northern Ireland" ~ "Northern Ireland",
+           TRUE ~ "England")) %>% 
+  group_by(Country, date, dayssince) %>% 
+  summarise(cases=sum(cases), pop=sum(pop)) %>% 
+  mutate(caserate=cases*100000/pop) %>% 
+  ungroup() %>% 
+  group_by(Country) %>% 
+  mutate(change=caserate-lag(caserate,7)) %>% 
+  ungroup() 
+
+agg_tiff("Outputs/COVIDCasesNationChangeScatter.tiff", units="in", width=8, height=7, res=800)
+ggplot()+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept=0)+
+  geom_path(data=plotdatanat %>% filter(date>=maxdate-days(182)), 
+            aes(x=caserate, y=change, colour=Country, alpha=182-dayssince),
+            show.legend=FALSE)+
+  geom_point(data=plotdatanat %>% filter(date==maxdate),
+             aes(x=caserate, y=change, size=pop), fill="White", shape=21)+
+  geom_point(data=plotdatanat %>% filter(date==maxdate),
+             aes(x=caserate, y=change, fill=Country, size=pop), shape=21, alpha=0.7)+
+  geom_text_repel(data=plotdatanat %>% filter(date==maxdate), 
+                  aes(x=caserate, y=change, label=Country), size=rel(2.3))+
+  scale_x_continuous(name="New cases in the past week\n(rate per 100,000)", limits=c(0,NA))+
+  scale_y_continuous(name="Change in case rate compared to the preceding week")+
+  scale_fill_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  scale_colour_paletteer_d("fishualize::Scarus_quoyi", name="")+
+  scale_size(guide=FALSE)+
+  theme_classic()+
+  theme(axis.line=element_blank(), text=element_text(family="Lato"),
+        legend.position = "top", plot.title.position="plot",
+        plot.title=element_text(face="bold", size=rel(1.6)))+
+  labs(title="Case numbers are rising again",
+       subtitle=paste0("COVID case rates and how these have changed in the past week in UK Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past month.\nData up to ",
+                       maxdate),
+       caption="Data from coronavirus.data.gov.uk and ONS\nPlot by @VictimOfMaths")
+dev.off()
+
 
 #Animated version (to be honest, this needs tweaking, it looks pretty rubbish with
 #these settings)
