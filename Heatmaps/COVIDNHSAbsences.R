@@ -24,7 +24,7 @@ theme_custom <- function() {
 }
 
 #Download latest absence data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Staff-Absences-Web-File-Timeseries-2.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Staff-Absences-Web-File-Timeseries-2.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -32,9 +32,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
   set_names("Region", "TrustCode")
 
-totalraw <- read_excel(temp, sheet="Total Absences", range="C16:BA163", col_names=FALSE) 
+totalraw <- read_excel(temp, sheet="Total Absences", range="C16:DE163", col_names=FALSE) 
   
-COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:BA163", col_names=FALSE) 
+COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:DE163", col_names=FALSE) 
 
 #Pull out national figures
 nattotals <- totalraw %>% 
@@ -64,7 +64,7 @@ ggplot(natdata %>% filter(Cause!="Total"), aes(x=Date, y=Count_roll, fill=Cause)
   scale_fill_paletteer_d("lisa::Jean_MichelBasquiat_1")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="NHS staff absences are falling, but still high",
+  labs(title="NHS staff absences are rising again",
        subtitle="Rolling 7-day average number of staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span><br>in English acute NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
@@ -180,7 +180,7 @@ ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-16")),
   theme_custom()+
   theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
   labs(title="Some NHS trusts have more than 10% of staff off work",
-       subtitle="Proportion of NHS staff absent for any reason as of 16th January, by trust (acute trusts only)",
+       subtitle="Proportion of NHS staff absent for any reason as of 13th March, by trust (acute trusts only)",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
