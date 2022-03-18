@@ -21,17 +21,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Primary-Diagnosis-Supplement-20220310.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Primary-Diagnosis-Supplement-20220317.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:FF22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:FM22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:FF22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:FM22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -57,7 +57,7 @@ olddata_from <- read_excel(temp, sheet=2, range="C14:DD22", col_names=FALSE) %>%
 data <- bind_rows(olddata_with, newdata_with) %>% 
   merge(bind_rows(olddata_from, newdata_from)) %>% 
   mutate(incidental=with-from,
-         Region=if_else(Region=="ENGLAND", "England", "Region")) %>% 
+         Region=if_else(Region=="ENGLAND", "England", Region)) %>% 
   gather(type, count, c("with", "from", "incidental"))
 
 agg_tiff("Outputs/COVIDAdmissionsCause.tiff", units="in", width=9, height=7, res=500)
@@ -70,12 +70,12 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The recent rise is mostly *not* patients being treated 'for' COVID",
+  labs(title="The number of patients being treated *for* COVID is rising again",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
-  annotate("text", x=as.Date("2021-10-30"), y=11500, label="Patients being treated for COVID",
+  annotate("text", x=as.Date("2021-10-30"), y=11500/2, label="Patients being treated for COVID",
            colour="#40A0D8", family="Lato")+
-  annotate("text", x=as.Date("2021-09-30"), y=4500, label="Patients being treated for other causes, but 'with' COVID",
+  annotate("text", x=as.Date("2021-09-30"), y=4500/2, label="Patients being treated for other causes, but 'with' COVID",
            colour="#F89088", family="Lato")
 dev.off()
 
