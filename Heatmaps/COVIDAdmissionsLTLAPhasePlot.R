@@ -24,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220120.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Weekly-covid-admissions-and-beds-publication-220324.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "DH"
+admrange <- "FS"
 #Set latest date of admissions data
-admdate <- as.Date("2022-01-16")
+admdate <- as.Date("2022-03-24")
 
 #Read in admissions
 #First data up to 6th April
@@ -316,7 +316,7 @@ plot1 <- ggplot()+
         plot.caption.position="plot", legend.position="top")+
   guides(fill = guide_colorbar(title.position = 'top', title.hjust = .5,
                                barwidth = unit(20, 'lines'), barheight = unit(.5, 'lines')))+
-  labs(title="COVID admission rates remain highest in the North West",
+  labs(title="COVID admission rates vary a lot across England",
        subtitle=paste0("Rolling 7-day average number of daily new hospital admissions at Lower Tier Local Authority level\nData up to ", adm_max),
        caption="Data from NHS England & ONS, Cartogram from @carlbaker/House of Commons Library\nPlot by @VictimOfMaths")
 
@@ -342,7 +342,7 @@ plot2 <- ggplot()+
   scale_fill_paletteer_d("LaCroixColoR::paired", name="")+
   scale_size(guide=FALSE)+
   theme_custom()+
-  labs(title="COVID admissions are falling in many places, but not everywhere️",
+  labs(title="COVID admissions are rising in most NHS trusts in England️",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English Local Authorities.\nBubbles are sized by population. Trails represent each area's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England & ONS\nPlot by @VictimOfMaths")
@@ -503,7 +503,7 @@ plot3 <- ggplot()+
   scale_size(guide="none")+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admission rates are still rising in several Northern NHS trusts",
+  labs(title="COVID admission rates are rising in most NHS trusts in England",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
