@@ -162,14 +162,15 @@ ggplot(data2 %>% filter(areaName=="England" & date>as.Date("2021-12-01")),
   geom_text_repel(data=data2 %>% filter(date==max(date[!is.na(peakprop)]) & areaName=="England"),
                   aes(x=max(date[!is.na(peakprop)]), y=peakprop, label = age, 
                       colour=age),
-                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-03-12"), NA),
+                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-03-20"), NA),
                   hjust = 0, segment.color = NA, box.padding = .3, show.legend = FALSE)+
-  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-03-20")))+
+  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-03-24")))+
   scale_y_continuous(name="Proportion of Omicron peak",
-                     labels=label_percent(accuracy=1))+
+                     labels=label_percent(accuracy=1), limits=c(0,NA), 
+                     breaks=c(0,0.2,0.4,0.6,0.8,1,1.2))+
   scale_colour_paletteer_d("awtools::a_palette")+
   theme_custom()+
-  labs(title="COVID hospital admissions are rising in all age groups",
+  labs(title="COVID hospital admissions in the oldest ages have surpassed their January peak",
        subtitle="Rolling 7-day average new COVID admissions (including those testing positive in hospital) as a proportion of the peak in January 2022",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
@@ -236,3 +237,4 @@ ggplot(data2 %>% filter(areaName!="England"  & date>as.Date("2021-12-01")),
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
+
