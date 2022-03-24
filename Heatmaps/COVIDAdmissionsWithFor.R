@@ -17,21 +17,27 @@ theme_custom <- function() {
           strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
           plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
                                   margin=margin(0,0,5.5,0)),
-          text=element_text(family="Lato"))
+          text=element_text(family="Lato"),
+          plot.subtitle=element_text(colour="Grey40", hjust=0, vjust=1),
+          plot.caption=element_text(colour="Grey40", hjust=1, vjust=1, size=rel(0.8)),
+          axis.text=element_text(colour="Grey40"),
+          axis.title=element_text(colour="Grey20"),
+          legend.text=element_text(colour="Grey40"),
+          legend.title=element_text(colour="Grey20"))
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Primary-Diagnosis-Supplement-20220317.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Primary-Diagnosis-Supplement-20220324.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:FM22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:FT22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:FM22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:FT22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -70,7 +76,7 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The number of patients being treated *for* COVID is rising again",
+  labs(title="The number of patients being treated *for* COVID is still rising",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-30"), y=11500/2, label="Patients being treated for COVID",
