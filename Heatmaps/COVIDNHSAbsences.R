@@ -24,7 +24,7 @@ theme_custom <- function() {
 }
 
 #Download latest absence data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Staff-Absences-Web-File-Timeseries-2.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Staff-Absences-Web-File-Timeseries-3.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -32,9 +32,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
   set_names("Region", "TrustCode")
 
-totalraw <- read_excel(temp, sheet="Total Absences", range="C16:DE163", col_names=FALSE) 
+totalraw <- read_excel(temp, sheet="Total Absences", range="C16:DL163", col_names=FALSE) 
   
-COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:DE163", col_names=FALSE) 
+COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:DL163", col_names=FALSE) 
 
 #Pull out national figures
 nattotals <- totalraw %>% 
@@ -180,16 +180,16 @@ ggplot(combined %>% filter(Cause=="Total" & Date==as.Date("2022-01-16")),
   theme_custom()+
   theme(axis.text.y=element_blank(), axis.ticks.y=element_blank())+
   labs(title="Some NHS trusts have more than 10% of staff off work",
-       subtitle="Proportion of NHS staff absent for any reason as of 13th March, by trust (acute trusts only)",
+       subtitle="Proportion of NHS staff absent for any reason as of 20th March, by trust (acute trusts only)",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
 
 #Bring in bed occupancy data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/01/Weekly-covid-admissions-and-beds-publication-220120.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Weekly-covid-admissions-and-beds-publication-220324.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-weeklyrange <- "DJ"
+weeklyrange <- "FS"
 
 GACV19 <- read_excel(temp, sheet="Adult G&A Beds Occupied COVID", 
                           range=paste0("B25:", weeklyrange, "164"), col_names=FALSE)[-c(2),] %>% 
