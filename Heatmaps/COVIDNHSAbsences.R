@@ -24,7 +24,7 @@ theme_custom <- function() {
 }
 
 #Download latest absence data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Staff-Absences-Web-File-Timeseries-3.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Staff-Absences-Web-File-Timeseries.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
@@ -32,9 +32,9 @@ temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 lookup <- read_excel(temp, sheet="Total Absences", range="B26:C163", col_names=FALSE) %>% 
   set_names("Region", "TrustCode")
 
-totalraw <- read_excel(temp, sheet="Total Absences", range="C16:DL163", col_names=FALSE) 
+totalraw <- read_excel(temp, sheet="Total Absences", range="C16:DZ163", col_names=FALSE) 
   
-COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:DL163", col_names=FALSE) 
+COVIDraw <- read_excel(temp, sheet="COVID Absences", range="C16:DZ163", col_names=FALSE) 
 
 #Pull out national figures
 nattotals <- totalraw %>% 
@@ -64,7 +64,7 @@ ggplot(natdata %>% filter(Cause!="Total"), aes(x=Date, y=Count_roll, fill=Cause)
   scale_fill_paletteer_d("lisa::Jean_MichelBasquiat_1")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="NHS staff absences are rising again",
+  labs(title="NHS staff absences are high but have stopped rising",
        subtitle="Rolling 7-day average number of staff ill or isolating <span style='color:#C11432FF;'>due to COVID</span> or <span style='color:#009ADAFF ;'>absent for other reasons</span><br>in English acute NHS trusts",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 
