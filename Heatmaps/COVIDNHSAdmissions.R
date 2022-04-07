@@ -16,14 +16,14 @@ library(scales)
 
 #Hospital admissions data available from https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
 #Longer time series of regional data updated daily
-dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/COVID-19-daily-admissions-and-beds-20220309.xlsx"
+dailyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/COVID-19-daily-admissions-and-beds-20220406.xlsx"
 #Shorter time series of trust-level data updated weekly on a Thursday afternoon
-weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Weekly-covid-admissions-and-beds-publication-220310.xlsx"
+weeklyurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Weekly-covid-admissions-and-beds-publication-220407.xlsx"
 #Increment by one each day
-dailyrange <- "FD"
-dailyoccrange <- "FF"
+dailyrange <- "GF"
+dailyoccrange <- "GH"
 #Increment by seven each week
-weeklyrange <- "FE"
+weeklyrange <- "GG"
 
 dailydata <- tempfile()
 dailydata <- curl_download(url=dailyurl, destfile=dailydata, quiet=FALSE, mode="wb")
@@ -133,7 +133,7 @@ dev.off()
 
 #Recent version
 agg_tiff("Outputs/COVIDNHSMetricsxRegRecent.tiff", units="in", width=12, height=6, res=500)
-ggplot(dailydata %>% filter(date>as.Date("2021-09-01")))+
+ggplot(dailydata %>% filter(date>as.Date("2021-12-01")))+
   geom_line(aes(x=date, y=rollrate, colour=region))+
   scale_x_date(name="")+
   scale_y_continuous(name="Rate per 100,000 population", limits=c(0,NA))+
@@ -143,7 +143,7 @@ ggplot(dailydata %>% filter(date>as.Date("2021-09-01")))+
   theme(strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
         plot.title=element_text(face="bold", size=rel(1.2)),
         text=element_text(family="Lato"))+
-  labs(title="COVID admissions are rising, but ventilated bed occupancy keeps falling",
+  labs(title="New COVID admissions have stopped rising recently",
        subtitle=paste0("Rolling 7-day averages of new hospital admissions, total bed occupancy and Mechanical Ventilation beds\nfor patients with a positive COVID-19 diagnosis. Data up to ", maxdailydate, "."),
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
