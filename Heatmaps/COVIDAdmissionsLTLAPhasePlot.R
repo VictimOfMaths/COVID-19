@@ -24,12 +24,12 @@ theme_custom <- function() {
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/03/Weekly-covid-admissions-and-beds-publication-220324.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Weekly-covid-admissions-and-beds-publication-220407.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "FS"
+admrange <- "GG"
 #Set latest date of admissions data
-admdate <- as.Date("2022-03-24")
+admdate <- as.Date("2022-04-03")
 
 #Read in admissions
 #First data up to 6th April
@@ -503,7 +503,7 @@ plot3 <- ggplot()+
   scale_size(guide="none")+
   theme_custom()+
   theme(axis.line=element_blank())+
-  labs(title="COVID admission rates are rising in most NHS trusts in England",
+  labs(title="At an NHS trust level, COVID admission rates in England are a mixed picture",
        subtitle=paste0("Hospital admission rates and how these have changed in the past week in English hospital trusts.\nBubbles are sized by population. Trails represent each trust's movement across the plot in the past week.\nData up to ",
                        adm_max),
        caption="Data from NHS England, PHE & ONS\nPlot by @VictimOfMaths")
