@@ -27,17 +27,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Primary-Diagnosis-Supplement-20220407.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Primary-Diagnosis-Supplement-20220421.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:GH22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:GV22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:GH22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:GV22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -76,7 +76,7 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="Growth in the number of patients being treated *for* COVID has slowed",
+  labs(title="The number of patients being treated *for* COVID is falling",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-30"), y=11500/2, label="Patients being treated for COVID",
@@ -167,7 +167,7 @@ data %>% filter(type!="incidental" & Region!="ENGLAND"& Region !="England") %>%
                      limits=c(0,NA), labels=label_percent(accuracy=1))+
   scale_colour_paletteer_d("colorblindr::OkabeIto")+
   theme_custom()+
-  labs(title="The proportion of COVID patients hospitalised because of COVID has fallen everywhere",
+  labs(title="The proportion of COVID patients hospitalised because of COVID varies a lot",
        subtitle="Proportion of total COVID-positive patients assessed to be in hospital 'for' rather than 'with' COVID by NHS region",
        caption="Data from NHS England | Plot by @VictimOfMaths")
 dev.off()
