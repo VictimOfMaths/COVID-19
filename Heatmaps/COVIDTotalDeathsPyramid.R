@@ -122,17 +122,16 @@ data2 <- bind_rows(data20f, data20m, data21f, data21m, data22f, data22m) %>%
                                   "65-69", "70-74", "75-79", "80-84", "85-89", "90+")))
 
 agg_png("Outputs/COVIDTotalDeathsxAgexSexxYear.png", units="in", width=8, height=8, res=800)
-ggplot(data2, aes(x=plotdeaths, y=Age, fill=Sex))+
-  geom_col()+
+ggplot(data2, aes(x=plotdeaths, y=Age, fill=as.factor(Year)))+
+  geom_col(position="dodge")+
   geom_vline(xintercept=0, colour="Grey40")+
-  scale_x_continuous(name="Total COVID deaths", limits=c(-25000, 25000),
-                     breaks=c(-20000, -10000, 0, 10000, 20000),
-                     labels=c("20,000", "10,000", "0", "10,000", "20,000"))+
-  scale_fill_manual(values=c("#00cc99", "#6600cc"), name="", guide = guide_legend(reverse = TRUE))+
-  facet_wrap(~Year)+
+  scale_x_continuous(name="Total COVID deaths", limits=c(-11000, 11000),
+                     breaks=c(-10000, -5000, 0, 5000, 10000),
+                     labels=c("10,000", "5,000", "0", "5,000", "10,000"))+
+  scale_fill_paletteer_d("calecopal::superbloom3", name="")+
   theme_custom()+
   theme(legend.position="top")+
-  labs(title="Total COVID-19 deaths by age and sex",
+  labs(title="COVID-19 deaths by age, sex and year",
        subtitle="Deaths in England & Wales registered up to 6th May 2022 where COVID-19 was mentioned on the death certificate",
        caption="Data from ONS | Plot by @VictimOfMaths")
 
