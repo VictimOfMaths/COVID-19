@@ -27,17 +27,34 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Primary-Diagnosis-Supplement-20220421.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/06/Primary-Diagnosis-Supplement-20220609.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:GV22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:BS22", col_names=FALSE) %>% 
+  drop_na() %>% 
+  gather(date, with, c(2:ncol(.))) %>% 
+  rename("Region"=`...1`) %>% 
+  mutate(date=as.Date("2022-04-01")+days(as.numeric(substr(date, 4, 6))-2))
+
+newdata_from <- read_excel(temp, sheet=2, range="C14:BS22", col_names=FALSE) %>% 
+  drop_na() %>% 
+  gather(date, from, c(2:ncol(.))) %>% 
+  rename("Region"=`...1`) %>% 
+  mutate(date=as.Date("2022-04-01")+days(as.numeric(substr(date, 4, 6))-2))
+
+#Slightly older data
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/05/Primary-Diagnosis-Supplement-20220512-211001-220331.xlsx"
+temp <- tempfile()
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+olddata_with <- read_excel(temp, sheet=1, range="C14:GC22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-10-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:GV22", col_names=FALSE) %>% 
+olddata_from <- read_excel(temp, sheet=2, range="C14:GC22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -48,20 +65,20 @@ source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2021
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-olddata_with <- read_excel(temp, sheet=1, range="C14:DD22", col_names=FALSE) %>% 
+olderdata_with <- read_excel(temp, sheet=1, range="C14:DD22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-06-18")+days(as.numeric(substr(date, 4, 6))-2))
 
-olddata_from <- read_excel(temp, sheet=2, range="C14:DD22", col_names=FALSE) %>% 
+olderdata_from <- read_excel(temp, sheet=2, range="C14:DD22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2021-06-18")+days(as.numeric(substr(date, 4, 6))-2))
 
-data <- bind_rows(olddata_with, newdata_with) %>% 
-  merge(bind_rows(olddata_from, newdata_from)) %>% 
+data <- bind_rows(olderdata_with, olddata_with, newdata_with) %>% 
+  merge(bind_rows(olderdata_from, olddata_from, newdata_from)) %>% 
   mutate(incidental=with-from,
          Region=if_else(Region=="ENGLAND", "England", Region)) %>% 
   gather(type, count, c("with", "from", "incidental"))
@@ -76,12 +93,12 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The number of patients being treated *for* COVID is falling",
+  labs(title="The number of COVID patients in hospital has ticked up",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
-  annotate("text", x=as.Date("2021-10-30"), y=11500/2, label="Patients being treated for COVID",
+  annotate("text", x=as.Date("2021-10-15"), y=11500/2, label="Patients being treated for COVID",
            colour="#40A0D8", family="Lato")+
-  annotate("text", x=as.Date("2021-09-30"), y=4500/2, label="Patients being treated for other causes, but 'with' COVID",
+  annotate("text", x=as.Date("2022-01-15"), y=4500/4, label="Patients being treated for other causes, but 'with' COVID",
            colour="#F89088", family="Lato")
 dev.off()
 
