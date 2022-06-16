@@ -27,17 +27,17 @@ theme_custom <- function() {
 }
 
 #Download latest primary diagnosis data
-source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/06/Primary-Diagnosis-Supplement-20220609.xlsx"
+source <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/06/Primary-Diagnosis-Supplement-20220616.xlsx"
 temp <- tempfile()
 temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 
-newdata_with <- read_excel(temp, sheet=1, range="C14:BS22", col_names=FALSE) %>% 
+newdata_with <- read_excel(temp, sheet=1, range="C14:BZ22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, with, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
   mutate(date=as.Date("2022-04-01")+days(as.numeric(substr(date, 4, 6))-2))
 
-newdata_from <- read_excel(temp, sheet=2, range="C14:BS22", col_names=FALSE) %>% 
+newdata_from <- read_excel(temp, sheet=2, range="C14:BZ22", col_names=FALSE) %>% 
   drop_na() %>% 
   gather(date, from, c(2:ncol(.))) %>% 
   rename("Region"=`...1`) %>% 
@@ -93,7 +93,7 @@ ggplot(data %>% filter(Region=="England" & type!="with"),
   scale_colour_paletteer_d("palettetown::porygon")+
   theme_custom()+
   theme(plot.subtitle=element_markdown())+
-  labs(title="The number of COVID patients in hospital has ticked up",
+  labs(title="The BA.4/5 wave is here",
        subtitle="Patients in English acute hospitals <span style='color:#40A0D8;'>'for' COVID</span> and <span style='color:#F89088;'>where COVID is not the primary cause of hospitalisation</span>",
        caption="Data from NHS England | Plot by @VictimOfMaths")+
   annotate("text", x=as.Date("2021-10-15"), y=11500/2, label="Patients being treated for COVID",
