@@ -19,17 +19,23 @@ theme_custom <- function() {
           strip.background=element_blank(), strip.text=element_text(face="bold", size=rel(1)),
           plot.title=element_text(face="bold", size=rel(1.5), hjust=0,
                                   margin=margin(0,0,5.5,0)),
-          text=element_text(family="Lato"))
+          text=element_text(family="Lato"),
+          plot.subtitle=element_text(colour="Grey40", hjust=0, vjust=1),
+          plot.caption=element_text(colour="Grey40", hjust=1, vjust=1, size=rel(0.8)),
+          axis.text=element_text(colour="Grey40"),
+          axis.title=element_text(colour="Grey20"),
+          legend.text=element_text(colour="Grey40"),
+          legend.title=element_text(colour="Grey20"))
 }
 
 #Read in admissions data
 #https://www.england.nhs.uk/statistics/statistical-work-areas/covid-19-hospital-activity/
-admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/04/Weekly-covid-admissions-and-beds-publication-220407.xlsx"
+admurl <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/06/Weekly-covid-admissions-and-beds-publication-220623.xlsx"
 
 #Increment by 7 when each new report is published
-admrange <- "GG"
+admrange <- "CF"
 #Set latest date of admissions data
-admdate <- as.Date("2022-04-03")
+admdate <- as.Date("2022-06-19")
 
 #Read in admissions
 #First data up to 6th April
@@ -48,6 +54,14 @@ temp1 <- curl_download(url=admurl.old2, destfile=temp1, quiet=FALSE, mode="wb")
 raw.adm.old2 <- read_excel(temp1, sheet="Hosp ads & diag", range=paste0("B25:FY512"), 
                           col_names=FALSE)
 
+#Then data from 1st October to 31st March
+admurl.old3 <- "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2022/05/Weekly-covid-admissions-and-beds-publication-220512_211001to220331-1.xlsx"
+
+temp1 <- tempfile()
+temp1 <- curl_download(url=admurl.old3, destfile=temp1, quiet=FALSE, mode="wb")
+raw.adm.old3 <- read_excel(temp1, sheet="Hosp ads & diag", range=paste0("B25:GD512"), 
+                           col_names=FALSE)
+
 #Read in more recent data
 temp2 <- tempfile()
 temp2 <- curl_download(url=admurl, destfile=temp2, quiet=FALSE, mode="wb")
@@ -62,11 +76,15 @@ admissions.old <- raw.adm.old %>%
   bind_rows(raw.adm.old2 %>% 
               gather(date, admissions, c(4:ncol(raw.adm.old2))) %>% 
               mutate(date=as.Date("2021-04-07")+days(as.integer(substr(date, 4, 6))-4)) %>% 
+              rename(Region=...1, code=...2, name=...3)) %>% 
+  bind_rows(raw.adm.old3 %>% 
+              gather(date, admissions, c(4:ncol(raw.adm.old3))) %>% 
+              mutate(date=as.Date("2021-10-01")+days(as.integer(substr(date, 4, 6))-4)) %>% 
               rename(Region=...1, code=...2, name=...3))
 
 admissions <- raw.adm %>% 
   gather(date, admissions, c(4:ncol(raw.adm))) %>% 
-  mutate(date=as.Date("2021-10-01")+days(as.integer(substr(date, 4, 6))-4)) %>% 
+  mutate(date=as.Date("2022-04-01")+days(as.integer(substr(date, 4, 6))-4)) %>% 
   rename(Region=...1, code=...2, name=...3) %>% 
   bind_rows(admissions.old)
 
