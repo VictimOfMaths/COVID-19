@@ -29,10 +29,10 @@ theme_custom <- function() {
 
 #Read in 2022 deaths by LA from ONS
 temp <- tempfile()
-source22 <- ("https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fhealthandsocialcare%2fcausesofdeath%2fdatasets%2fdeathregistrationsandoccurrencesbylocalauthorityandhealthboard%2f2022/lahbtables2022week09.xlsx")
+source22 <- ("https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/causesofdeath/datasets/deathregistrationsandoccurrencesbylocalauthorityandhealthboard/2022/lahbtables2022week24.xlsx")
 temp <- curl_download(url=source22, destfile=temp, quiet=FALSE, mode="wb")
 
-deaths22 <- read_excel(temp, sheet="Registrations - All data", range="A4:G36508") %>% 
+deaths22 <- read_excel(temp, sheet="Registrations - All data", range="A4:G97348") %>% 
   set_names("LAD17CD", "Geography", "LAName", "Cause", "Week", "Location", "Deaths") %>% 
   mutate(Date=as.Date("2022-01-07")+weeks(Week-1))
 
@@ -188,8 +188,8 @@ deciledata %>% filter(Location=="AllLocations" & Cause=="COVID 19" &
   geom_line()+
   scale_x_date(name="", breaks=c(as.Date("2021-07-01"), as.Date("2021-09-01"), 
                                  as.Date("2021-11-01"), as.Date("2022-01-01"),
-                                 as.Date("2022-03-01")), 
-               labels=c("Jul '21", "Sep '21","Nov '21",  "Jan '22", "Mar '22"))+
+                                 as.Date("2022-03-01"), as.Date("2022-05-01")), 
+               labels=c("Jul '21", "Sep '21","Nov '21",  "Jan '22", "Mar '22", "May '22"))+
   scale_y_continuous(name="Weekly COVID deaths", limits=c(0,NA))+
   #scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="Deprivation decile",
   #                         labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
@@ -197,7 +197,7 @@ deciledata %>% filter(Location=="AllLocations" & Cause=="COVID 19" &
   scale_colour_manual(values=c("#663000", "#CC9B7A", "#F2DACE", "#66F0FF", "#00AACC"), name="Deprivation quintile",
                       labels=c("1 - Most deprived", "2", "3", "4", "5 - Least deprived"))+
   theme_custom()+
-  labs(title="COVID mortality has fallen fastest in more deprived areas",
+  labs(title="The BA.2 wave hit less deprived areas hardest",
        subtitle="Number of deaths registered with Covid on the death certificate by quintiles of the Index of Multiple Deprivation",
        caption="Data from the Office for National Statistics | Plot by @VictimOfMaths")
 dev.off()
@@ -209,8 +209,8 @@ deciledata %>% filter(Location=="AllLocations" & Cause=="COVID 19" &
   geom_area(position="fill")+
   scale_x_date(name="", breaks=c(as.Date("2021-07-01"), as.Date("2021-09-01"), 
                                  as.Date("2021-11-01"), as.Date("2022-01-01"),
-                                 as.Date("2022-03-01")), 
-               labels=c("Jul '21", "Sep '21","Nov '21",  "Jan '22", "Mar '22"))+
+                                 as.Date("2022-03-01"), as.Date("2022-05-01")), 
+               labels=c("Jul '21", "Sep '21","Nov '21",  "Jan '22", "Mar '22", "May '22"))+
   scale_y_continuous(name="Proportion of COVID deaths", limits=c(0,NA), 
                      labels=label_percent(accuracy=1))+
   #scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="Deprivation decile",
