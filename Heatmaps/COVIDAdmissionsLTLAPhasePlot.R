@@ -12,6 +12,7 @@ library(snakecase)
 library(ggrepel)
 library(ragg)
 library(ggtext)
+library(gtools)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -762,3 +763,69 @@ before <- Imm.data3 %>% filter(date<as.Date("2021-09-02")+days(8)) %>%
 
 during <- Imm.data3 %>% filter(date>=as.Date("2021-09-02")+days(8) & date<=as.Date("2021-10-12")+days(8)) %>% 
   summarise(sum(diffSW))
+
+####################################
+#Admissions by deprivation
+#Start by calculating IMD at MSOA level
+#Download IMD data
+temp <- tempfile()
+source <- ("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833970/File_1_-_IMD2019_Index_of_Multiple_Deprivation.xlsx")
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+IMD <- read_excel(temp, sheet="IMD2019", range="A2:F32845", col_names=FALSE) %>% 
+  select(c(1,2,5,6)) %>% 
+  set_names("LSOA11CD", "LSOA11NM", "IMDrank", "IMDdecile")
+
+#Download LSOA to MSOA lookup
+source <- ("https://opendata.arcgis.com/datasets/fe6c55f0924b4734adf1cf7104a0173e_0.csv")
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+lookup <- read.csv(temp) %>% 
+  select(LSOA11CD, MSOA11CD, LAD17CD) %>% 
+  unique()
+
+#Merge into IMD data
+IMD <- merge(IMD, lookup, by="LSOA11CD")
+
+#Bring in population data for LSOAs
+source <- "https://www.ons.gov.uk/file?uri=%2fpeoplepopulationandcommunity%2fpopulationandmigration%2fpopulationestimates%2fdatasets%2flowersuperoutputareamidyearpopulationestimates%2fmid2020sape23dt2/sape23dt2mid2020lsoasyoaestimatesunformatted.xlsx"
+temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
+
+pop <- read_excel(temp, sheet="Mid-2020 Persons", range="A6:G34758", col_names=FALSE) %>% 
+  select(-c(2:6)) %>% 
+  set_names("LSOA11CD", "pop")
+
+pop_full <- read_excel(temp, sheet="Mid-2020 Persons", range="A6:CT34758", col_names=FALSE) %>% 
+  select(-c(2:7)) %>% 
+  set_names("LSOA11CD", c(0:90))
+
+#Merge into IMD data
+IMD <- merge(IMD, pop)
+
+#Calculate IMD rank at LTLA level, weighting by population
+IMD_LTLA <- IMD %>% 
+  group_by(LAD17CD)%>% 
+  summarise(IMDrank=weighted.mean(IMDrank, pop), pop=sum(pop)) %>% 
+  ungroup() %>% 
+  mutate(decile=quantcut(IMDrank, q=10, labels=FALSE))
+
+Adm_IMD <- merge(LAadmissions, IMD_LTLA, by.x="Lacode", by.y="LAD17CD") %>% 
+  group_by(date, decile) %>% 
+  summarise(pop=sum(pop.x), adm_roll=sum(adm_roll)) %>% 
+  ungroup() %>% 
+  mutate(admrate_roll=adm_roll*100000/pop)
+
+agg_tiff("Outputs/COVIDAdmissionsxIMD.tiff", units="in", width=9, height=6, res=500)
+ggplot(Adm_IMD, aes(x=date, y=admrate_roll, colour=as.factor(decile)))+
+  geom_line()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Daily new admissions per 100,000 people", limits=c(0,NA))+
+  scale_colour_paletteer_d("dichromat::BrowntoBlue_10", name="",
+                           labels=c("1 - Most deprived","2","3","4","5","6","7","8","9",
+                                    "10 - least deprived"))+
+  theme_custom()+
+  labs(title="Less deprived areas have consistently seen more COVID admissions",
+       subtitle="Daily rate of new COVID admissions in England based on Local Authority-level data",
+       caption="Data from NHS England, PHE & MHCLG | Plot by Colin Angus")
+
+dev.off()
