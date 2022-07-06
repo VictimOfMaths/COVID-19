@@ -133,7 +133,7 @@ natdata %>% mutate(date=as.Date(date),
   mutate(newadm=value-lag(value, 1),
          newadm_roll=roll_mean(newadm, 7, align="center", fill=NA)) %>% 
   ungroup() %>% 
-  ggplot(aes(x=date, y=newadm_roll, fill=age))+
+ggplot(aes(x=date, y=newadm_roll, fill=age))+
   geom_col(position="fill")+
   scale_x_date(name="")+
   scale_y_continuous(name="Proportion of admissions", labels=label_percent(accuracy=1))+
@@ -163,31 +163,34 @@ ggplot(data2 %>% filter(areaName=="England" & date>as.Date("2021-12-01")),
   geom_text_repel(data=data2 %>% filter(date==max(date[!is.na(peakprop)]) & areaName=="England"),
                   aes(x=max(date[!is.na(peakprop)]), y=peakprop, label = age, 
                       colour=age),
-                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-06-12"), NA),
+                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-07-03"), NA),
                   hjust = 0, segment.color = NA, box.padding = .3, show.legend = FALSE)+
-  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-07-01")))+
+  scale_x_date(name="", limits=c(NA_Date_, as.Date("2022-07-15")))+
   scale_y_continuous(name="Proportion of Omicron peak",
                      labels=label_percent(accuracy=1), limits=c(0,NA), 
                      breaks=c(0,0.2,0.4,0.6,0.8,1,1.2, 1.4))+
   scale_colour_paletteer_d("awtools::a_palette")+
   theme_custom()+
-  labs(title="The BA.4/5 wave is increasing hospitalisations across all age groups",
+  labs(title="Hospital admissions in older age groups are close to the January peak",
        subtitle="Rolling 7-day average new COVID admissions (including those testing positive in hospital) as a proportion of the peak in January 2022",
        caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
 
 dev.off()
 
-agg_tiff("Outputs/COVIDAdmissionsxAgeAbsOmi.tiff", units="in", width=9, height=6, res=500)
+agg_png("Outputs/COVIDAdmissionsxAgeAbsOmi.png", units="in", width=9, height=6, res=500)
 ggplot(data2 %>% filter(areaName=="England" & date>as.Date("2021-12-01")), 
        aes(x=date, y=admrate_roll, colour=age))+
-  geom_line()+
-  scale_x_date(name="")+
-  scale_y_continuous(name="Daily new admissions per 100,000")+
+  geom_line(show.legend=FALSE)+
+  geom_text_repel(data=data2 %>% filter(date==max(date[!is.na(admrate_roll)]) & areaName=="England"),
+                  aes(x=max(date[!is.na(admrate_roll)]), y=admrate_roll, label = paste(age, "year olds"), 
+                      colour=age),
+                  family = "Calibri", direction = "y", xlim = c(as.Date("2022-06-25"), NA),
+                  hjust = 0, segment.color = NA, box.padding = .3, show.legend = FALSE)+
+  scale_x_date(name="", limits=c(as.Date("2021-12-01"), as.Date("2022-07-15")))+
+  scale_y_continuous(name="Daily new COVID admissions per 100,000")+
   scale_colour_paletteer_d("awtools::a_palette", name="Age")+
   theme_custom()+
-  labs(title="COVID admission rates are rising again",
-       subtitle="Rolling 7-day average new COVID admissions (including those testing positive in hospital)",
-       caption="Data from coronavirus.data.gov.uk | Plot by @VictimOfMaths")
+  labs(caption="Data from coronavirus.data.gov.uk | Plot by Colin Angus")
 
 dev.off()
 
