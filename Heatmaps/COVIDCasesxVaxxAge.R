@@ -11,6 +11,7 @@ library(scales)
 library(ggrepel)
 library(ggridges)
 library(ungroup)
+library(lubridate)
 
 theme_custom <- function() {
   theme_classic() %+replace%
@@ -29,19 +30,28 @@ temp <- curl_download(url=sourcevax, destfile=temp, quiet=FALSE, mode="wb")
 vaxdata <- read.csv(temp) %>% 
   select(date, age, newPeopleVaccinatedFirstDoseByVaccinationDate,
          newPeopleVaccinatedSecondDoseByVaccinationDate,
-         newPeopleVaccinatedThirdInjectionByVaccinationDate) %>% 
-  set_names("date", "age", "dose1", "dose2", "dose3") %>% 
+         newPeopleVaccinatedThirdInjectionByVaccinationDate,
+         newPeopleVaccinatedSpring22ByVaccinationDate,
+         newPeopleVaccinatedAutumn22ByVaccinationDate) %>% 
+  set_names("date", "age", "dose1", "dose2", "dose3", "spring22", "autumn22") %>% 
   mutate(date=as.Date(date)) %>% 
   #Some fuckery to crudely align the age bands, assuming equal coverage *within* each
   #age band in the vaccination data
-  pivot_wider(names_from=age, values_from=c(dose1, dose2, dose3), names_sep="__") %>% 
-  mutate(dose1__10_14=dose1__12_15*0.75, dose2__10_14=dose2__12_15*0.75, 
-         dose3__10_14=dose3__12_15*0.75, 
+  pivot_wider(names_from=age, values_from=c(dose1, dose2, dose3, spring22, autumn22), 
+              names_sep="__") %>% 
+  mutate(across(starts_with("spring22"), ~replace_na(., 0)),
+         across(starts_with("autumn22"), ~replace_na(., 0)),
+         dose1__10_14=dose1__12_15*0.75, dose2__10_14=dose2__12_15*0.75, 
+         dose3__10_14=dose3__12_15*0.75, spring22__10_14=spring22__05_11*2/7+spring22__12_15*0.75,
+         autumn22__10_14=autumn22__05_11*2/7+autumn22__12_15*0.75,
          dose1__15_19=dose1__12_15*0.25+dose1__16_17+dose1__18_24*2/7,
          dose2__15_19=dose2__12_15*0.25+dose2__16_17+dose2__18_24*2/7,
          dose3__15_19=dose3__12_15*0.25+dose3__16_17+dose3__18_24*2/7,
+         spring22__15_19=spring22__12_15*0.25+spring22__16_17+spring22__18_24*2/7,
+         autumn22__15_19=autumn22__12_15*0.25+autumn22__16_17+autumn22__18_24*2/7,
          dose1__20_24=dose1__18_24*5/7, dose2__20_24=dose2__18_24*5/7,
-         dose3__20_24=dose3__18_24*5/7) %>% 
+         dose3__20_24=dose3__18_24*5/7, spring22__20_24=spring22__18_24*5/7,
+         autumn22__20_24=autumn22__18_24*5/7) %>% 
   pivot_longer(cols=c(2:ncol(.)), names_to=c("dose", "age"), names_sep="__") %>% 
   filter(!age %in% c("12_15", "16_17", "18_24")) %>% 
   spread(dose, value)
@@ -81,14 +91,17 @@ data <- data.frame(date=rep(seq.Date(from=min(min(deathsdata$date), min(casedata
   merge(deathsdata, all=TRUE) %>% 
   mutate(dose1=if_else(is.na(dose1), 0, dose1),
          dose2=if_else(is.na(dose2), 0, dose2),
-         dose3=if_else(is.na(dose3), 0, dose3)) %>% 
+         dose3=if_else(is.na(dose3), 0, dose3),
+         spring22=replace_na(spring22, 0),
+         autumn22=replace_na(autumn22, 0)) %>% 
   #Calculate rolling avg cases and cumulative vax doses
   group_by(age) %>% 
   arrange(date) %>% 
   mutate(cases_roll=roll_mean(cases, 7, align="center", fill=NA),
          deaths_roll=roll_mean(deaths, 7, align="center", fill=NA),
          cum_dose1=cumsum(dose1), cum_dose2=cumsum(dose2),
-         cum_dose3=cumsum(dose3)) %>% 
+         cum_dose3=cumsum(dose3), cumspring22=cumsum(spring22),
+         cumautumn22=cumsum(autumn22)) %>% 
   ungroup()
 
 #Bring in populations for rates
@@ -131,7 +144,8 @@ finaldata <- data %>%
          deathrate_roll=deaths_roll*100000/pop,
          dose1prop=cum_dose1/pop,
          dose2prop=cum_dose2/pop,
-         dose3prop=cum_dose3/pop) %>% 
+         dose3prop=cum_dose3/pop, spring22prop=cumspring22/pop,
+         autumn22prop=cumautumn22/pop) %>% 
   #Pick out Dec20/Jan21 peak
   group_by(age) %>% 
   mutate(casepeak=max(caserate_roll[date>as.Date("2020-10-01") & 
@@ -266,9 +280,10 @@ dev.off()
 #from Mathias Leroy
 
 ridgedata <- finaldata %>% 
-  select(date, age, dose1, dose2, dose3) %>% 
+  filter(!age %in% c("50+", "75+", "05_11")) %>% 
+  select(date, age, dose1, dose2, dose3, spring22, autumn22) %>% 
   filter(date>as.Date("2020-12-01")) %>% 
-  gather(dose, no, c(dose1, dose2, dose3)) %>% 
+  gather(dose, no, c(dose1, dose2, dose3, spring22, autumn22)) %>% 
   mutate(contage=case_when(
     age=="00_04" ~ 2, age=="05_09" ~ 7, age=="10_14" ~ 12, age=="15_19" ~ 17,
     age=="20_24" ~ 22, age=="25_29" ~ 27, age=="30_34" ~ 32, age=="35_39" ~ 37,
@@ -281,18 +296,22 @@ ridgedata <- finaldata %>%
       TRUE ~ week(date)+105)) %>% 
   group_by(contage, week, dose) %>% 
   summarise(no=sum(no)) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(dose=factor(dose, levels=c("dose1", "dose2", "dose3", "spring22", "autumn22")))
 
 
 agg_tiff("Outputs/COVIDVaxRidgesxAgexDose.tiff", units="in", width=8, height=8, res=500)
 ggplot(ridgedata, aes(x=contage, y=fct_rev(as.factor(week)), height=no, fill=dose))+
   geom_density_ridges(stat="identity", scale=10, alpha=0.3, colour=NA)+
   scale_x_continuous(name="Age", limits=c(0,95))+
-  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110, 114,
+                            118, 123, 127, 131, 136, 140),
                    labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                            "Oct", "Nov", "Dec"), name="")+
+                            "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
+                            "Aug", "Sep"), name="")+
   scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
-                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster",
+                                  "Spring booster", "Autumn booster"))+
   theme_custom()+
   theme(axis.line.y=element_blank())+
   labs(title="Vaccine rollout down the age groups",
@@ -303,9 +322,10 @@ dev.off()
 
 #Alternative version interpolating the age groups to give (hopefully) smoother
 smoothdata <- finaldata %>% 
-  select(date, age, dose1, dose2, dose3) %>% 
+  filter(!age %in% c("50+", "75+", "05_11")) %>% 
+  select(date, age, dose1, dose2, dose3, spring22, autumn22) %>% 
   filter(date>as.Date("2020-12-01")) %>% 
-  gather(dose, no, c(dose1, dose2, dose3)) %>% 
+  gather(dose, no, c(dose1, dose2, dose3, spring22, autumn22)) %>% 
   mutate(contage=case_when(
     age=="00_04" ~ 0, age=="05_09" ~ 5, age=="10_14" ~ 10, age=="15_19" ~ 15,
     age=="20_24" ~ 20, age=="25_29" ~ 25, age=="30_34" ~ 30, age=="35_39" ~ 35,
@@ -320,15 +340,18 @@ smoothdata <- finaldata %>%
   group_by(age, contage, week, dose) %>% 
   summarise(no=sum(no)) %>% 
   ungroup() %>% 
-  merge(ONSpop)
+  merge(ONSpop)%>% 
+  mutate(dose=factor(dose, levels=c("dose1", "dose2", "dose3", "spring22", "autumn22")))
 
 smootheddata <- data.frame(dose=character(), week=integer(), age=integer(),
                             smoothedno=double())
 
+#First smooth out first 3 doses
 for(i in c("dose1", "dose2", "dose3")){
   for(j in min(smoothdata$week):max(smoothdata$week)){
     working <- smoothdata %>% 
-      filter(dose==i & week==j)
+      filter(dose==i & week==j) %>% 
+      mutate(no=if_else(no==0, 0.001, no))
     x <- working$contage
     y <- working$no
     offset <- working$pop
@@ -344,6 +367,47 @@ for(i in c("dose1", "dose2", "dose3")){
   }
 }
 
+#Add in spring boosters (only available to over 75s)
+for(j in c(117:140)){
+  working <- smoothdata %>% 
+    filter(dose=="spring22" & week==j & contage>=75) %>% 
+    mutate(no=if_else(no==0, 0.001, no))
+  x <- working$contage
+  y <- working$no
+  offset <- working$pop
+  nlast <- 21
+  
+  smoothed <- pclm(x, y, nlast)
+  
+  outputs <- as.data.frame(smoothed$fitted) %>% 
+    mutate(dose="spring22", week=j, age=75:110) %>% 
+    rename("smoothedno"="smoothed$fitted")
+  
+  smootheddata=smootheddata %>% bind_rows(outputs)
+}
+
+#Add in autumn boosters (only available to over 50s)
+for(j in c(140:max(smoothdata$week))){
+  working <- smoothdata %>% 
+    filter(dose=="autumn22" & week==j & contage>=50) %>% 
+    mutate(no=if_else(no==0, 0.001, no))
+  x <- working$contage
+  y <- working$no
+  offset <- working$pop
+  nlast <- 21
+  
+  smoothed <- pclm(x, y, nlast)
+  
+  outputs <- as.data.frame(smoothed$fitted) %>% 
+    mutate(dose="autumn22", week=j, age=50:110) %>% 
+    rename("smoothedno"="smoothed$fitted")
+  
+  smootheddata=smootheddata %>% bind_rows(outputs)
+}
+
+smootheddata <- smootheddata %>% 
+  mutate(dose=factor(dose, levels=c("dose1", "dose2", "dose3", "spring22", "autumn22")))
+
 agg_tiff("Outputs/COVIDVaxRidgesxAgexDoseSmoothed.tiff", units="in", width=8, height=8, res=500)
 ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, fill=dose,
                          colour=dose))+
@@ -351,13 +415,18 @@ ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, f
   geom_segment(aes(x = 5, y = 35, xend = 5, yend = 25),
                arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
   scale_x_continuous(name="Age", limits=c(0,105))+
-  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101),
-                   labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                            "Oct", "Nov", "Dec"), name="")+
-  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
-                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
-  scale_colour_paletteer_d("lisa::AndyWarhol_2", guide="none")+
-  annotate("text", x=3, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110, 114,
+                            118, 123, 127, 131, 136, 140),
+                   labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
+                            "Aug", "Sep"), name="")+
+  scale_fill_paletteer_d("fishualize::Scarus_tricolor", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster",
+                                  "Spring booster", "Autumn booster"))+
+  scale_colour_paletteer_d("fishualize::Scarus_tricolor", guide="none")+
+  annotate("text", x=2, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
+  annotate("text", x=0, y=38, label="2022", family="Lato", colour="Grey40", size=rel(3))+
+  annotate("text", x=0, y=90, label="2021", family="Lato", colour="Grey40", size=rel(3))+
   theme_custom()+
   theme(axis.line.y=element_blank())+
   labs(title="Vaccine rollout down the age groups",
@@ -368,16 +437,21 @@ dev.off()
 
 agg_tiff("Outputs/COVIDVaxRidgesxAgexDoseSmoothedv2.tiff", units="in", width=8, height=8, res=500)
 ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, fill=dose))+
-  geom_density_ridges(stat="identity", scale=10, alpha=0.4, colour=NA)+
+  geom_density_ridges(stat="identity", scale=10, alpha=0.4, rel_min_height=0.01, colour=NA)+
   geom_segment(aes(x = 5, y = 35, xend = 5, yend = 25),
                arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
   scale_x_continuous(name="Age", limits=c(0,105))+
-  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110),
-                   labels=c("Dec\n2020", "Jan\n2021", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                            "Oct", "Nov", "Dec", "Jan\n2022", "Feb"), name="")+
-  scale_fill_paletteer_d("lisa::AndyWarhol_2", name="Dose", 
-                         labels=c("1st dose", "2nd dose", "3rd dose/booster"))+
-  annotate("text", x=3, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
+  scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110, 114,
+                            118, 123, 127, 131, 136, 140),
+                   labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                            "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
+                            "Aug", "Sep"), name="")+
+  scale_fill_paletteer_d("fishualize::Scarus_tricolor", name="Dose", 
+                         labels=c("1st dose", "2nd dose", "3rd dose/booster",
+                                  "Spring booster", "Autumn booster"))+
+  annotate("text", x=2, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
+  annotate("text", x=0, y=38, label="2022", family="Lato", colour="Grey40", size=rel(3))+
+  annotate("text", x=0, y=90, label="2021", family="Lato", colour="Grey40", size=rel(3))+
   theme_custom()+
   theme(axis.line.y=element_blank())+
   labs(title="Vaccine rollout down the age groups",
