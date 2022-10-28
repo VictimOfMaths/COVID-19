@@ -416,10 +416,10 @@ ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, f
                arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
   scale_x_continuous(name="Age", limits=c(0,105))+
   scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110, 114,
-                            118, 123, 127, 131, 136, 140),
+                            118, 123, 127, 131, 136, 140, 144),
                    labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
                             "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
-                            "Aug", "Sep"), name="")+
+                            "Aug", "Sep", "Oct"), name="")+
   scale_fill_paletteer_d("fishualize::Scarus_tricolor", name="Dose", 
                          labels=c("1st dose", "2nd dose", "3rd dose/booster",
                                   "Spring booster", "Autumn booster"))+
@@ -442,16 +442,16 @@ ggplot(smootheddata, aes(x=age, y=fct_rev(as.factor(week)), height=smoothedno, f
                arrow = arrow(length = unit(0.3, "cm")), colour="Grey40")+
   scale_x_continuous(name="Age", limits=c(0,105))+
   scale_y_discrete(breaks=c(49, 54, 58, 62, 67, 71, 75, 79, 84, 88, 93, 97, 101, 106, 110, 114,
-                            118, 123, 127, 131, 136, 140),
+                            118, 123, 127, 131, 136, 140, 144),
                    labels=c("Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
                             "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
-                            "Aug", "Sep"), name="")+
+                            "Aug", "Sep", "Oct"), name="")+
   scale_fill_paletteer_d("fishualize::Scarus_tricolor", name="Dose", 
                          labels=c("1st dose", "2nd dose", "3rd dose/booster",
                                   "Spring booster", "Autumn booster"))+
   annotate("text", x=2, y=30, angle=90, label="More recent", family="Lato", colour="Grey40")+
-  annotate("text", x=0, y=38, label="2022", family="Lato", colour="Grey40", size=rel(3))+
-  annotate("text", x=0, y=90, label="2021", family="Lato", colour="Grey40", size=rel(3))+
+  annotate("text", x=0, y=43, label="2022", family="Lato", colour="Grey40", size=rel(3))+
+  annotate("text", x=0, y=95, label="2021", family="Lato", colour="Grey40", size=rel(3))+
   theme_custom()+
   theme(axis.line.y=element_blank())+
   labs(title="Vaccine rollout down the age groups",
