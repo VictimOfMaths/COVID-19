@@ -12,7 +12,7 @@ library(ggtext)
 library(RcppRoll)
 library(keyring)
 library(HMDHFDplus)
-library(Hmisc)
+library(signal)
 
 #Define window as number of weeks across which to take rolling average
 Window <- 10
@@ -304,4 +304,21 @@ ggplot(Ratios %>% dplyr::filter(Age!="15-24"), aes(x=Date, y=Ratio, colour=Age))
 
 dev.off()
 
+DeathProps <- Fulldata %>% 
+  group_by(Country, Date) %>% 
+  mutate(Total=sum(DeathsRoll),
+         Prop=DeathsRoll/Total) %>% 
+  ungroup() %>% 
+  mutate(Date=as.Date(Date))
 
+agg_png("Outputs/EWUSACOVIDDeathsxAgeProp.png", units="in", width=8, height=6, res=500)
+ggplot(DeathProps, aes(x=Date, y=Prop, fill=Age))+
+  geom_col()+
+  scale_x_date(name="")+
+  scale_y_continuous(name="Proportion of deaths involving COVID-19",
+                     labels=label_percent(accuracy=1))+
+  scale_fill_manual(values=c("darkred", "#B83326FF", "#C8570DFF", "#EDB144FF", "#8CC8BCFF", "#7DA7EAFF", "#5773C0FF", "#1D4497FF"))+
+  facet_wrap(~Country)+
+  theme_custom()
+
+dev.off()
